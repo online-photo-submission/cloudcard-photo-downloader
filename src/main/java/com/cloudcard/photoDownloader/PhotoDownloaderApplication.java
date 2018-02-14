@@ -10,5 +10,7 @@ public class PhotoDownloaderApplication {
 		SpringApplication.run(PhotoDownloaderApplication.class, args);
 	}
 
+
+
 	
 }
