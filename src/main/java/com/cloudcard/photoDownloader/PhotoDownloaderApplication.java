@@ -6,11 +6,11 @@ import org.springframework.boot.autoconfigure.SpringBootApplication;
 @SpringBootApplication
 public class PhotoDownloaderApplication {
 
+
 	public static void main(String[] args) {
 		SpringApplication.run(PhotoDownloaderApplication.class, args);
+
+		System.out.println("Hello World");
 	}
-
-
-
 
 }
