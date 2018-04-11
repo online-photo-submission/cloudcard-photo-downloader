@@ -44,7 +44,7 @@ public class PhotoDownloaderApplication {
         String username = "brian.akumah@gmail.com";
 
         System.out.println("Enter Password: ");             //TODO: Mask the user imputed password
-        String password = "BBaller213&";
+        String password = "";
 
         String body = "{ \"username\" : \"" + username + "\", \"password\" : \"" + password + "\" }";
         System.out.println("body == " + body);
