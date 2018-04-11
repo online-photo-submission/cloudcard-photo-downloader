@@ -1,6 +1,5 @@
 package com.cloudcard.photoDownloader;
 
-import com.fasterxml.jackson.core.JsonParseException;
 import com.mashape.unirest.http.HttpResponse;
 import com.mashape.unirest.http.JsonNode;
 import com.mashape.unirest.http.Unirest;
@@ -9,7 +8,7 @@ import org.jvnet.hk2.annotations.Service;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.web.bind.annotation.RestController;
-import java.util.Map;
+
 import java.io.*;
 import java.util.Arrays;
 import java.util.Scanner;
@@ -61,9 +60,7 @@ public class PhotoDownloaderApplication {
 
         int Status = adminDesc.getStatus();
 
-        System.out.println("STATUS IS -------  " + Status);
-
-
+        System.out.println(Status);
 
         System.out.println("This is the access token" + accessToken);
 
