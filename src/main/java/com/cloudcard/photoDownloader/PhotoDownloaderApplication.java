@@ -1,82 +1,114 @@
 package com.cloudcard.photoDownloader;
 
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.mashape.unirest.http.HttpResponse;
-import com.mashape.unirest.http.JsonNode;
 import com.mashape.unirest.http.Unirest;
 import com.mashape.unirest.http.exceptions.UnirestException;
-import org.jvnet.hk2.annotations.Service;
+import org.json.JSONArray;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
-import org.springframework.web.bind.annotation.RestController;
 
-import java.io.*;
-import java.util.Arrays;
-import java.util.Scanner;
+import javax.swing.*;
+import java.io.IOException;
+import java.util.*;
 
 @SpringBootApplication
 public class PhotoDownloaderApplication {
 
-
     private static final String API_URL = " https://api.onlinephotosubmission.com/api";
-
 
     public static void main(String[] args) {
 		SpringApplication.run(PhotoDownloaderApplication.class, args);
 
-        HttpResponse<JsonNode> myList = null;
+        List photoList = null;
         try {
-            myList = fetchPhotosReadyForDownload();
+            photoList = fetchPhotosReadyForDownload();
         } catch (UnirestException e) {
             e.printStackTrace();
         }
 
-        System.out.println(myList);
-
-		//Unirest.shutdown();
+        //System.out.println();
 	}
 
-
-
-    private static HttpResponse<JsonNode> fetchPhotosReadyForDownload() throws UnirestException {
+    private static List fetchPhotosReadyForDownload() throws UnirestException {
         Scanner sc = new Scanner(System.in);
 
-        System.out.println("Enter Username: ");
-        String username = "brian.akumah@gmail.com";
+        //System.out.println("Enter Username: ");
+        String username = "";
 
-        System.out.println("Enter Password: ");             //TODO: Mask the user imputed password
-        String password = "BBaller213&";
+        //System.out.println("Enter Password: ");             //TODO: Mask the user imputed password
+        String password = "";
 
-        String body = "{ \"username\" : \"" + username + "\", \"password\" : \"" + password + "\" }";
-        System.out.println("body == " + body);
-        HttpResponse<String> adminDesc = Unirest.post(API_URL + "/login")
+        if(username == null || username == ""){
+            Scanner login = new Scanner(System.in);
+            System.out.println("Enter Username: ");
+            username = login.nextLine();
+            System.out.println("Enter Password: ");
+            password = login.nextLine();
+        }
+
+        if((password == null || password == "") && (username != null || username == "")){
+            Scanner login = new Scanner(System.in);
+            System.out.println("Enter Password: ");
+            password = login.nextLine();
+        }
+
+        String loginJSON = "{ \"username\" : \"" + username + "\", \"password\" : \"" + password + "\" }";
+        HttpResponse<String> adminResponse = Unirest.post(API_URL + "/login")
                 .header("accept", "application/json")
                 .header("Content-Type", "application/json")
-                .body(body).asString();
+                .body(loginJSON).asString();
+
+        if (adminResponse.getStatus() != 200){
+            System.out.println("***Error " + adminResponse.getStatus() + ":  There is a problem Logging into Cloudcard");
+        }
+
+        String adminResponseBody = adminResponse.getBody();
+
+        Administrator adminResponseJSON = null;
+        try {
+            adminResponseJSON = new ObjectMapper().readValue(adminResponseBody, Administrator.class);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+
+        String adminAccessToken = null;
+        if (adminResponseJSON != null) {
+            adminAccessToken = adminResponseJSON.getAccessToken();
+        } else {
+            System.out.println("***ERROR: No Access Token Found");
+        }
+        System.out.println("This is the access token: " + adminAccessToken);
 
 
-        System.out.println(adminDesc.getBody());
+            HttpResponse<String> userResponse = Unirest.get(API_URL +"/photos?status=READY_FOR_DOWNLOAD")
+                    .header("accept", "application/json")
+                    .header("X-Auth-Token", adminAccessToken)
+                    .header("Content-Type", "application/json").asString();
 
-        String accessToken = adminDesc.getBody();
+        String userResponseBody = userResponse.getBody();
 
-        int Status = adminDesc.getStatus();
+        System.out.println(userResponse.getStatus());
+        System.out.println(userResponseBody);
 
-        System.out.println(Status);
 
-        System.out.println("This is the access token" + accessToken);
+        JSONArray userResponseArray = new JSONArray(userResponseBody);
+        System.out.println(userResponseArray.length());
 
-//        try {
-//            HttpResponse<JsonNode> jsonImageResponse;
-//            jsonImageResponse = Unirest.get(API_URL +"/photos[?status=READY_FOR_DOWNLOAD]")
-//            .header("X-Auth-Token", accessToken).asJson();
-//
-//            return jsonImageResponse;
-//
-//        } catch (UnirestException e) {
-//            e.printStackTrace();
+        List<User> userResponseJSON = null;
+        try {
+            userResponseJSON = new ObjectMapper().readValue(userResponseBody, new TypeReference<List<User>>(){});
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+
+//        for (User aStudentInfoJSON : userResponseJSON) {
+//            System.out.println(aStudentInfoJSON.getPerson().getUsername());
+//            System.out.println(aStudentInfoJSON.getLinks().getBytes());
 //        }
 
-
-        return null;
+        return userResponseJSON;
     }
 
 }
