@@ -5,12 +5,10 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.mashape.unirest.http.HttpResponse;
 import com.mashape.unirest.http.Unirest;
 import com.mashape.unirest.http.exceptions.UnirestException;
-import org.json.JSONArray;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 
-import javax.swing.*;
-import java.io.IOException;
+import java.io.*;
 import java.util.*;
 
 @SpringBootApplication
@@ -18,33 +16,42 @@ public class PhotoDownloaderApplication {
 
     private static final String API_URL = " https://api.onlinephotosubmission.com/api";
 
-    public static void main(String[] args) {
+    public static void main(String[] args) throws UnirestException {
 		SpringApplication.run(PhotoDownloaderApplication.class, args);
 
-        List photoList = null;
-        try {
-            photoList = fetchPhotosReadyForDownload();
-        } catch (UnirestException e) {
-            e.printStackTrace();
-        }
+		    // calls fetchPhotosReadyForDownload and assigns it to photos
+            List<User> photoList = null;
 
-        //System.out.println();
+                photoList = fetchPhotosReadyForDownload();
+
+            //Prints out list of users
+            assert photoList != null;
+            for (User aPhotoList : photoList) {
+                System.out.println("Student ID: " + aPhotoList.getId());
+                System.out.println("Student Username: " + aPhotoList.getPerson().getUsername());
+                System.out.println("Bytes: " + aPhotoList.getLinks().getBytes());
+                System.out.println("Public Key: " + aPhotoList.getPublicKey() + "\n");
+
+                fetchPhotoBytes(aPhotoList.getLinks().getBytes(), aPhotoList.getId());
+            }
+
+
+
+
+
+
 	}
 
-    private static List fetchPhotosReadyForDownload() throws UnirestException {
-        Scanner sc = new Scanner(System.in);
+    private static List<User> fetchPhotosReadyForDownload() throws UnirestException {
 
-        //System.out.println("Enter Username: ");
-        String username = "";
-
-        //System.out.println("Enter Password: ");             //TODO: Mask the user imputed password
-        String password = "";
+        String username = "brian.akumah@gmail.com";
+        String password = "BBaller213&";
 
         if(username == null || username == ""){
             Scanner login = new Scanner(System.in);
             System.out.println("Enter Username: ");
             username = login.nextLine();
-            System.out.println("Enter Password: ");
+            System.out.println("Enter Password: ");                 //TODO: Mask the user imputed password
             password = login.nextLine();
         }
 
@@ -89,12 +96,10 @@ public class PhotoDownloaderApplication {
 
         String userResponseBody = userResponse.getBody();
 
-        System.out.println(userResponse.getStatus());
-        System.out.println(userResponseBody);
 
-
-        JSONArray userResponseArray = new JSONArray(userResponseBody);
-        System.out.println(userResponseArray.length());
+        if (userResponse.getStatus() != 200){
+            System.out.println("***Error " + userResponse.getStatus() + ":  There is a problem receiving the user JSON");
+        }
 
         List<User> userResponseJSON = null;
         try {
@@ -103,12 +108,37 @@ public class PhotoDownloaderApplication {
             e.printStackTrace();
         }
 
-//        for (User aStudentInfoJSON : userResponseJSON) {
-//            System.out.println(aStudentInfoJSON.getPerson().getUsername());
-//            System.out.println(aStudentInfoJSON.getLinks().getBytes());
-//        }
-
         return userResponseJSON;
     }
 
+    private static byte[] fetchPhotoBytes(String bytes, Integer uId) throws UnirestException {
+
+        HttpResponse<String> photoBytes = Unirest.get(bytes)
+                .header("accept", "image/jpeg;charset=utf-8")
+                .header("Content-Type", "image/jpeg;charset=utf-8").asString();
+
+       System.out.println("******STATUS******" + photoBytes.getStatus() + "\n");
+        System.out.println(photoBytes.getBody());
+
+        File file = new File("/Users/RakChazak/desktop/testImages/"+ uId +".jpeg");
+
+        FileOutputStream outputStream = null;
+        try {
+            outputStream = new FileOutputStream(file);
+
+            if (!file.exists()) {
+                file.createNewFile();
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        try {
+            outputStream.write(photoBytes.getBody().getBytes());
+            outputStream.flush();
+            outputStream.close();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        return null;
+    }
 }
