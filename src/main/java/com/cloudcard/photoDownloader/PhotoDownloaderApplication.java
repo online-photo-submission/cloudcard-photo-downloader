@@ -27,18 +27,13 @@ public class PhotoDownloaderApplication {
             //Prints out list of users
             assert photoList != null;
             for (User aPhotoList : photoList) {
-                System.out.println("Student ID: " + aPhotoList.getId());
+                System.out.println("\n\n\n\n\nStudent ID: " + aPhotoList.getId());
                 System.out.println("Student Username: " + aPhotoList.getPerson().getUsername());
                 System.out.println("Bytes: " + aPhotoList.getLinks().getBytes());
                 System.out.println("Public Key: " + aPhotoList.getPublicKey() + "\n");
 
                 fetchPhotoBytes(aPhotoList.getLinks().getBytes(), aPhotoList.getId());
             }
-
-
-
-
-
 
 	}
 
@@ -113,6 +108,7 @@ public class PhotoDownloaderApplication {
 
     private static byte[] fetchPhotoBytes(String bytes, Integer uId) throws UnirestException {
 
+        //Recieves the list of photos ready for download
         HttpResponse<String> photoBytes = Unirest.get(bytes)
                 .header("accept", "image/jpeg;charset=utf-8")
                 .header("Content-Type", "image/jpeg;charset=utf-8").asString();
@@ -140,5 +136,19 @@ public class PhotoDownloaderApplication {
             e.printStackTrace();
         }
         return null;
+    }
+
+    private static void markPhotosAsDownloaded(Integer uID){
+
+        try {
+            HttpResponse<String> userResponse = Unirest.get(API_URL +"/photos?status=READY_FOR_DOWNLOAD")
+                    .header("accept", "application/json")
+                  //  .header("X-Auth-Token", adminAccessToken)
+                    .header("Content-Type", "application/json").asString();
+        } catch (UnirestException e) {
+            e.printStackTrace();
+        }
+
+
     }
 }
