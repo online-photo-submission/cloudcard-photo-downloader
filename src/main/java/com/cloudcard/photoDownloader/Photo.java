@@ -1,30 +1,14 @@
 package com.cloudcard.photoDownloader;
 
+import com.fasterxml.jackson.annotation.*;
+
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import com.fasterxml.jackson.annotation.JsonAnyGetter;
-import com.fasterxml.jackson.annotation.JsonAnySetter;
-import com.fasterxml.jackson.annotation.JsonIgnore;
-import com.fasterxml.jackson.annotation.JsonInclude;
-import com.fasterxml.jackson.annotation.JsonProperty;
-import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 
 @JsonInclude(JsonInclude.Include.NON_NULL)
-@JsonPropertyOrder({
-        "aspectRatio",
-        "classifications",
-        "domainClass",
-        "id",
-        "isAspectRatioCorrect",
-        "links",
-        "lowestClassification",
-        "originalPhoto",
-        "person",
-        "publicKey",
-        "status"
-})
-public class User {
+@JsonPropertyOrder({"aspectRatio", "classifications", "domainClass", "id", "isAspectRatioCorrect", "links", "lowestClassification", "originalPhoto", "person", "publicKey", "status"})
+public class Photo {
 
     @JsonProperty("aspectRatio")
     private Double aspectRatio;
@@ -53,121 +37,145 @@ public class User {
 
     @JsonProperty("aspectRatio")
     public Double getAspectRatio() {
+
         return aspectRatio;
     }
 
     @JsonProperty("aspectRatio")
     public void setAspectRatio(Double aspectRatio) {
+
         this.aspectRatio = aspectRatio;
     }
 
     @JsonProperty("classifications")
     public List<Object> getClassifications() {
+
         return classifications;
     }
 
     @JsonProperty("classifications")
     public void setClassifications(List<Object> classifications) {
+
         this.classifications = classifications;
     }
 
     @JsonProperty("domainClass")
     public String getDomainClass() {
+
         return domainClass;
     }
 
     @JsonProperty("domainClass")
     public void setDomainClass(String domainClass) {
+
         this.domainClass = domainClass;
     }
 
     @JsonProperty("id")
     public Integer getId() {
+
         return id;
     }
 
     @JsonProperty("id")
     public void setId(Integer id) {
+
         this.id = id;
     }
 
     @JsonProperty("isAspectRatioCorrect")
     public Boolean getIsAspectRatioCorrect() {
+
         return isAspectRatioCorrect;
     }
 
     @JsonProperty("isAspectRatioCorrect")
     public void setIsAspectRatioCorrect(Boolean isAspectRatioCorrect) {
+
         this.isAspectRatioCorrect = isAspectRatioCorrect;
     }
 
     @JsonProperty("links")
     public Links getLinks() {
+
         return links;
     }
 
     @JsonProperty("links")
     public void setLinks(Links links) {
+
         this.links = links;
     }
 
     @JsonProperty("lowestClassification")
     public Object getLowestClassification() {
+
         return lowestClassification;
     }
 
     @JsonProperty("lowestClassification")
     public void setLowestClassification(Object lowestClassification) {
+
         this.lowestClassification = lowestClassification;
     }
 
     @JsonProperty("originalPhoto")
     public Object getOriginalPhoto() {
+
         return originalPhoto;
     }
 
     @JsonProperty("originalPhoto")
     public void setOriginalPhoto(Object originalPhoto) {
+
         this.originalPhoto = originalPhoto;
     }
 
     @JsonProperty("person")
     public Person getPerson() {
+
         return person;
     }
 
     @JsonProperty("person")
     public void setPerson(Person person) {
+
         this.person = person;
     }
 
     @JsonProperty("publicKey")
     public String getPublicKey() {
+
         return publicKey;
     }
 
     @JsonProperty("publicKey")
     public void setPublicKey(String publicKey) {
+
         this.publicKey = publicKey;
     }
 
     @JsonProperty("status")
     public String getStatus() {
+
         return status;
     }
 
     @JsonProperty("status")
     public void setStatus(String status) {
+
         this.status = status;
     }
 
     @JsonAnyGetter
     public Map<String, Object> getAdditionalProperties() {
+
         return this.additionalProperties;
     }
 
     @JsonAnySetter
     public void setAdditionalProperty(String name, Object value) {
+
         this.additionalProperties.put(name, value);
     }
 
