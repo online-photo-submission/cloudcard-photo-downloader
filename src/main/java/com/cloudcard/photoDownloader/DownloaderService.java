@@ -10,10 +10,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 
-import java.io.File;
-import java.io.FileOutputStream;
-import java.io.IOException;
-import java.io.InputStream;
+import java.io.*;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
@@ -23,10 +20,6 @@ import java.util.List;
 public class DownloaderService {
 
     private static final Logger log = LoggerFactory.getLogger(DownloaderService.class);
-
-    private static final SimpleDateFormat titleDateFormat = new SimpleDateFormat("MMM dd 'at' HHmm");
-    private static final SimpleDateFormat numericDateFormat = new SimpleDateFormat("YYYYMMddHHmm");
-    private static final SimpleDateFormat hyphenatedDateFormat = new SimpleDateFormat("YYYY-MM-dd");
 
     @Value("${cloudcard.api.url}")
     private String apiUrl;
@@ -39,6 +32,24 @@ public class DownloaderService {
 
     @Value("${downloader.udfDirectory}")
     String udfDirectory;
+
+    @Value("${downloader.slash}")
+    private String slash;
+
+    @Value("${downloader.udfFilePrefix}")
+    private String udfFilePrefix;
+
+    @Value("${downloader.udfFileExtension}")
+    private String udfFileExtension;
+
+    @Value("${downloader.descriptionDateFormat}")
+    private String descriptionDateFormat;
+
+    @Value("${downloader.batchIdDateFormat}")
+    private String batchIdDateFormat;
+
+    @Value("${downloader.createdDateFormat}")
+    private String createdDateFormat;
 
     @Scheduled(fixedDelayString = "${downloader.delay.milliseconds}")
     public void downloadPhotos() throws Exception {
@@ -86,7 +97,7 @@ public class DownloaderService {
             return null;
         }
 
-        String fileName = photoDirectory + "/" + studentID + ".jpg";
+        String fileName = photoDirectory + slash + studentID + ".jpg";
         writeBytesToFile(fileName, getBytes(response));
         return new PhotoFile(studentID, fileName);
     }
@@ -114,7 +125,7 @@ public class DownloaderService {
         return bytes;
     }
 
-    private void createUdfFile(List<PhotoFile> photoFiles) throws Exception {
+    private void createUdfFile(List<PhotoFile> photoFiles) throws IOException {
 
         List<String> lines = new ArrayList<>();
         String blankLine = "!";
@@ -125,21 +136,16 @@ public class DownloaderService {
         lines.add(blankLine);
         lines.addAll(generateUdfData(photoFiles));
 
-
-        log.info("UDF file follows...");
-        for (String line : lines)
-            log.info(line);
-        log.info("...UDF file complete");
-
+        writeUdfFile(lines);
     }
 
     private List<String> generateUdfHeader(List<PhotoFile> photoFiles) {
 
         List<String> header = new ArrayList<>();
-        header.add("!Description: Photo Import " + titleDateFormat.format(new Date()));
+        header.add("!Description: Photo Import " + new SimpleDateFormat(descriptionDateFormat).format(new Date()));
         header.add("!Source: CloudCard Online Photo Submission");
-        header.add("!BatchID: " + numericDateFormat.format(new Date()));
-        header.add("!Created: " + hyphenatedDateFormat.format(new Date()));
+        header.add("!BatchID: " + new SimpleDateFormat(batchIdDateFormat).format(new Date()));
+        header.add("!Created: " + new SimpleDateFormat(createdDateFormat).format(new Date()));
         header.add("!Version:");
         header.add("!RecordCount: " + photoFiles.size());
         return header;
@@ -192,5 +198,18 @@ public class DownloaderService {
     private static String fixedLengthString(String string, int length) {
 
         return String.format("%1$-" + length + "s", string);
+    }
+
+    private void writeUdfFile(List<String> lines) throws IOException {
+
+        log.info("Writing the UDF file...");
+        String fileName = udfDirectory + slash + udfFilePrefix + new SimpleDateFormat(batchIdDateFormat).format(new Date()) + udfFileExtension;
+        FileWriter writer = new FileWriter(fileName);
+        for (String line : lines) {
+            log.info(line);
+            writer.write(line + "\n");
+        }
+        writer.close();
+        log.info("...UDF file writing complete");
     }
 }
