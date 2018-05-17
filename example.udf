@@ -1,0 +1,15 @@
+!Description: Test Photo Import
+!Source: File Download
+!BatchID: 00002
+!Created: 2018-03-29
+!Version:
+!RecordCount: 1
+!
+!BeginFormat
+!Odyssey_PCS,   1,  9,  "IDNUMBER"
+!Odyssey_PCS,   10, 32, "PICTUREPATH"
+!EndFormat
+!
+!BeginData
+909090909H:\TEST_PHOTO\909090909.jpg
+!EndData
