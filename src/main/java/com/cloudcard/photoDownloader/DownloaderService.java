@@ -51,6 +51,9 @@ public class DownloaderService {
     @Value("${downloader.createdDateFormat}")
     private String createdDateFormat;
 
+    @Value("${downloader.enableUdf}")
+    private boolean enableUdf;
+
     @Scheduled(fixedDelayString = "${downloader.delay.milliseconds}")
     public void downloadPhotos() throws Exception {
 
@@ -64,7 +67,7 @@ public class DownloaderService {
         }
         log.info(photoFiles.size() + " photos downloaded.");
 
-        createUdfFile(photoFiles);
+        if (enableUdf) createUdfFile(photoFiles);
     }
 
     public List<Photo> fetchPhotosReadyForDownload() throws Exception {
