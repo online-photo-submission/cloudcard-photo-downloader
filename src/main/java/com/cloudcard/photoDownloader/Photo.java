@@ -1,7 +1,13 @@
 package com.cloudcard.photoDownloader;
 
 import com.fasterxml.jackson.annotation.*;
+import com.mashape.unirest.http.HttpResponse;
+import com.mashape.unirest.http.Unirest;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
+import java.io.IOException;
+import java.io.InputStream;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -9,6 +15,8 @@ import java.util.Map;
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @JsonPropertyOrder({"aspectRatio", "classifications", "domainClass", "id", "isAspectRatioCorrect", "links", "lowestClassification", "originalPhoto", "person", "publicKey", "status"})
 public class Photo {
+
+    private static final Logger log = LoggerFactory.getLogger(Photo.class);
 
     @JsonProperty("aspectRatio")
     private Double aspectRatio;
@@ -170,12 +178,15 @@ public class Photo {
 
     public byte[] getBytes() {
 
+        if (bytes == null) {
+            try {
+                fetchBytes();
+            } catch (Exception e) {
+                log.error(e.getMessage());
+                e.printStackTrace();
+            }
+        }
         return bytes;
-    }
-
-    public void setBytes(byte[] bytes) {
-
-        this.bytes = bytes;
     }
 
     @JsonAnyGetter
@@ -188,6 +199,27 @@ public class Photo {
     public void setAdditionalProperty(String name, Object value) {
 
         this.additionalProperties.put(name, value);
+    }
+
+    private void fetchBytes() throws Exception {
+
+        String bytesURL = links.getBytes();
+        HttpResponse<String> response = Unirest.get(bytesURL).header("accept", "image/jpeg;charset=utf-8").header("Content-Type", "image/jpeg;charset=utf-8").asString();
+
+        if (response.getStatus() != 200) {
+            log.error("Status " + response.getStatus() + "returned from CloudCard API when retrieving photos bytes.");
+            return;
+        }
+
+        bytes = getBytes(response);
+    }
+
+    private byte[] getBytes(HttpResponse<String> response) throws IOException {
+
+        InputStream rawBody = response.getRawBody();
+        byte[] bytes = new byte[ rawBody.available() ];
+        rawBody.read(bytes);
+        return bytes;
     }
 
 }
