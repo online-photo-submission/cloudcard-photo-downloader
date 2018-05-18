@@ -2,7 +2,6 @@ package com.cloudcard.photoDownloader;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 
 import java.io.File;
@@ -43,9 +42,6 @@ public class FileStorageService implements StorageService {
     @Value("${downloader.createdDateFormat}")
     private String createdDateFormat;
 
-    @Autowired
-    CloudCardPhotoService cloudCardPhotoService;
-
     @Override
     public List<PhotoFile> save(Collection<Photo> photos) throws Exception {
 
@@ -64,12 +60,14 @@ public class FileStorageService implements StorageService {
         String studentID = photo.getPerson().getIdentifier();
 
         if (studentID == null || studentID.isEmpty()) {
-            log.error(photo.getPerson().getEmail() + " is missing an ID number, so photo " + photo.getId() + " cannot be downloaded.");
+            log.error(photo.getPerson().getEmail() + " is missing an ID number, so photo " + photo.getId() + " cannot be saved.");
             return null;
         }
 
-        cloudCardPhotoService.fetchBytes(photo);
-        if (photo.getBytes() == null) return null;
+        if (photo.getBytes() == null) {
+            log.error("Photo " + photo.getId() + " for " + photo.getPerson().getEmail() + " is missing binary data, so it cannot be saved.");
+            return null;
+        }
 
         String fileName = photoDirectory + slash + studentID + ".jpg";
         writeBytesToFile(fileName, photo.getBytes());

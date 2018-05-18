@@ -49,6 +49,11 @@ public class CloudCardPhotoService {
 
     public List<Photo> fetch(String status) throws Exception {
 
+        return fetch(status, true);
+    }
+
+    public List<Photo> fetch(String status, boolean fetchBytes) throws Exception {
+
         HttpResponse<String> response = Unirest.get(apiUrl + "/photos?status=" + status).header("accept", "application/json").header("X-Auth-Token", accessToken).header("Content-Type", "application/json").asString();
 
         if (response.getStatus() != 200) {
@@ -56,12 +61,19 @@ public class CloudCardPhotoService {
             return null;
         }
 
-        return new ObjectMapper().readValue(response.getBody(), new TypeReference<List<Photo>>() {
+        List<Photo> photos = new ObjectMapper().readValue(response.getBody(), new TypeReference<List<Photo>>() {
         });
+
+        if (fetchBytes) {
+            for (Photo photo : photos) {
+                fetchBytes(photo);
+            }
+        }
+        return photos;
     }
 
 
-    public void fetchBytes(Photo photo) throws Exception {
+    private void fetchBytes(Photo photo) throws Exception {
 
         String bytesURL = photo.getLinks().getBytes();
         HttpResponse<String> response = Unirest.get(bytesURL).header("accept", "image/jpeg;charset=utf-8").header("Content-Type", "image/jpeg;charset=utf-8").asString();
