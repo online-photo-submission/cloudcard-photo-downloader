@@ -44,6 +44,15 @@ public class Photo {
     @JsonIgnore
     private Map<String, Object> additionalProperties = new HashMap<String, Object>();
 
+    public Photo() {
+
+    }
+
+    public Photo(Integer id) {
+
+        this.id = id;
+    }
+
     @JsonProperty("aspectRatio")
     public Double getAspectRatio() {
 

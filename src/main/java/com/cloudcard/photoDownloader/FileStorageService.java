@@ -71,7 +71,7 @@ public class FileStorageService implements StorageService {
 
         String fileName = photoDirectory + slash + studentID + ".jpg";
         writeBytesToFile(fileName, photo.getBytes());
-        return new PhotoFile(studentID, fileName);
+        return new PhotoFile(studentID, fileName, photo.getId());
     }
 
     private void writeBytesToFile(String fileName, byte[] bytes) throws IOException {

@@ -23,7 +23,11 @@ public class DownloaderService {
     public void downloadPhotos() throws Exception {
 
         log.info("Downloading photos...");
-        List<PhotoFile> photoFiles = storageService.save(cloudCardPhotoService.fetchReadyForDownload());
-        log.info("Completed downloading " + photoFiles.size() + " photos.");
+        List<PhotoFile> downloadedPhotos = storageService.save(cloudCardPhotoService.fetchReadyForDownload());
+        for (PhotoFile photo : downloadedPhotos) {
+            cloudCardPhotoService.markAsDownloaded(new Photo(photo.getPhotoId()));
+        }
+
+        log.info("Completed downloading " + downloadedPhotos.size() + " photos.");
     }
 }

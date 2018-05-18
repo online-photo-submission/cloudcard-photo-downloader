@@ -4,23 +4,20 @@ import java.util.Objects;
 
 public class PhotoFile {
 
-    private String idNumber;
+    private String studentId;
     private String fileName;
+    private Integer photoId;
 
-    public PhotoFile(String idNumber, String fileName) {
+    public PhotoFile(String studentId, String fileName, Integer photoId) {
 
-        this.idNumber = idNumber;
+        this.studentId = studentId;
         this.fileName = fileName;
+        this.photoId = photoId;
     }
 
-    public String getIdNumber() {
+    public String getStudentId() {
 
-        return idNumber;
-    }
-
-    public void setIdNumber(String idNumber) {
-
-        this.idNumber = idNumber;
+        return studentId;
     }
 
     public String getFileName() {
@@ -28,9 +25,9 @@ public class PhotoFile {
         return fileName;
     }
 
-    public void setFileName(String fileName) {
+    public Integer getPhotoId() {
 
-        this.fileName = fileName;
+        return photoId;
     }
 
     @Override
@@ -39,18 +36,18 @@ public class PhotoFile {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
         PhotoFile photoFile = (PhotoFile) o;
-        return Objects.equals(idNumber, photoFile.idNumber) && Objects.equals(fileName, photoFile.fileName);
+        return Objects.equals(studentId, photoFile.studentId) && Objects.equals(fileName, photoFile.fileName);
     }
 
     @Override
     public int hashCode() {
 
-        return Objects.hash(idNumber, fileName);
+        return Objects.hash(studentId, fileName);
     }
 
     @Override
     public String toString() {
 
-        return "PhotoFile{" + "idNumber='" + idNumber + '\'' + ", fileName='" + fileName + '\'' + '}';
+        return "PhotoFile{" + "studentId='" + studentId + '\'' + ", fileName='" + fileName + '\'' + ", photoId=" + photoId + '}';
     }
 }

@@ -70,8 +70,6 @@ public class CloudCardPhotoService {
 
         HttpResponse<String> response = Unirest.put(apiUrl + "/photos/" + photo.getId()).header("accept", "application/json").header("X-Auth-Token", accessToken).header("Content-Type", "application/json").body("{ \"status\": \"" + status + "\" }").asString();
 
-        log.error("\n\n" + response.getBody() + "\n\n");
-
         if (response.getStatus() != 200) {
             log.error("Status " + response.getStatus() + " returned from CloudCard API when updating photo.");
             return null;
