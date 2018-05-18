@@ -4,14 +4,14 @@ import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.mashape.unirest.http.HttpResponse;
 import com.mashape.unirest.http.Unirest;
-import com.mashape.unirest.http.exceptions.UnirestException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
-import java.io.IOException;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 @Service
 public class CloudCardPhotoService {
@@ -48,9 +48,9 @@ public class CloudCardPhotoService {
         return fetch(READY_FOR_DOWNLOAD);
     }
 
-    public List<Photo> fetch(String status) throws UnirestException, IOException {
+    public List<Photo> fetch(String status) throws Exception {
 
-        HttpResponse<String> response = Unirest.get(apiUrl + "/photos?status=" + status).header("accept", "application/json").header("X-Auth-Token", accessToken).header("Content-Type", "application/json").asString();
+        HttpResponse<String> response = Unirest.get(apiUrl + "/photos?status=" + status).headers(standardHeaders()).asString();
 
         if (response.getStatus() != 200) {
             log.error("Status " + response.getStatus() + " returned from CloudCard API when retrieving photo list to download.");
@@ -61,14 +61,14 @@ public class CloudCardPhotoService {
         });
     }
 
-    public Photo markAsDownloaded(Photo photo) throws UnirestException, IOException {
+    public Photo markAsDownloaded(Photo photo) throws Exception {
 
         return updateStatus(photo, DOWNLOADED);
     }
 
-    public Photo updateStatus(Photo photo, String status) throws IOException, UnirestException {
+    public Photo updateStatus(Photo photo, String status) throws Exception {
 
-        HttpResponse<String> response = Unirest.put(apiUrl + "/photos/" + photo.getId()).header("accept", "application/json").header("X-Auth-Token", accessToken).header("Content-Type", "application/json").body("{ \"status\": \"" + status + "\" }").asString();
+        HttpResponse<String> response = Unirest.put(apiUrl + "/photos/" + photo.getId()).headers(standardHeaders()).body("{ \"status\": \"" + status + "\" }").asString();
 
         if (response.getStatus() != 200) {
             log.error("Status " + response.getStatus() + " returned from CloudCard API when updating photo.");
@@ -78,4 +78,14 @@ public class CloudCardPhotoService {
         return new ObjectMapper().readValue(response.getBody(), new TypeReference<Photo>() {
         });
     }
+
+    private Map<String, String> standardHeaders() {
+
+        Map<String, String> headers = new HashMap<>();
+        headers.put("accept", "application/json");
+        headers.put("Content-Type", "application/json");
+        headers.put("X-Auth-Token", accessToken);
+        return headers;
+    }
+
 }

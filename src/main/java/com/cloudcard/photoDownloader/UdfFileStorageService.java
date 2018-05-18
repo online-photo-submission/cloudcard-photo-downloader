@@ -57,6 +57,8 @@ public class UdfFileStorageService extends FileStorageService implements Storage
 
     private void createUdfFile(List<PhotoFile> photoFiles) throws IOException {
 
+        if (photoFiles == null || photoFiles.isEmpty()) return;
+
         List<String> lines = new ArrayList<>();
         String blankLine = "!";
 

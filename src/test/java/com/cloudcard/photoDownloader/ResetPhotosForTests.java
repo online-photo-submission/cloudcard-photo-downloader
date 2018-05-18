@@ -1,10 +1,7 @@
 package com.cloudcard.photoDownloader;
 
-import com.mashape.unirest.http.exceptions.UnirestException;
 import org.junit.Before;
 import org.junit.Test;
-
-import java.io.IOException;
 
 import static com.cloudcard.photoDownloader.CloudCardPhotoService.APPROVED;
 import static com.cloudcard.photoDownloader.CloudCardPhotoService.READY_FOR_DOWNLOAD;
@@ -24,7 +21,7 @@ public class ResetPhotosForTests {
     }
 
     @Test
-    public void resetPhotos() throws IOException, UnirestException {
+    public void resetPhotos() throws Exception {
 
         service.updateStatus(new Photo(107307), READY_FOR_DOWNLOAD);
         service.updateStatus(new Photo(107311), READY_FOR_DOWNLOAD);
