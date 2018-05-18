@@ -24,17 +24,28 @@ public class CloudCardPhotoService {
     @Value("${cloudcard.api.accessToken}")
     private String accessToken;
 
-    public List<Photo> fetchApprovedPhotos() throws Exception {
+    public CloudCardPhotoService() {
 
-        return fetchPhotos(APPROVED);
     }
 
-    public List<Photo> fetchPhotosReadyForDownload() throws Exception {
+    public CloudCardPhotoService(String apiUrl, String accessToken) {
 
-        return fetchPhotos(READY_FOR_DOWNLOAD);
+        this.apiUrl = apiUrl;
+        this.accessToken = accessToken;
     }
 
-    public List<Photo> fetchPhotos(String status) throws Exception {
+
+    public List<Photo> fetchApproved() throws Exception {
+
+        return fetch(APPROVED);
+    }
+
+    public List<Photo> fetchReadyForDownload() throws Exception {
+
+        return fetch(READY_FOR_DOWNLOAD);
+    }
+
+    public List<Photo> fetch(String status) throws Exception {
 
         HttpResponse<String> response = Unirest.get(apiUrl + "/photos?status=" + status).header("accept", "application/json").header("X-Auth-Token", accessToken).header("Content-Type", "application/json").asString();
 
