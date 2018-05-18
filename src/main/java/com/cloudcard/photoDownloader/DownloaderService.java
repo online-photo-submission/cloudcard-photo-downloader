@@ -56,7 +56,7 @@ public class DownloaderService {
         log.info("Downloading photos");
 
         List<PhotoFile> photoFiles = new ArrayList<>();
-        for (Photo photo : cloudCardPhotoService.fetchApprovedPhotos()) {
+        for (Photo photo : cloudCardPhotoService.fetchPhotosReadyForDownload()) {
             log.info("Downloading: " + photo.getPublicKey());
             PhotoFile photoFile = downloadPhotoFiles(photo);
             if (photoFile != null) photoFiles.add(photoFile);
