@@ -6,6 +6,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 
+import java.util.List;
+
 @Service
 public class DownloaderService {
 
@@ -20,8 +22,8 @@ public class DownloaderService {
     @Scheduled(fixedDelayString = "${downloader.delay.milliseconds}")
     public void downloadPhotos() throws Exception {
 
-        log.info("Downloading photos");
-        storageService.save(cloudCardPhotoService.fetchReadyForDownload());
-        log.info("Done downloading photos");
+        log.info("Downloading photos...");
+        List<PhotoFile> photoFiles = storageService.save(cloudCardPhotoService.fetchReadyForDownload());
+        log.info("Completed downloading " + photoFiles.size() + " photos.");
     }
 }

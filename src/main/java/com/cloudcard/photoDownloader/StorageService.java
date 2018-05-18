@@ -1,8 +1,9 @@
 package com.cloudcard.photoDownloader;
 
 import java.util.Collection;
+import java.util.List;
 
 public interface StorageService {
 
-    void save(Collection<Photo> photos) throws Exception;
+    List<PhotoFile> save(Collection<Photo> photos) throws Exception;
 }
