@@ -1,11 +1,10 @@
 package com.cloudcard.photoDownloader;
 
-import com.fasterxml.jackson.core.type.TypeReference;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.mashape.unirest.http.HttpResponse;
 import com.mashape.unirest.http.Unirest;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
@@ -20,12 +19,6 @@ import java.util.List;
 public class DownloaderService {
 
     private static final Logger log = LoggerFactory.getLogger(DownloaderService.class);
-
-    @Value("${cloudcard.api.url}")
-    private String apiUrl;
-
-    @Value("${cloudcard.api.accessToken}")
-    private String accessToken;
 
     @Value("${downloader.photoDirectory}")
     String photoDirectory;
@@ -54,13 +47,16 @@ public class DownloaderService {
     @Value("${downloader.enableUdf}")
     private boolean enableUdf;
 
+    @Autowired
+    CloudCardPhotoService cloudCardPhotoService;
+
     @Scheduled(fixedDelayString = "${downloader.delay.milliseconds}")
     public void downloadPhotos() throws Exception {
 
         log.info("Downloading photos");
 
         List<PhotoFile> photoFiles = new ArrayList<>();
-        for (Photo photo : fetchPhotosReadyForDownload()) {
+        for (Photo photo : cloudCardPhotoService.fetchApprovedPhotos()) {
             log.info("Downloading: " + photo.getPublicKey());
             PhotoFile photoFile = downloadPhotoFiles(photo);
             if (photoFile != null) photoFiles.add(photoFile);
@@ -68,19 +64,6 @@ public class DownloaderService {
         log.info(photoFiles.size() + " photos downloaded.");
 
         if (enableUdf) createUdfFile(photoFiles);
-    }
-
-    public List<Photo> fetchPhotosReadyForDownload() throws Exception {
-
-        HttpResponse<String> response = Unirest.get(apiUrl + "/photos?status=READY_FOR_DOWNLOAD").header("accept", "application/json").header("X-Auth-Token", accessToken).header("Content-Type", "application/json").asString();
-
-        if (response.getStatus() != 200) {
-            log.error("Status " + response.getStatus() + "returned from CloudCard API when retrieving photo list to download.");
-            return null;
-        }
-
-        return new ObjectMapper().readValue(response.getBody(), new TypeReference<List<Photo>>() {
-        });
     }
 
     public PhotoFile downloadPhotoFiles(Photo photo) throws Exception {
