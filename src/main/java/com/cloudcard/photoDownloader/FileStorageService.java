@@ -1,15 +1,13 @@
 package com.cloudcard.photoDownloader;
 
-import com.mashape.unirest.http.HttpResponse;
-import com.mashape.unirest.http.Unirest;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
-import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
@@ -45,6 +43,9 @@ public class FileStorageService implements StorageService {
     @Value("${downloader.createdDateFormat}")
     private String createdDateFormat;
 
+    @Autowired
+    CloudCardPhotoService cloudCardPhotoService;
+
     @Override
     public List<PhotoFile> save(Collection<Photo> photos) throws Exception {
 
@@ -60,7 +61,6 @@ public class FileStorageService implements StorageService {
 
     protected PhotoFile save(Photo photo) throws Exception {
 
-        String bytesURL = photo.getLinks().getBytes();
         String studentID = photo.getPerson().getIdentifier();
 
         if (studentID == null || studentID.isEmpty()) {
@@ -68,15 +68,11 @@ public class FileStorageService implements StorageService {
             return null;
         }
 
-        HttpResponse<String> response = Unirest.get(bytesURL).header("accept", "image/jpeg;charset=utf-8").header("Content-Type", "image/jpeg;charset=utf-8").asString();
-
-        if (response.getStatus() != 200) {
-            log.error("Status " + response.getStatus() + "returned from CloudCard API when retrieving photos bytes.");
-            return null;
-        }
+        cloudCardPhotoService.fetchBytes(photo);
+        if (photo.getBytes() == null) return null;
 
         String fileName = photoDirectory + slash + studentID + ".jpg";
-        writeBytesToFile(fileName, getBytes(response));
+        writeBytesToFile(fileName, photo.getBytes());
         return new PhotoFile(studentID, fileName);
     }
 
@@ -92,15 +88,6 @@ public class FileStorageService implements StorageService {
         outputStream.write(bytes);
         outputStream.flush();
         outputStream.close();
-    }
-
-
-    private byte[] getBytes(HttpResponse<String> response) throws IOException {
-
-        InputStream rawBody = response.getRawBody();
-        byte[] bytes = new byte[ rawBody.available() ];
-        rawBody.read(bytes);
-        return bytes;
     }
 
 }

@@ -9,6 +9,8 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
+import java.io.IOException;
+import java.io.InputStream;
 import java.util.List;
 
 @Service
@@ -56,6 +58,28 @@ public class CloudCardPhotoService {
 
         return new ObjectMapper().readValue(response.getBody(), new TypeReference<List<Photo>>() {
         });
+    }
+
+
+    public void fetchBytes(Photo photo) throws Exception {
+
+        String bytesURL = photo.getLinks().getBytes();
+        HttpResponse<String> response = Unirest.get(bytesURL).header("accept", "image/jpeg;charset=utf-8").header("Content-Type", "image/jpeg;charset=utf-8").asString();
+
+        if (response.getStatus() != 200) {
+            log.error("Status " + response.getStatus() + "returned from CloudCard API when retrieving photos bytes.");
+            return;
+        }
+
+        photo.setBytes(getBytes(response));
+    }
+
+    private byte[] getBytes(HttpResponse<String> response) throws IOException {
+
+        InputStream rawBody = response.getRawBody();
+        byte[] bytes = new byte[ rawBody.available() ];
+        rawBody.read(bytes);
+        return bytes;
     }
 
 }

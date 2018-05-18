@@ -32,6 +32,7 @@ public class Photo {
     private String publicKey;
     @JsonProperty("status")
     private String status;
+    private byte[] bytes;
     @JsonIgnore
     private Map<String, Object> additionalProperties = new HashMap<String, Object>();
 
@@ -165,6 +166,16 @@ public class Photo {
     public void setStatus(String status) {
 
         this.status = status;
+    }
+
+    public byte[] getBytes() {
+
+        return bytes;
+    }
+
+    public void setBytes(byte[] bytes) {
+
+        this.bytes = bytes;
     }
 
     @JsonAnyGetter
