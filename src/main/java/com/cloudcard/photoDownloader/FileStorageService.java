@@ -21,27 +21,6 @@ public class FileStorageService implements StorageService {
     @Value("${downloader.slash}")
     private String slash;
 
-    @Value("${downloader.enableUdf}")
-    private boolean enableUdf;
-
-    @Value("${downloader.udfDirectory}")
-    String udfDirectory;
-
-    @Value("${downloader.udfFilePrefix}")
-    private String udfFilePrefix;
-
-    @Value("${downloader.udfFileExtension}")
-    private String udfFileExtension;
-
-    @Value("${downloader.descriptionDateFormat}")
-    private String descriptionDateFormat;
-
-    @Value("${downloader.batchIdDateFormat}")
-    private String batchIdDateFormat;
-
-    @Value("${downloader.createdDateFormat}")
-    private String createdDateFormat;
-
     @Override
     public List<PhotoFile> save(Collection<Photo> photos) throws Exception {
 
@@ -69,14 +48,22 @@ public class FileStorageService implements StorageService {
             return null;
         }
 
-        String fileName = photoDirectory + slash + studentID + ".jpg";
-        writeBytesToFile(fileName, photo.getBytes());
+        String fileName = writeBytesToFile(photoDirectory, studentID + ".jpg", photo.getBytes());
         return new PhotoFile(studentID, fileName, photo.getId());
     }
 
-    private void writeBytesToFile(String fileName, byte[] bytes) throws IOException {
+    private String writeBytesToFile(String directoryName, String fileName, byte[] bytes) throws IOException {
 
-        File file = new File(fileName);
+        File directory = new File(directoryName);
+        if (!directory.exists()) {
+            directory.mkdirs();
+        }
+
+        File file = new File(directoryName + "/" + fileName);
+
+        if (file.getName() != directoryName + "/" + fileName) {
+            log.error("wrong file name.\n" + file.getName());
+        }
 
         FileOutputStream outputStream = new FileOutputStream(file);
 
@@ -86,6 +73,8 @@ public class FileStorageService implements StorageService {
         outputStream.write(bytes);
         outputStream.flush();
         outputStream.close();
+
+        return file.getName();
     }
 
 }

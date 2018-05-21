@@ -18,9 +18,6 @@ public class UdfFileStorageService extends FileStorageService implements Storage
 
     private static final Logger log = LoggerFactory.getLogger(UdfFileStorageService.class);
 
-    @Value("${downloader.photoDirectory}")
-    String photoDirectory;
-
     @Value("${downloader.slash}")
     private String slash;
 
