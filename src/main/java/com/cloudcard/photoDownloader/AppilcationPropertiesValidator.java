@@ -24,9 +24,6 @@ public class AppilcationPropertiesValidator {
     @Value("${downloader.photoDirectory}")
     String photoDirectory;
 
-    @Value("${downloader.slash}")
-    private String slash;
-
     @Value("${downloader.enableUdf}")
     private Boolean enableUdf;
 
@@ -54,7 +51,6 @@ public class AppilcationPropertiesValidator {
         throwIfBlank(apiUrl, "The CloudCard API URL must be specified.");
         throwIfBlank(accessToken, "The CloudCard API access token must be specified.");
         throwIfBlank(photoDirectory, "The Photo Directory must be specified.");
-        throwIfTrue(!"\\".equals(slash) && !"/".equals(slash), "The 'downloader.slash' setting must be either '\\' or '/'.");
 
         if (enableUdf) {
             throwIfBlank(udfDirectory, "The UDF Directory must be specified.");

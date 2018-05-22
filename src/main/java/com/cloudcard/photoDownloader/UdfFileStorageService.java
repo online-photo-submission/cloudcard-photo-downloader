@@ -5,6 +5,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
+import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.text.SimpleDateFormat;
@@ -17,9 +18,6 @@ import java.util.List;
 public class UdfFileStorageService extends FileStorageService implements StorageService {
 
     private static final Logger log = LoggerFactory.getLogger(UdfFileStorageService.class);
-
-    @Value("${downloader.slash}")
-    private String slash;
 
     @Value("${downloader.enableUdf}")
     private boolean enableUdf;
@@ -132,7 +130,7 @@ public class UdfFileStorageService extends FileStorageService implements Storage
     private void writeUdfFile(List<String> lines) throws IOException {
 
         log.info("Writing the UDF file...");
-        String fileName = udfDirectory + slash + udfFilePrefix + new SimpleDateFormat(batchIdDateFormat).format(new Date()) + udfFileExtension;
+        String fileName = udfDirectory + File.separator + udfFilePrefix + new SimpleDateFormat(batchIdDateFormat).format(new Date()) + udfFileExtension;
         FileWriter writer = new FileWriter(fileName);
         for (String line : lines) {
             log.info(line);

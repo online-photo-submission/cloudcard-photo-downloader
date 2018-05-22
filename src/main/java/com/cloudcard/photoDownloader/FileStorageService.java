@@ -18,9 +18,6 @@ public class FileStorageService implements StorageService {
     @Value("${downloader.photoDirectory}")
     String photoDirectory;
 
-    @Value("${downloader.slash}")
-    private String slash;
-
     @Override
     public List<PhotoFile> save(Collection<Photo> photos) throws Exception {
 
@@ -59,11 +56,7 @@ public class FileStorageService implements StorageService {
             directory.mkdirs();
         }
 
-        File file = new File(directoryName + "/" + fileName);
-
-        if (file.getName() != directoryName + "/" + fileName) {
-            log.error("wrong file name.\n" + file.getName());
-        }
+        File file = new File(directoryName + File.separator + fileName);
 
         FileOutputStream outputStream = new FileOutputStream(file);
 
