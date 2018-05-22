@@ -9,9 +9,11 @@ This project automatically downloads photos from [CloudCard Online Photo Submiss
 1. Configure `application.properties`
 1. Run `java -jar cloudcard-photo-downloader.jar`
 
-## Configuring `application.properties`
+## Configuration
 
-`application.properties` is the main configuration file for the exporter.  Below are descriptions of each option:
+`application.properties` is the main configuration file and should be saved in the same directory as the downloader.  You configure the settings using environment variables, JVM variables, etc.  See the [Spring Boot Documentation](https://docs.spring.io/spring-boot/docs/current/reference/html/boot-features-external-config.html) for more information.
+
+Below are descriptions of each option:
 
 - cloudcard.api.url  
   - default: `https://api.onlinephotosubmission.com/api`
