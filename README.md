@@ -27,8 +27,6 @@ This project automatically downloads photos from [CloudCard Online Photo Submiss
   - description: this is the absolute path to the directory into which the photos will be saved
 - downloader.udfDirectory
   - default: 
-# Use '/' for linux. Use '\' for windows
-downloader.slash=/
 # The first part of the UDF filename
 downloader.udfFilePrefix=CloudCard_Photos_
 # The extension to use for the UDF filename
