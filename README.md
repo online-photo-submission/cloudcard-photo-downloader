@@ -27,15 +27,21 @@ This project automatically downloads photos from [CloudCard Online Photo Submiss
   - description: this is the absolute path to the directory into which the photos will be saved
 - downloader.udfDirectory
   - default: 
-# The first part of the UDF filename
-downloader.udfFilePrefix=CloudCard_Photos_
-# The extension to use for the UDF filename
-downloader.udfFileExtension=.udf
-# The format of the date in the UDF description
-downloader.descriptionDateFormat=MMM dd 'at' HHmm
-# The format of the date in the UDF batch ID field and in the filename suffix
-downloader.batchIdDateFormat=YYYYMMddHHmm
-# The format of the date in the UDF Created field
-downloader.createdDateFormat=YYYY-MM-dd
-# Enable/Disable UDF file generation
-downloader.enableUdf=true
+- downloader.udfFilePrefix
+  - default: `CloudCard_Photos_`
+  - description: The first part of the UDF filename.  The UDF filename is constructed by concatonating the `udfFilePrefix`, a date formated accordning to `batchIdDateFormat`, and `udfFileExtension`.  Given the defaults the generated filename will look something like `CloudCard_Photos_201805221648.udf`
+- downloader.udfFileExtension
+  - default: `.udf`
+  - description: The extension to use for the UDF filename (see the description for `downloader.udfFilePrefix`)
+- downloader.descriptionDateFormat
+  - default: `MMM dd 'at' HHmm`
+  - description: The format of the date in the UDF description (i.e. `!Description: Photo Import May 22 at 1541`)
+- downloader.batchIdDateFormat
+  - default: `YYYYMMddHHmm`
+  - description: The format of the date in the UDF batch ID field (i.e. `!BatchID: 201805221541`) and in the filename suffix (see the description for `downloader.udfFilePrefix`) 
+- downloader.createdDateFormat
+  - default: `YYYY-MM-dd`
+  - description: The format of the date in the UDF Created field (i.e. `!Created: 2018-05-22`)
+- downloader.enableUdf
+  - default: `true`
+  - description: Enable/Disable UDF file generation
