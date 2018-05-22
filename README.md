@@ -47,3 +47,6 @@ Below are descriptions of each option:
 - downloader.enableUdf
   - default: `true`
   - description: Enable/Disable UDF file generation
+## Support and Warranty
+THIS PROJECT IS DISTRIBUTED WITH NO WARRANTY.  SEE THE LICENSE FOR FULL DETAILS.
+If your organization needs fully warranteed CloudCard integration software, consider Cloud Photo Connect from [Vision Database Systems](http://www.visiondatabase.com/).
