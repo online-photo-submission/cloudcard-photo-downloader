@@ -5,6 +5,8 @@ This project automatically downloads photos from [CloudCard Online Photo Submiss
 ## Video Tutorial
 https://youtu.be/0KcCnMOf1jA
 
+<iframe width="560" height="315" src="https://www.youtube.com/embed/0KcCnMOf1jA" frameborder="0" allow="autoplay; encrypted-media" allowfullscreen></iframe>
+
 ## Requirements
 
 - Java 1.8 (to run from the Jar file)
