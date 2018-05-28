@@ -2,6 +2,11 @@
 
 This project automatically downloads photos from [CloudCard Online Photo Submission](http://onlinephotosubmission.com/).
 
+## Video Tutorial
+https://youtu.be/0KcCnMOf1jA
+
+[![Tutorial Video](https://img.youtube.com/vi/0KcCnMOf1jA/0.jpg)](https://www.youtube.com/watch?v=0KcCnMOf1jA)
+
 ## Requirements
 
 - Java 1.8 (to run from the Jar file)
@@ -10,7 +15,7 @@ This project automatically downloads photos from [CloudCard Online Photo Submiss
 
 ## Usage
 
-1. Download the [jar file](https://github.com/online-photo-submission/cloudcard-photo-downloader/raw/master/cloudcard-photo-downloader-2018.05.22.1624.jar).
+1. Download the [jar file](https://github.com/online-photo-submission/cloudcard-photo-downloader/raw/master/cloudcard-photo-downloader.jar).
 1. Download [application.properties](https://raw.githubusercontent.com/online-photo-submission/cloudcard-photo-downloader/master/src/main/resources/application.properties) into the same directory
 1. Configure `application.properties`
 1. Run `java -jar cloudcard-photo-downloader.jar`
