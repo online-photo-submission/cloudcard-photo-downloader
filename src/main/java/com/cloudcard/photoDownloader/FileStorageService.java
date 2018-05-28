@@ -46,6 +46,7 @@ public class FileStorageService implements StorageService {
         }
 
         String fileName = writeBytesToFile(photoDirectory, studentID + ".jpg", photo.getBytes());
+
         return new PhotoFile(studentID, fileName, photo.getId());
     }
 
@@ -67,7 +68,7 @@ public class FileStorageService implements StorageService {
         outputStream.flush();
         outputStream.close();
 
-        return file.getName();
+        return file.getCanonicalPath();
     }
 
 }
