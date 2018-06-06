@@ -39,11 +39,26 @@ public class AppilcationPropertiesValidator {
     @Value("${downloader.descriptionDateFormat}")
     private String descriptionDateFormat;
 
-    @Value("${downloader.batchIdDateFormat}")
-    private String batchIdDateFormat;
+    @Value("${downloader.udfBatchIdDateFormat}")
+    private String udfBatchIdDateFormat;
 
     @Value("${downloader.createdDateFormat}")
     private String createdDateFormat;
+
+    @Value("${downloader.enableCsv}")
+    private boolean enableCsv;
+
+    @Value("${downloader.csvDirectory}")
+    String csvDirectory;
+
+    @Value("${downloader.csvFilePrefix}")
+    private String csvFilePrefix;
+
+    @Value("${downloader.csvFileExtension}")
+    private String csvFileExtension;
+
+    @Value("${downloader.csvBatchIdDateFormat}")
+    private String csvBatchIdDateFormat;
 
     public void validate() {
 
@@ -57,8 +72,13 @@ public class AppilcationPropertiesValidator {
             throwIfBlank(udfFilePrefix, "The UDF File Prefix must be specified.");
             throwIfBlank(udfFileExtension, "The UDF File Extension must be specified.");
             throwIfBlank(descriptionDateFormat, "The Description Date Format must be specified.");
-            throwIfBlank(batchIdDateFormat, "The Batch ID Date Format must be specified.");
+            throwIfBlank(udfBatchIdDateFormat, "The Batch ID Date Format must be specified.");
             throwIfBlank(createdDateFormat, "The Created Date Format must be specified.");
+
+            throwIfBlank(csvDirectory, "The CSV Directory must be specified.");
+            throwIfBlank(csvFilePrefix, "The CSV File Prefix must be specified.");
+            throwIfBlank(csvFileExtension, "The CSV File Extension must be specified.");
+            throwIfBlank(csvBatchIdDateFormat, "The Batch ID Date Format must be specified.");
         }
 
     }

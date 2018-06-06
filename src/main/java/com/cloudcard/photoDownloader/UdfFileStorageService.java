@@ -34,8 +34,8 @@ public class UdfFileStorageService extends FileStorageService implements Storage
     @Value("${downloader.descriptionDateFormat}")
     private String descriptionDateFormat;
 
-    @Value("${downloader.batchIdDateFormat}")
-    private String batchIdDateFormat;
+    @Value("${downloader.udfBatchIdDateFormat}")
+    private String udfBatchIdDateFormat;
 
     @Value("${downloader.createdDateFormat}")
     private String createdDateFormat;
@@ -71,7 +71,7 @@ public class UdfFileStorageService extends FileStorageService implements Storage
         List<String> header = new ArrayList<>();
         header.add("!Description: Photo Import " + new SimpleDateFormat(descriptionDateFormat).format(new Date()));
         header.add("!Source: CloudCard Online Photo Submission");
-        header.add("!BatchID: " + new SimpleDateFormat(batchIdDateFormat).format(new Date()));
+        header.add("!BatchID: " + new SimpleDateFormat(udfBatchIdDateFormat).format(new Date()));
         header.add("!Created: " + new SimpleDateFormat(createdDateFormat).format(new Date()));
         header.add("!Version:");
         header.add("!RecordCount: " + photoFiles.size());
@@ -130,7 +130,7 @@ public class UdfFileStorageService extends FileStorageService implements Storage
     private void writeUdfFile(List<String> lines) throws IOException {
 
         log.info("Writing the UDF file...");
-        String fileName = udfDirectory + File.separator + udfFilePrefix + new SimpleDateFormat(batchIdDateFormat).format(new Date()) + udfFileExtension;
+        String fileName = udfDirectory + File.separator + udfFilePrefix + new SimpleDateFormat(udfBatchIdDateFormat).format(new Date()) + udfFileExtension;
         FileWriter writer = new FileWriter(fileName);
         for (String line : lines) {
             log.info(line);
