@@ -16,7 +16,20 @@ public class FileStorageService implements StorageService {
     private static final Logger log = LoggerFactory.getLogger(FileStorageService.class);
 
     @Value("${downloader.photoDirectory}")
-    String photoDirectory;
+    private String photoDirectory;
+
+    @Value("${downloader.minPhotoIdLength}")
+    private Integer minPhotoIdLength;
+
+    public FileStorageService() {
+
+    }
+
+    public FileStorageService(String photoDirectory, Integer minPhotoIdLength) {
+
+        this.photoDirectory = photoDirectory;
+        this.minPhotoIdLength = minPhotoIdLength;
+    }
 
     @Override
     public List<PhotoFile> save(Collection<Photo> photos) throws Exception {
@@ -33,7 +46,7 @@ public class FileStorageService implements StorageService {
 
     protected PhotoFile save(Photo photo) throws Exception {
 
-        String studentID = photo.getPerson().getIdentifier();
+        String studentID = getStudentID(photo);
 
         if (studentID == null || studentID.isEmpty()) {
             log.error(photo.getPerson().getEmail() + " is missing an ID number, so photo " + photo.getId() + " cannot be saved.");
@@ -48,6 +61,13 @@ public class FileStorageService implements StorageService {
         String fileName = writeBytesToFile(photoDirectory, studentID + ".jpg", photo.getBytes());
 
         return new PhotoFile(studentID, fileName, photo.getId());
+    }
+
+    protected String getStudentID(Photo photo) {
+
+        String identifier = photo.getPerson().getIdentifier();
+        if (minPhotoIdLength < identifier.length()) return identifier;
+        return String.format("%" + minPhotoIdLength + "s", identifier).replace(' ', '0');
     }
 
     private String writeBytesToFile(String directoryName, String fileName, byte[] bytes) throws IOException {
