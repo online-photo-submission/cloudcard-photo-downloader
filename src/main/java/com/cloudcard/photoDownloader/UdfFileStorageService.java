@@ -85,8 +85,8 @@ public class UdfFileStorageService extends FileStorageService implements Storage
         int longestFilename = findLongestFilename(photoFiles);
 
         format.add("!BeginFormat");
-        format.add("!Odyssey_PCS,\t1,\t" + longestId + "\t\"IDNUMBER\"");
-        format.add("!Odyssey_PCS,\t" + (longestId + 1) + ",\t" + longestFilename + "\t\"PICTUREPATH\"");
+        format.add("!Odyssey_PCS,\t1,\t" + longestId + ",\t\"IDNUMBER\"");
+        format.add("!Odyssey_PCS,\t" + (longestId + 1) + ",\t" + longestFilename + ",\t\"PICTUREPATH\"");
         format.add("!EndFormat");
         return format;
     }
