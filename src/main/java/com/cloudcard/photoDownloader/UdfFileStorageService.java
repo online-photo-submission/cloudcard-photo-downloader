@@ -18,13 +18,10 @@ import java.util.List;
 public class UdfFileStorageService extends FileStorageService implements StorageService {
 
     private static final Logger log = LoggerFactory.getLogger(UdfFileStorageService.class);
-
-    @Value("${downloader.enableUdf}")
-    private boolean enableUdf;
-
     @Value("${downloader.udfDirectory}")
     String udfDirectory;
-
+    @Value("${downloader.enableUdf}")
+    private boolean enableUdf;
     @Value("${downloader.udfFilePrefix}")
     private String udfFilePrefix;
 
@@ -39,6 +36,11 @@ public class UdfFileStorageService extends FileStorageService implements Storage
 
     @Value("${downloader.createdDateFormat}")
     private String createdDateFormat;
+
+    private static String fixedLengthString(String string, int length) {
+
+        return String.format("%1$-" + length + "s", string);
+    }
 
     @Override
     public List<PhotoFile> save(Collection<Photo> photos) throws Exception {
@@ -85,8 +87,8 @@ public class UdfFileStorageService extends FileStorageService implements Storage
         int longestFilename = findLongestFilename(photoFiles);
 
         format.add("!BeginFormat");
-        format.add("!Odyssey_PCS,\t1,\t" + longestId + ",\t\"IDNUMBER\"");
-        format.add("!Odyssey_PCS,\t" + (longestId + 1) + ",\t" + longestFilename + ",\t\"PICTUREPATH\"");
+        format.add("!Odyssey_PCS,1," + longestId + ",\"IDNUMBER\"");
+        format.add("!Odyssey_PCS," + (longestId + 1) + "," + longestFilename + ",\"PICTUREPATH\"");
         format.add("!EndFormat");
         return format;
     }
@@ -120,11 +122,6 @@ public class UdfFileStorageService extends FileStorageService implements Storage
             longestId = Math.max(photoFile.getStudentId().length(), longestId);
         }
         return longestId;
-    }
-
-    private static String fixedLengthString(String string, int length) {
-
-        return String.format("%1$-" + length + "s", string);
     }
 
     private void writeUdfFile(List<String> lines) throws IOException {

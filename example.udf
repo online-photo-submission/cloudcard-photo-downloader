@@ -6,8 +6,8 @@
 !RecordCount: 1
 !
 !BeginFormat
-!Odyssey_PCS,   1,  9,  "IDNUMBER"
-!Odyssey_PCS,   10, 32, "PICTUREPATH"
+!Odyssey_PCS,1,9,"IDNUMBER"
+!Odyssey_PCS,10,32,"PICTUREPATH"
 !EndFormat
 !
 !BeginData
