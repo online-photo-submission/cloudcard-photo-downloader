@@ -75,8 +75,8 @@ public class UdfFileStorageService extends FileStorageService implements Storage
         header.add("!Source: CloudCard Online Photo Submission");
         header.add("!BatchID: " + new SimpleDateFormat(udfBatchIdDateFormat).format(new Date()));
         header.add("!Created: " + new SimpleDateFormat(createdDateFormat).format(new Date()));
-        header.add("!Version:");
         header.add("!RecordCount: " + photoFiles.size());
+        header.add("!Version:");
         return header;
     }
 
