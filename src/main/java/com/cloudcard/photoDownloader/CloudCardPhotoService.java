@@ -9,6 +9,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -54,7 +55,7 @@ public class CloudCardPhotoService {
 
         if (response.getStatus() != 200) {
             log.error("Status " + response.getStatus() + " returned from CloudCard API when retrieving photo list to download.");
-            return null;
+            return new ArrayList<>();
         }
 
         return new ObjectMapper().readValue(response.getBody(), new TypeReference<List<Photo>>() {
