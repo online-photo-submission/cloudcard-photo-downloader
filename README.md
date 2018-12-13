@@ -22,7 +22,7 @@ https://youtu.be/0KcCnMOf1jA
 
 ## Configuration
 
-`application.properties` is the main configuration file and should be saved in the same directory as the downloader.  You configure the settings using environment variables, JVM variables, etc.  See the [Spring Boot Documentation](https://docs.spring.io/spring-boot/docs/current/reference/html/boot-features-external-config.html) for more information.
+The simplest way to configure the application is by creating an `application.properties` file, which should be saved in the same directory as the downloader.  There are, however, many other strategies for configuring the application.  For example you may configure the settings using environment variables, JVM variables, etc.  See the [Spring Boot Documentation](https://docs.spring.io/spring-boot/docs/current/reference/html/boot-features-external-config.html) for more information on those options.
 
 Below are descriptions of each option:
 
