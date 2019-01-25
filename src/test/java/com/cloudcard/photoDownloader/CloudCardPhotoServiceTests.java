@@ -2,6 +2,7 @@ package com.cloudcard.photoDownloader;
 
 import org.junit.Before;
 import org.junit.Test;
+import org.springframework.test.util.ReflectionTestUtils;
 
 import java.util.List;
 
@@ -12,15 +13,19 @@ import static org.junit.Assume.assumeTrue;
 //@Ignore
 public class CloudCardPhotoServiceTests {
 
-    private static final String API_URL = "https://api.onlinephotosubmission.com/api";
-    private static final String ACCESS_TOKEN = "bom0m9qvfpkr42rv3odo41feilmvj740";
+    private String[] fetchStatuses = {"APPROVED", "READY_FOR_DOWNLOAD"};
 
     CloudCardPhotoService service;
 
     @Before
     public void setup() {
 
-        service = new CloudCardPhotoService(API_URL, ACCESS_TOKEN);
+        //        service = new CloudCardPhotoService(API_URL, ACCESS_TOKEN);
+        service = new CloudCardPhotoService();
+        ReflectionTestUtils.setField(service, "apiUrl", "https://api.onlinephotosubmission.com/api");
+        ReflectionTestUtils.setField(service, "accessToken", "bom0m9qvfpkr42rv3odo41feilmvj740");
+        ReflectionTestUtils.setField(service, "fetchStatuses", fetchStatuses);
+        ReflectionTestUtils.setField(service, "putStatus", "DOWNLOADED");
     }
 
     @Test
@@ -29,7 +34,7 @@ public class CloudCardPhotoServiceTests {
         List<Photo> photos = service.fetchReadyForDownload();
         assertThat(photos.size()).isGreaterThanOrEqualTo(0);
         for (Photo photo : photos) {
-            assertThat(photo.getStatus()).isEqualTo(READY_FOR_DOWNLOAD);
+            assertThat(fetchStatuses).contains(photo.getStatus());
         }
     }
 
