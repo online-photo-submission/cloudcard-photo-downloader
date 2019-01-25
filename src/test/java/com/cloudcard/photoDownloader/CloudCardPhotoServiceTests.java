@@ -1,6 +1,7 @@
 package com.cloudcard.photoDownloader;
 
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.springframework.test.util.ReflectionTestUtils;
 
@@ -10,7 +11,7 @@ import static com.cloudcard.photoDownloader.CloudCardPhotoService.*;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.Assume.assumeTrue;
 
-//@Ignore
+@Ignore
 public class CloudCardPhotoServiceTests {
 
     private String[] fetchStatuses = {"APPROVED", "READY_FOR_DOWNLOAD"};
@@ -20,7 +21,6 @@ public class CloudCardPhotoServiceTests {
     @Before
     public void setup() {
 
-        //        service = new CloudCardPhotoService(API_URL, ACCESS_TOKEN);
         service = new CloudCardPhotoService();
         ReflectionTestUtils.setField(service, "apiUrl", "https://api.onlinephotosubmission.com/api");
         ReflectionTestUtils.setField(service, "accessToken", "bom0m9qvfpkr42rv3odo41feilmvj740");
