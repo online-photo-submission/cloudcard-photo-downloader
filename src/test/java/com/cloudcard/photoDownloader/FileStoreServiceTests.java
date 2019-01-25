@@ -9,35 +9,47 @@ import static org.assertj.core.api.Assertions.assertThat;
 public class FileStoreServiceTests {
 
     FileStorageService fileStorageService;
+    private Person person;
+    private Photo photo;
 
     @Before
     public void setup() {
 
         fileStorageService = new FileStorageService("", 8);
+
+        person = new Person();
+        photo = new Photo();
+        photo.setPerson(person);
     }
 
     @Test
-    public void testGetIdentifier() {
+    public void getStudentID_should_pad_id_correctly() {
 
-        Person person = new Person();
-        person.setIdentifier("123");
-        Photo photo = new Photo();
-        photo.setPerson(person);
+        String identifier = "123";
 
-        ReflectionTestUtils.setField(fileStorageService, "minPhotoIdLength", 8);
+        testGetStudentId(identifier, 8, "00000123");
+        testGetStudentId(identifier, 10, "0000000123");
+        testGetStudentId(identifier, 0, identifier);
+        testGetStudentId(identifier, 2, identifier);
+    }
+
+    @Test
+    public void getStudentID_should_not_throw_NPE() {
+
+        testGetStudentId(null, 8, null);
+    }
+
+    @Test
+    public void getStudentID_should_not_pad_an_empty_id() {
+
+        testGetStudentId("", 8, "");
+    }
+
+    private void testGetStudentId(String identifier, int minPhotoIdLength, String expected) {
+
+        person.setIdentifier(identifier);
+        ReflectionTestUtils.setField(fileStorageService, "minPhotoIdLength", minPhotoIdLength);
         String result = ReflectionTestUtils.invokeMethod(fileStorageService, "getStudentID", photo);
-        assertThat(result).isEqualTo("00000123");
-
-        ReflectionTestUtils.setField(fileStorageService, "minPhotoIdLength", 10);
-        result = ReflectionTestUtils.invokeMethod(fileStorageService, "getStudentID", photo);
-        assertThat(result).isEqualTo("0000000123");
-
-        ReflectionTestUtils.setField(fileStorageService, "minPhotoIdLength", 0);
-        result = ReflectionTestUtils.invokeMethod(fileStorageService, "getStudentID", photo);
-        assertThat(result).isEqualTo("123");
-
-        ReflectionTestUtils.setField(fileStorageService, "minPhotoIdLength", 2);
-        result = ReflectionTestUtils.invokeMethod(fileStorageService, "getStudentID", photo);
-        assertThat(result).isEqualTo("123");
+        assertThat(result).isEqualTo(expected);
     }
 }
