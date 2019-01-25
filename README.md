@@ -35,9 +35,11 @@ Below are descriptions of each option:
   - description: this setting holds the API access token for your service account and must be set before the exporter to run. On a Unix/Linux based operating system, you can use `get-token.sh` to get your access token.
 - downloader.fetchStatuses
   - default: `READY_FOR_DOWNLOAD`
+  - allowed values: `PENDING`,`APPROVED`,`DENIED`,`READY_FOR_DOWNLOAD`,`DOWNLOADED`,`DISCARDED`,`DONE`
   - description: Photos with these statuses will be downloaded. Separate statuses with a comma.
 - downloader.putStatus
   - default: `DOWNLOADED`
+  - allowed values: `PENDING`,`APPROVED`,`DENIED`,`READY_FOR_DOWNLOAD`,`DOWNLOADED`,`DISCARDED`,`DONE`
   - description: Downloaded photos will be marked with this status in the CloudCard web application.
 
 #### General Settings
