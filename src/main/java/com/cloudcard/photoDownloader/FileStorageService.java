@@ -15,8 +15,8 @@ public class FileStorageService implements StorageService {
 
     private static final Logger log = LoggerFactory.getLogger(FileStorageService.class);
 
-    @Value("${downloader.photoDirectory}")
-    private String photoDirectory;
+    @Value("${downloader.photoDirectories}")
+    private String[] photoDirectories;
 
     @Value("${downloader.minPhotoIdLength}")
     private Integer minPhotoIdLength;
@@ -25,9 +25,9 @@ public class FileStorageService implements StorageService {
 
     }
 
-    public FileStorageService(String photoDirectory, Integer minPhotoIdLength) {
+    public FileStorageService(String[] photoDirectories, Integer minPhotoIdLength) {
 
-        this.photoDirectory = photoDirectory;
+        this.photoDirectories = photoDirectories;
         this.minPhotoIdLength = minPhotoIdLength;
     }
 
@@ -37,14 +37,16 @@ public class FileStorageService implements StorageService {
         List<PhotoFile> photoFiles = new ArrayList<>();
         for (Photo photo : photos) {
             log.info("Saving: " + photo.getPublicKey());
-            PhotoFile photoFile = save(photo);
-            if (photoFile != null) photoFiles.add(photoFile);
+            for (String photoDirectory : photoDirectories) {
+                PhotoFile photoFile = save(photo, photoDirectory);
+                if (photoFile != null) photoFiles.add(photoFile);
+            }
         }
 
         return photoFiles;
     }
 
-    protected PhotoFile save(Photo photo) throws Exception {
+    protected PhotoFile save(Photo photo, String photoDirectory) throws Exception {
 
         String studentID = getStudentID(photo);
 

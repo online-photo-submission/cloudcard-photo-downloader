@@ -46,9 +46,9 @@ Below are descriptions of each option:
 - downloader.delay.milliseconds
   - default: `600000` (Ten Minutes)
   - this is the amount of time the exporter will wait between exports
-- downloader.photoDirectory
+- downloader.photoDirectories
   - default: `.`
-  - description: this is the absolute path to the directory into which the photos will be saved
+  - description: this is the absolute path to the directory(ies) into which the photos will be saved. Separate multiple directories with commas.  If multiple directories are specified, a copy of each downloaded photo will be saved to each directory. 
   
 #### UDF Settings
 - downloader.udfDirectory

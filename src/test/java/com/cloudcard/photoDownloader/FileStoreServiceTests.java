@@ -15,7 +15,8 @@ public class FileStoreServiceTests {
     @Before
     public void setup() {
 
-        fileStorageService = new FileStorageService("", 8);
+        String[] photoDirectories = {""};
+        fileStorageService = new FileStorageService(photoDirectories, 8);
 
         person = new Person();
         photo = new Photo();
