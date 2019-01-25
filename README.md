@@ -58,6 +58,12 @@ Below are descriptions of each option:
 - downloader.enableUdf
   - default: `true`
   - description: Enable/Disable UDF file generation
+- downloader.fetchStatuses
+  - default: `READY_FOR_DOWNLOAD`
+  - description: Photos with these statuses will be downloaded. Separate statuses with a comma.
+- downloader.putStatus
+  - default: `DOWNLOADED`
+  - description: Downloaded photos will be marked with this status in the CloudCard web application.
 ## Support and Warranty
 THIS PROJECT IS DISTRIBUTED WITH NO WARRANTY.  SEE THE LICENSE FOR FULL DETAILS.
 If your organization needs fully warranteed CloudCard integration software, consider Cloud Photo Connect from [Vision Database Systems](http://www.visiondatabase.com/).
