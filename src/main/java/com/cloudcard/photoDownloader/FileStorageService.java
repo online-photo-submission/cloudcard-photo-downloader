@@ -66,7 +66,7 @@ public class FileStorageService implements StorageService {
     protected String getStudentID(Photo photo) {
 
         String identifier = photo.getPerson().getIdentifier();
-        if (minPhotoIdLength < identifier.length()) return identifier;
+        if (identifier == null || identifier.isEmpty() || minPhotoIdLength < identifier.length()) return identifier;
         return String.format("%" + minPhotoIdLength + "s", identifier).replace(' ', '0');
     }
 
