@@ -26,20 +26,31 @@ The simplest way to configure the application is by creating an `application.pro
 
 Below are descriptions of each option:
 
+#### API Settings
 - cloudcard.api.url  
   - default: `https://api.onlinephotosubmission.com/api`
   - description: This option allows you to specify the URL of your CloudCard Online Photo Submission API.  Most users will not need to change this setting.  Generally, this is only useful if you are testing the integration using the test intance `https://test-api.onlinephotosubmission.com/api`.
 - cloudcard.api.accessToken
   - default: none
   - description: this setting holds the API access token for your service account and must be set before the exporter to run. On a Unix/Linux based operating system, you can use `get-token.sh` to get your access token.
+- downloader.fetchStatuses
+  - default: `READY_FOR_DOWNLOAD`
+  - description: Photos with these statuses will be downloaded. Separate statuses with a comma.
+- downloader.putStatus
+  - default: `DOWNLOADED`
+  - description: Downloaded photos will be marked with this status in the CloudCard web application.
+
+#### General Settings
 - downloader.delay.milliseconds
   - default: `600000` (Ten Minutes)
   - this is the amount of time the exporter will wait between exports
 - downloader.photoDirectory
-  - default: none
+  - default: `.`
   - description: this is the absolute path to the directory into which the photos will be saved
+  
+#### UDF Settings
 - downloader.udfDirectory
-  - default: 
+  - default: `.`
 - downloader.udfFilePrefix
   - default: `CloudCard_Photos_`
   - description: The first part of the UDF filename.  The UDF filename is constructed by concatonating the `udfFilePrefix`, a date formated accordning to `batchIdDateFormat`, and `udfFileExtension`.  Given the defaults the generated filename will look something like `CloudCard_Photos_201805221648.udf`
@@ -58,12 +69,29 @@ Below are descriptions of each option:
 - downloader.enableUdf
   - default: `true`
   - description: Enable/Disable UDF file generation
-- downloader.fetchStatuses
-  - default: `READY_FOR_DOWNLOAD`
-  - description: Photos with these statuses will be downloaded. Separate statuses with a comma.
-- downloader.putStatus
-  - default: `DOWNLOADED`
-  - description: Downloaded photos will be marked with this status in the CloudCard web application.
+  
+#### CSV Settings - Coming Soon
+- downloader.csvDirectory
+  - **Ignore this setting**
+  - default: `.`
+  - absolute path to the CSV directory
+- downloader.csvFilePrefix
+  - **Ignore this setting**
+  - default: `CloudCard_Photos_`
+  - The first part of the CSV filename
+- downloader.csvFileExtension
+  - **Ignore this setting**
+  - default: `.csv`
+  - The extension to use for the CSV filename
+- downloader.csvBatchIdDateFormat
+  - **Ignore this setting**
+  - default: `YYYYMMddHHmm`
+  - The format of the date in the CSV batch ID field and in the filename suffix
+- downloader.enableCsv
+  - **Ignore this setting**
+  - default: `true`
+  - Enable/Disable CSV file generation
+
 ## Support and Warranty
 THIS PROJECT IS DISTRIBUTED WITH NO WARRANTY.  SEE THE LICENSE FOR FULL DETAILS.
 If your organization needs fully warranteed CloudCard integration software, consider Cloud Photo Connect from [Vision Database Systems](http://www.visiondatabase.com/).
