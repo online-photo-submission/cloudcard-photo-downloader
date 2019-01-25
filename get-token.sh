@@ -12,3 +12,4 @@ read -p "CloudCard Password: " password
 
 curl -s -X POST -H 'Content-Type: application/json' -d "{ \"username\": \"$username\", \"password\": \"$password\" }" "$api_url/login" | \
     python -c "import sys, json; print json.load(sys.stdin)['access_token']"
+

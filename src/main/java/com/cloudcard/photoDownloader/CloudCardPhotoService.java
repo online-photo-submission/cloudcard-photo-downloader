@@ -28,6 +28,12 @@ public class CloudCardPhotoService {
     @Value("${cloudcard.api.accessToken}")
     private String accessToken;
 
+    @Value("${downloader.putStatus:DOWNLOADED}")
+    private String putStatus;
+
+    @Value("${downloader.getPhotosOfStatus:READY_FOR_DOWNLOAD}")
+    private String[] getPhotosOfStatus;
+
     public CloudCardPhotoService() {
 
     }
@@ -46,7 +52,7 @@ public class CloudCardPhotoService {
 
     public List<Photo> fetchReadyForDownload() throws Exception {
 
-        return fetch(READY_FOR_DOWNLOAD);
+        return fetch(getPhotosOfStatus);
     }
 
     public List<Photo> fetch(String status) throws Exception {
@@ -62,9 +68,22 @@ public class CloudCardPhotoService {
         });
     }
 
+//    INFO: This is where I stopped.
+
+    public List<Photo> fetch(String[] statuses) throws Exception {
+        List<Photo> photoList = new ArrayList<>();
+
+        for (String status : statuses) {
+            List<Photo> photos = fetch(status);
+            photoList.addAll(photos);
+        }
+
+        return photoList;
+    }
+
     public Photo markAsDownloaded(Photo photo) throws Exception {
 
-        return updateStatus(photo, DOWNLOADED);
+        return updateStatus(photo, putStatus);
     }
 
     public Photo updateStatus(Photo photo, String status) throws Exception {
