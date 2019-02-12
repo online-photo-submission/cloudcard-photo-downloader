@@ -1,6 +1,7 @@
 package com.cloudcard.photoDownloader;
 
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.springframework.jdbc.datasource.DriverManagerDataSource;
 import java.util.ArrayList;
@@ -18,6 +19,7 @@ public class SimpleDatabaseStorageServiceTest {
     }
 
     @Test
+    @Ignore
     public void save_to_database() {
         DriverManagerDataSource dataSource = new DriverManagerDataSource();
         dataSource.setDriverClassName("com.mysql.jdbc.Driver");
