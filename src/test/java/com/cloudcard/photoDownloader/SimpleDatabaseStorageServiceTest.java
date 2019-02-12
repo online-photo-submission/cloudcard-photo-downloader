@@ -3,25 +3,18 @@ package com.cloudcard.photoDownloader;
 import org.junit.Before;
 import org.junit.Test;
 import org.springframework.jdbc.datasource.DriverManagerDataSource;
-
-import javax.sql.DataSource;
-
 import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collection;
 import java.util.List;
 
 import static org.junit.Assert.*;
 
-public class DatabaseStorageServiceTest {
+public class SimpleDatabaseStorageServiceTest {
 
-    DatabaseStorageService databaseStorageService;
-    CloudCardPhotoService cloudCardPhotoService;
+    DatabaseStorageService simpleDatabaseStorageService;
 
     @Before
     public void Setup() {
-        databaseStorageService = new DatabaseStorageService();
-        cloudCardPhotoService = new CloudCardPhotoService("https://api.onlinephotosubmission.com/api", "egn880in41skuqqnoc7a11rf9gg268at");
+        simpleDatabaseStorageService = new SimpleDatabaseStorageService();
     }
 
     @Test
@@ -41,7 +34,7 @@ public class DatabaseStorageServiceTest {
         photos.add(photo);
 
         try {
-            databaseStorageService.save(photos,dataSource);
+            simpleDatabaseStorageService.save(photos);
         }
         catch (Exception e) {
             e.printStackTrace();

@@ -1,30 +1,30 @@
 package com.cloudcard.photoDownloader;
 
-import org.springframework.jdbc.core.simple.SimpleJdbcInsert;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.jdbc.datasource.DriverManagerDataSource;
 
-import javax.sql.DataSource;
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import javax.annotation.PostConstruct;
 
-public class DatabaseStorageService implements StorageService{
+public abstract class DatabaseStorageService implements StorageService {
+    protected DriverManagerDataSource dataSource;
+    @Value("${db.datasource.driverClassName}")
+    String driverClassName;
+    @Value("${db.datasource.url}")
+    String url;
+    @Value("${db.datasource.username}")
+    String username;
+    @Value("${db.datasource.password}")
+    String password;
+    @Value("${db.datasource.schema:}")
+    String schemaName;
 
-    @Override
-    public List<PhotoFile> save(Collection<Photo> photos) throws Exception {
-        return null;
+    @PostConstruct
+    public void init() {
+        dataSource = new DriverManagerDataSource();
+        dataSource.setDriverClassName(driverClassName);
+        dataSource.setUrl(url);
+        dataSource.setUsername(username);
+        dataSource.setPassword(password);
+        if (!schemaName.isEmpty()) dataSource.setSchema(schemaName);
     }
-
-    public void save(Collection<Photo> photos, DataSource dataSource) throws Exception {
-        SimpleJdbcInsert simpleJdbcInsert = new SimpleJdbcInsert(dataSource).withTableName("photos").usingGeneratedKeyColumns("ID");
-
-        for (Photo photo: photos) {
-            Map<String, Object> parameters = new HashMap<>();
-            parameters.put("STUDENT_ID", photo.getPerson().getIdentifier());
-            parameters.put("PHOTO", photo.getBytes());
-
-            simpleJdbcInsert.execute(parameters);
-        }
-    }
-
 }
