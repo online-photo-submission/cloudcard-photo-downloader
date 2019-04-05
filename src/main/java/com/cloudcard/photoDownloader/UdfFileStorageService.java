@@ -31,7 +31,7 @@ public class UdfFileStorageService extends FileStorageService implements Storage
     @Value("${downloader.descriptionDateFormat}")
     private String descriptionDateFormat;
 
-    @Value("${downloader.udfBatchIdDateFormat}")
+    @Value("00002")
     private String udfBatchIdDateFormat;
 
     @Value("${downloader.createdDateFormat}")
