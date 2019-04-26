@@ -3,9 +3,9 @@
 This project automatically downloads photos from [CloudCard Online Photo Submission](http://onlinephotosubmission.com/).
 
 ## Video Tutorial
-https://youtu.be/0KcCnMOf1jA
+https://youtu.be/8qUS-rLeZlM
 
-[![Tutorial Video](https://img.youtube.com/vi/0KcCnMOf1jA/0.jpg)](https://www.youtube.com/watch?v=0KcCnMOf1jA)
+[![Tutorial Video](https://img.youtube.com/vi/0KcCnMOf1jA/0.jpg)](https://youtu.be/8qUS-rLeZlM)
 
 ## Requirements
 
