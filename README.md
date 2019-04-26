@@ -15,8 +15,14 @@ https://youtu.be/0KcCnMOf1jA
 
 ## Usage
 
+1. Create a separate service account for CloudCard Photo Downloader to use. ([Instructions](https://youtu.be/IvVXNgeipO0))
 1. Download the [jar file](https://github.com/online-photo-submission/cloudcard-photo-downloader/raw/master/cloudcard-photo-downloader.jar).
 1. Download [application.properties](https://raw.githubusercontent.com/online-photo-submission/cloudcard-photo-downloader/master/src/main/resources/application.properties) into the same directory
+1. Get your access token
+    1. Download [get-token.sh](https://raw.githubusercontent.com/online-photo-submission/cloudcard-photo-downloader/master/get-token.sh) (for Linux) or [get-token.ps1](https://raw.githubusercontent.com/online-photo-submission/cloudcard-photo-downloader/master/get-token.ps1) (for Windows).
+    1. If necessary, make the `get-token` script executable, i.e. `chmod +x get-token.sh`
+    1. Run the `get-token` script, i.e. `./get-token.sh` and follow the prompts.
+    1. You will copy the output of the script into `application.properties` in the next step.
 1. Configure `application.properties`
 1. Run `java -jar cloudcard-photo-downloader.jar`
 
@@ -50,7 +56,7 @@ Below are descriptions of each option:
   - default: `.`
   - description: this is the absolute path to the directory(ies) into which the photos will be saved. Separate multiple directories with commas.  If multiple directories are specified, a copy of each downloaded photo will be saved to each directory. 
   
-#### UDF Settings
+#### UDF Settings - Deprecated
 - downloader.udfDirectory
   - default: `.`
 - downloader.udfFilePrefix
