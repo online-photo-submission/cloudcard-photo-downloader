@@ -3,9 +3,9 @@
 This project automatically downloads photos from [CloudCard Online Photo Submission](http://onlinephotosubmission.com/).
 
 ## Video Tutorial
-https://youtu.be/0KcCnMOf1jA
+https://youtu.be/8qUS-rLeZlM
 
-[![Tutorial Video](https://img.youtube.com/vi/0KcCnMOf1jA/0.jpg)](https://www.youtube.com/watch?v=0KcCnMOf1jA)
+[![Tutorial Video](https://img.youtube.com/vi/0KcCnMOf1jA/0.jpg)](https://youtu.be/8qUS-rLeZlM)
 
 ## Requirements
 
@@ -15,8 +15,14 @@ https://youtu.be/0KcCnMOf1jA
 
 ## Usage
 
+1. Create a separate service account for CloudCard Photo Downloader to use. ([Instructions](https://youtu.be/IvVXNgeipO0))
 1. Download the [jar file](https://github.com/online-photo-submission/cloudcard-photo-downloader/raw/master/cloudcard-photo-downloader.jar).
 1. Download [application.properties](https://raw.githubusercontent.com/online-photo-submission/cloudcard-photo-downloader/master/src/main/resources/application.properties) into the same directory
+1. Get your access token
+    1. Download [get-token.sh](https://raw.githubusercontent.com/online-photo-submission/cloudcard-photo-downloader/master/get-token.sh) (for Linux) or [get-token.ps1](https://raw.githubusercontent.com/online-photo-submission/cloudcard-photo-downloader/master/get-token.ps1) (for Windows).
+    1. If necessary, make the `get-token` script executable, i.e. `chmod +x get-token.sh`
+    1. Run the `get-token` script, i.e. `./get-token.sh` and follow the prompts.
+    1. You will copy the output of the script into `application.properties` in the next step.
 1. Configure `application.properties`
 1. Run `java -jar cloudcard-photo-downloader.jar`
 
@@ -32,7 +38,7 @@ Below are descriptions of each option:
   - description: This option allows you to specify the URL of your CloudCard Online Photo Submission API.  Most users will not need to change this setting.  Generally, this is only useful if you are testing the integration using the test intance `https://test-api.onlinephotosubmission.com/api`.
 - cloudcard.api.accessToken
   - default: none
-  - description: this setting holds the API access token for your service account and must be set before the exporter to run. On a Unix/Linux based operating system, you can use `get-token.sh` to get your access token.
+  - description: this setting holds the API access token for your service account and must be set before the exporter to run. On a Unix/Linux based operating system, you can use `get-token.sh` to get your access token. On Windows systems, you can use `get-token.ps1` in a PowerShell window to get your access token. If you have problems with execution policy, see [this StackExchange question](https://superuser.com/questions/106360/how-to-enable-execution-of-powershell-scripts) for how to resolve the issue.
 - downloader.fetchStatuses
   - default: `READY_FOR_DOWNLOAD`
   - allowed values: `PENDING`,`APPROVED`,`DENIED`,`READY_FOR_DOWNLOAD`,`DOWNLOADED`,`DISCARDED`,`DONE`
@@ -50,7 +56,7 @@ Below are descriptions of each option:
   - default: `.`
   - description: this is the absolute path to the directory(ies) into which the photos will be saved. Separate multiple directories with commas.  If multiple directories are specified, a copy of each downloaded photo will be saved to each directory. 
   
-#### UDF Settings
+#### UDF Settings - Deprecated
 - downloader.udfDirectory
   - default: `.`
 - downloader.udfFilePrefix
