@@ -10,7 +10,7 @@ import org.springframework.stereotype.Service;
 import javax.annotation.PostConstruct;
 import java.util.*;
 
-@Service
+//@Service
 public class SimpleDatabaseStorageService extends DatabaseStorageService {
     private static final Logger log = LoggerFactory.getLogger(SimpleDatabaseStorageService.class);
 

@@ -30,7 +30,7 @@ public class DownloaderService {
         log.info("Downloading photos...");
         List<PhotoFile> downloadedPhotos = storageService.save(cloudCardPhotoService.fetchReadyForDownload());
         for (PhotoFile photo : downloadedPhotos) {
-            cloudCardPhotoService.markAsDownloaded(new Photo(photo.getPhotoId()));
+//            cloudCardPhotoService.markAsDownloaded(new Photo(photo.getPhotoId()));
         }
 
         log.info("Completed downloading " + downloadedPhotos.size() + " photos.");
