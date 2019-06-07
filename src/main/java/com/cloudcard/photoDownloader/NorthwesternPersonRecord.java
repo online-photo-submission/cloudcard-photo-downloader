@@ -1,9 +1,5 @@
 package com.cloudcard.photoDownloader;
 
-import org.springframework.jdbc.core.RowMapper;
-
-import java.sql.ResultSet;
-import java.sql.SQLException;
 import java.sql.Timestamp;
 
 public class NorthwesternPersonRecord {
@@ -12,8 +8,9 @@ public class NorthwesternPersonRecord {
     private String lastName;
     private String identifier;
     private Timestamp photoUpdated;
+    private Timestamp expirationDate;
 
-    private boolean needsUpdated = false;
+    private boolean isCardPhoto = false;
 
     public String getFirstName() {
         return firstName;
@@ -56,12 +53,20 @@ public class NorthwesternPersonRecord {
                 '}';
     }
 
-    public boolean needsUpdate() {
-        return needsUpdated;
+    public boolean needsCardPhoto() {
+        return isCardPhoto;
     }
 
-    public void setNeedsUpdated(boolean needsUpdated) {
-        this.needsUpdated = needsUpdated;
+    public void setCardPhoto(boolean cardPhoto) {
+        this.isCardPhoto = cardPhoto;
+    }
+
+    public Timestamp getExpirationDate() {
+        return expirationDate;
+    }
+
+    public void setExpirationDate(Timestamp expirationDate) {
+        this.expirationDate = expirationDate;
     }
 }
 
