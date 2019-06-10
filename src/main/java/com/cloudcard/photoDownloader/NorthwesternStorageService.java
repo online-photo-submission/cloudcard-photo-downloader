@@ -6,6 +6,8 @@ import com.mashape.unirest.http.Unirest;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.dao.EmptyResultDataAccessException;
+import org.springframework.dao.PermissionDeniedDataAccessException;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Service;
 
@@ -54,43 +56,55 @@ public class NorthwesternStorageService extends DatabaseStorageService {
 
             person.setEmployeeNumber(getPersonEmployeeNumber(person, getPersonReport()));
 
-//            String query = "select photoupdated from WILDCARD where SSNNumber = '99' + " + person.getIdentifier();
             String query = "select firstname, lastname, idnumber, photoupdated, expirationdate from WILDCARD where idnumber = '" + person.getIdentifier() + "'";
             log.info(query);
 
             NorthwesternPersonRecord record = null;
             try {
                 record = jdbcTemplate.queryForObject(query, new NorthwesternPersonRecordMapper());
-            } catch(Exception e) {
+            } catch(EmptyResultDataAccessException e) {
                 log.error("No record in database for given id of " + person.getIdentifier());
             }
 
-            if (record != null && record.needsCardPhoto()) {
-                PhotoFile wildcardPhotoFile = saveToFile(photo, photoDirectoryWildcard, record.getIdentifier(), "99" + person.getEmployeeNumber());
-                photoFiles.add(wildcardPhotoFile);
-                Timestamp photoUpdated = Timestamp.valueOf(LocalDateTime.now());
-                log.info("updating database: Picture = " + photoDirectoryWildcard + wildcardPhotoFile.getFileName() + ", PhotoUpdated = " + photoUpdated.toString());
-            }
-            else if (record != null && !record.needsCardPhoto()) {
-                PhotoFile outlookPhotoFile = saveToFile(photo, photoDirectoryOutlook, record.getIdentifier(), person.getEmployeeNumber());
-                photoFiles.add(outlookPhotoFile);
-                Timestamp photoUpdated = Timestamp.valueOf(LocalDateTime.now());
-                log.info("updating database: Picture = " + photoDirectoryWildcard + outlookPhotoFile.getFileName() + ", PhotoUpdated = " + photoUpdated.toString());
+            if (record == null) {
+                photoFiles.add(saveToFile(photo, photoDirectoryError, person.getIdentifier(), person.getIdentifier()));
             }
             else {
-                photoFiles.add(saveToFile(photo, photoDirectoryError,null, person.getEmail()));
-                log.info("Photo for user " + person.getEmail() + " was not found in the database, and was sent to the error folder.");
+                if (!record.needsCardPhoto()) {
+                    PhotoFile file = saveToFile(photo, photoDirectoryOutlook, record.getIdentifier(), person.getEmployeeNumber());
+                    photoFiles.add(file);
+                    updateDatabase(jdbcTemplate, person, file, photoDirectoryOutlook);
+                } else {
+                    PhotoFile file = saveToFile(photo, photoDirectoryWildcard, record.getIdentifier(), "99" + person.getEmployeeNumber());
+                    photoFiles.add(file);
+                    updateDatabase(jdbcTemplate, person, file, photoDirectoryWildcard);
+                }
             }
         }
 
         return photoFiles;
     }
 
-    PhotoFile saveToFile(Photo photo, String photoDirectory, String studentID, String filename) throws Exception {
+    private void updateDatabase(JdbcTemplate jdbcTemplate, Person person, PhotoFile file, String photoDirectory) {
+        if (file != null) {
+            Timestamp photoUpdated = Timestamp.valueOf(LocalDateTime.now().withSecond(0).withNano(0));
+            log.info("updating database: Picture = " + photoDirectory + file.getFileName() + ", PhotoUpdated = " + photoUpdated.toString());
+
+//            TODO: This fill-in query should work, but I'm having a tough time testing it, so the alternate query should work just as well.
+//            jdbcTemplate.update("update WILDCARD set PhotoUpdated = ?, Picture = ? where IDNumber = ?", photoUpdated, photoDirectory + file.getFileName(), person.getIdentifier());
+            try {
+                jdbcTemplate.update("update WILDCARD set PhotoUpdated = '" + photoUpdated + "', Picture = '" + photoDirectory + file.getFileName() + "' where IDNumber = '" + person.getIdentifier() + "'");
+            } catch(Exception e) {
+                log.error("Unable to push update to database: " + e.getMessage());
+            }
+        }
+    }
+
+    private PhotoFile saveToFile(Photo photo, String photoDirectory, String studentID, String filename) throws Exception {
 
         if (studentID == null || studentID.isEmpty()) {
-            String fileName = writeBytesToFile(photoDirectory, filename + ".jpg", photo.getBytes());
-            return new PhotoFile(studentID, fileName, photo.getId());
+            log.error(photo.getPerson().getEmail() + " is missing an ID number, so photo " + photo.getId() + " cannot be saved.");
+            return null;
         }
 
         if (photo.getBytes() == null) {
@@ -99,6 +113,7 @@ public class NorthwesternStorageService extends DatabaseStorageService {
         }
 
         String fileName = writeBytesToFile(photoDirectory, filename + ".jpg", photo.getBytes());
+
 
         return new PhotoFile(studentID, fileName, photo.getId());
     }
