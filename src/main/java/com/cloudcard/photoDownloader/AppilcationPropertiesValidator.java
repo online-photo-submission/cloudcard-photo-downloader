@@ -21,8 +21,12 @@ public class AppilcationPropertiesValidator {
     @Value("${cloudcard.api.accessToken}")
     private String accessToken;
 
-    @Value("${downloader.photoDirectories}")
-    String[] photoDirectories;
+    @Value("${downloader.photoDirectoryWildcard}")
+    String photoDirectoryWildcard;
+    @Value("${downloader.photoDirectoryOutlook}")
+    String photoDirectoryOutlook;
+    @Value("${downloader.photoDirectoryError}")
+    String photoDirectoryError;
 
     @Value("${downloader.enableUdf}")
     private Boolean enableUdf;
@@ -65,7 +69,7 @@ public class AppilcationPropertiesValidator {
         throwIfTrue(downloaderDelay < Timer.ONE_MINUTE, "The minimum downloader delay is 60000 milliseconds (one minute).");
         throwIfBlank(apiUrl, "The CloudCard API URL must be specified.");
         throwIfBlank(accessToken, "The CloudCard API access token must be specified.");
-        throwIfTrue(photoDirectories == null || photoDirectories.length == 0, "The Photo Directory(ies) must be specified.");
+        throwIfTrue(photoDirectoryWildcard == null || photoDirectoryOutlook == null || photoDirectoryError == null, "The Photo Directories must be specified.");
 
         if (enableUdf) {
             throwIfBlank(udfDirectory, "The UDF Directory must be specified.");

@@ -26,3 +26,6 @@ nbdist/
 
 out/*
 temp
+error/
+outlook/
+wildcard/
