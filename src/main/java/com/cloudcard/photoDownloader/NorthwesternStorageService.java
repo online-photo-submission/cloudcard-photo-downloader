@@ -71,11 +71,11 @@ public class NorthwesternStorageService extends DatabaseStorageService {
             }
             else {
                 if (!record.needsCardPhoto()) {
-                    PhotoFile file = saveToFile(photo, photoDirectoryOutlook, record.getIdentifier(), person.getEmployeeNumber());
+                    PhotoFile file = saveToFile(photo, photoDirectoryOutlook, record.getIdentifier(), person.getIdentifier());
                     photoFiles.add(file);
                     updateDatabase(jdbcTemplate, person, file, photoDirectoryOutlook);
                 } else {
-                    PhotoFile file = saveToFile(photo, photoDirectoryWildcard, record.getIdentifier(), "99" + person.getEmployeeNumber());
+                    PhotoFile file = saveToFile(photo, photoDirectoryWildcard, record.getIdentifier(), "99" + person.getIdentifier());
                     photoFiles.add(file);
                     updateDatabase(jdbcTemplate, person, file, photoDirectoryWildcard);
                 }
