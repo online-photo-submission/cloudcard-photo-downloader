@@ -15,7 +15,7 @@ public class NorthwesternPersonRecordMapper implements RowMapper<NorthwesternPer
 
         record.setFirstName(rs.getString("firstname"));
         record.setLastName(rs.getString("lastname"));
-        record.setIdentifier(rs.getString("idnumber"));
+        record.setIdentifier(rs.getString("ssnnumber"));
         record.setPhotoUpdated(rs.getTimestamp("photoUpdated"));
         record.setExpirationDate(rs.getTimestamp("expirationDate"));
 

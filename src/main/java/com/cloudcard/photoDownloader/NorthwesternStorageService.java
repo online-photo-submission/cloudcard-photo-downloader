@@ -56,7 +56,7 @@ public class NorthwesternStorageService extends DatabaseStorageService {
 
             person.setEmployeeNumber(getPersonEmployeeNumber(person, getPersonReport()));
 
-            String query = "select firstname, lastname, idnumber, photoupdated, expirationdate from WILDCARD where idnumber = '" + person.getIdentifier() + "'";
+            String query = "select firstname, lastname, ssnnumber, photoupdated, expirationdate from WILDCARD where ssnnumber = '" + person.getIdentifier() + "'";
             log.info(query);
 
             NorthwesternPersonRecord record = null;
@@ -93,7 +93,7 @@ public class NorthwesternStorageService extends DatabaseStorageService {
 //            TODO: This fill-in query should work, but I'm having a tough time testing it, so the alternate query should work just as well.
 //            jdbcTemplate.update("update WILDCARD set PhotoUpdated = ?, Picture = ? where IDNumber = ?", photoUpdated, photoDirectory + file.getFileName(), person.getIdentifier());
             try {
-                jdbcTemplate.update("update WILDCARD set PhotoUpdated = '" + photoUpdated + "', Picture = '" + photoDirectory + file.getFileName() + "' where IDNumber = '" + person.getIdentifier() + "'");
+                jdbcTemplate.update("update WILDCARD set PhotoUpdated = '" + photoUpdated + "', Picture = '" + photoDirectory + file.getFileName() + "' where SSNNumber = '" + person.getIdentifier() + "'");
             } catch(Exception e) {
                 log.error("Unable to push update to database: " + e.getMessage());
             }
