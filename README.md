@@ -1,4 +1,4 @@
-# cloudcard-photo-downloader
+# northwestern-photo-downloader
 
 This project automatically downloads photos from [CloudCard Online Photo Submission](http://onlinephotosubmission.com/).
 
