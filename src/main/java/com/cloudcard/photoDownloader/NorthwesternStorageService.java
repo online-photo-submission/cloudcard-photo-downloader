@@ -54,9 +54,7 @@ public class NorthwesternStorageService extends DatabaseStorageService {
         for (Photo photo: photos) {
             Person person = photo.getPerson();
 
-            person.setEmployeeNumber(getPersonEmployeeNumber(person, getPersonReport()));
-
-            String query = "select firstname, lastname, ssnnumber, photoupdated, expirationdate from WILDCARD where ssnnumber = '" + person.getIdentifier() + "'";
+            String query = "select firstname, lastname, ssnnumber, photoupdated, expirationdate from WILDCARD where ssnnumber = '99" + person.getIdentifier() + "'";
             log.info(query);
 
             NorthwesternPersonRecord record = null;
@@ -93,7 +91,7 @@ public class NorthwesternStorageService extends DatabaseStorageService {
 //            TODO: This fill-in query should work, but I'm having a tough time testing it, so the alternate query should work just as well.
 //            jdbcTemplate.update("update WILDCARD set PhotoUpdated = ?, Picture = ? where IDNumber = ?", photoUpdated, photoDirectory + file.getFileName(), person.getIdentifier());
             try {
-                jdbcTemplate.update("update WILDCARD set PhotoUpdated = '" + photoUpdated + "', Picture = '" + photoDirectory + file.getFileName() + "' where SSNNumber = '" + person.getIdentifier() + "'");
+                jdbcTemplate.update("update WILDCARD set PhotoUpdated = '" + photoUpdated + "', Picture = '" + photoDirectory + file.getFileName() + "' where SSNNumber = '99" + person.getIdentifier() + "'");
             } catch(Exception e) {
                 log.error("Unable to push update to database: " + e.getMessage());
             }
@@ -137,15 +135,6 @@ public class NorthwesternStorageService extends DatabaseStorageService {
         outputStream.close();
 
         return file.getCanonicalPath();
-    }
-
-    private String getPersonEmployeeNumber(Person person, PersonReportObject[] personRecord) throws Exception {
-        String employeeNumber = null;
-        for (PersonReportObject recordObject : personRecord) {
-            if (recordObject.identifier.equals(person.getIdentifier())) employeeNumber = recordObject.employeeNumber;
-        }
-        if (employeeNumber != null) return employeeNumber;
-        else throw new Exception("No employeeNumber found for person with identifier " + person.getIdentifier());
     }
 
     private PersonReportObject[] getPersonReport() throws Exception {
