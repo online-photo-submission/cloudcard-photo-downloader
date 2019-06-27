@@ -7,10 +7,13 @@ import javax.annotation.PostConstruct;
 
 public abstract class DatabaseStorageService implements StorageService {
     protected DriverManagerDataSource dataSource;
+    protected DriverManagerDataSource customerDataSource;
     @Value("${db.datasource.driverClassName}")
     String driverClassName;
     @Value("${db.datasource.url}")
     String url;
+    @Value("${db.transact.customerdb.url}")
+    String customerUrl;
     @Value("${db.datasource.username}")
     String username;
     @Value("${db.datasource.password}")
@@ -26,5 +29,12 @@ public abstract class DatabaseStorageService implements StorageService {
         dataSource.setUsername(username);
         dataSource.setPassword(password);
         if (!schemaName.isEmpty()) dataSource.setSchema(schemaName);
+        if (!customerUrl.isEmpty()) {
+            customerDataSource = new DriverManagerDataSource();
+            customerDataSource.setDriverClassName(driverClassName);
+            customerDataSource.setUrl(customerUrl);
+            customerDataSource.setUsername(username);
+            customerDataSource.setPassword(password);
+        }
     }
 }
