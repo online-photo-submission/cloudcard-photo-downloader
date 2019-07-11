@@ -86,12 +86,12 @@ public class NorthwesternStorageService extends DatabaseStorageService {
     private void updateDatabase(JdbcTemplate jdbcTemplate, Person person, PhotoFile file, String photoDirectory) {
         if (file != null) {
             Timestamp photoUpdated = Timestamp.valueOf(LocalDateTime.now().withSecond(0).withNano(0));
-            log.info("updating database: Picture = " + photoDirectory + file.getFileName() + ", PhotoUpdated = " + photoUpdated.toString());
+            log.info("updating database: Picture = " + file.getFileName() + ", PhotoUpdated = " + photoUpdated.toString());
 
 //            TODO: This fill-in query should work, but I'm having a tough time testing it, so the alternate query should work just as well.
-//            jdbcTemplate.update("update WILDCARD set PhotoUpdated = ?, Picture = ? where IDNumber = ?", photoUpdated, photoDirectory + file.getFileName(), person.getIdentifier());
+//            jdbcTemplate.update("update WILDCARD set PhotoUpdated = ?, Picture = ? where IDNumber = ?", photoUpdated, file.getFileName(), person.getIdentifier());
             try {
-                jdbcTemplate.update("update WILDCARD set PhotoUpdated = '" + photoUpdated + "', Picture = '" + photoDirectory + file.getFileName() + "' where SSNNumber = '99" + person.getIdentifier() + "'");
+                jdbcTemplate.update("update WILDCARD set PhotoUpdated = '" + photoUpdated + "', Picture = '" + file.getFileName() + "' where SSNNumber = '99" + person.getIdentifier() + "'");
             } catch(Exception e) {
                 log.error("Unable to push update to database: " + e.getMessage());
             }
