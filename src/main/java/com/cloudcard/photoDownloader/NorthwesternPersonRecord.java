@@ -10,7 +10,7 @@ public class NorthwesternPersonRecord {
     private Timestamp photoUpdated;
     private Timestamp expirationDate;
 
-    private boolean isCardPhoto = false;
+    private boolean isCardPhoto = true;
 
     public String getFirstName() {
         return firstName;

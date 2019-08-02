@@ -26,7 +26,7 @@ public class NorthwesternPersonRecordMapper implements RowMapper<NorthwesternPer
 
     private void doesRecordNeedUpdated(NorthwesternPersonRecord record) {
         if (record.getExpirationDate() != null && Math.abs(ChronoUnit.DAYS.between(record.getExpirationDate().toLocalDateTime(), LocalDateTime.now().plusDays(60))) < 60.0) {
-            record.setCardPhoto(true);
+            record.setCardPhoto(false);
         }
     }
 }
