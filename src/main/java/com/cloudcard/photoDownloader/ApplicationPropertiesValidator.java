@@ -10,7 +10,7 @@ import javax.management.timer.Timer;
 @Component
 public class ApplicationPropertiesValidator {
 
-    String version = "19.08.08.1448";
+    String version = "19.08.08.1511";
     private static final Logger log = LoggerFactory.getLogger(ApplicationPropertiesValidator.class);
 
     @Value("${downloader.delay.milliseconds}")
