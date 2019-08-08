@@ -38,8 +38,11 @@ public class NorthwesternStorageService extends DatabaseStorageService {
     String photoDirectoryWildcard;
     @Value("${downloader.photoDirectoryOutlook}")
     String photoDirectoryOutlook;
-    @Value("${downloader.photoDirectoryError}")
+    @Value("${downloader.photoDirectoryError:}")
     String photoDirectoryError;
+
+    @Value("${downloader.sql.photoField.filePath:}")
+    String photoFieldFilePath;
 
     @Value("${downloader.minPhotoIdLength}")
     Integer minPhotoIdLength;
@@ -91,7 +94,12 @@ public class NorthwesternStorageService extends DatabaseStorageService {
 //            TODO: This fill-in query should work, but I'm having a tough time testing it, so the alternate query should work just as well.
 //            jdbcTemplate.update("update WILDCARD set PhotoUpdated = ?, Picture = ? where IDNumber = ?", photoUpdated, file.getFileName(), person.getIdentifier());
             try {
-                jdbcTemplate.update("update WILDCARD set PhotoUpdated = '" + photoUpdated + "', Picture = '" + file.getFileName() + "' where SSNNumber = '99" + person.getIdentifier() + "'");
+                if (!photoFieldFilePath.equals("")) {
+                    String fileName = photoFieldFilePath + "99" + person.getIdentifier() + ".jpg";
+                    log.info("fileName == " + fileName);
+                    jdbcTemplate.update("update WILDCARD set PhotoUpdated = '" + photoUpdated + "', Picture = '" + fileName + "' where SSNNumber = '99" + person.getIdentifier() + "'");
+                }
+                else jdbcTemplate.update("update WILDCARD set PhotoUpdated = '" + photoUpdated + "', Picture = '" + file.getFileName() + "' where SSNNumber = '99" + person.getIdentifier() + "'");
             } catch(Exception e) {
                 log.error("Unable to push update to database: " + e.getMessage());
             }

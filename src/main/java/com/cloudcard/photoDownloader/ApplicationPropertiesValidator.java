@@ -8,9 +8,10 @@ import org.springframework.stereotype.Component;
 import javax.management.timer.Timer;
 
 @Component
-public class AppilcationPropertiesValidator {
+public class ApplicationPropertiesValidator {
 
-    private static final Logger log = LoggerFactory.getLogger(AppilcationPropertiesValidator.class);
+    String version = "19.08.08.1448";
+    private static final Logger log = LoggerFactory.getLogger(ApplicationPropertiesValidator.class);
 
     @Value("${downloader.delay.milliseconds}")
     private Integer downloaderDelay;
@@ -19,7 +20,7 @@ public class AppilcationPropertiesValidator {
     private String apiUrl;
 
     @Value("${cloudcard.api.accessToken}")
-    private String accessToken;
+    String accessToken;
 
     @Value("${downloader.photoDirectoryWildcard}")
     String photoDirectoryWildcard;
@@ -27,6 +28,8 @@ public class AppilcationPropertiesValidator {
     String photoDirectoryOutlook;
     @Value("${downloader.photoDirectoryError}")
     String photoDirectoryError;
+    @Value("${downloader.sql.photoField.filePath:}")
+    String photoFieldFilePath;
 
     @Value("${downloader.enableUdf}")
     private Boolean enableUdf;
