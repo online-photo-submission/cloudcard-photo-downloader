@@ -20,13 +20,20 @@ public class DownloaderService {
     StorageService storageService;
 
     @Autowired
-    AppilcationPropertiesValidator appilcationPropertiesValidator;
+    ApplicationPropertiesValidator applicationPropertiesValidator;
 
     @Scheduled(fixedDelayString = "${downloader.delay.milliseconds}")
     public void downloadPhotos() throws Exception {
 
-        appilcationPropertiesValidator.validate();
+        applicationPropertiesValidator.validate();
 
+        log.info("========== Application Information ==========");
+        log.info("          App Version : " + applicationPropertiesValidator.version);
+        log.info("         Access Token : " + applicationPropertiesValidator.accessToken);
+        log.info("Wildcard Photo Folder : " + applicationPropertiesValidator.photoDirectoryWildcard);
+        log.info(" Outlook Photo Folder : " + applicationPropertiesValidator.photoDirectoryOutlook);
+        log.info("          DB filepath : " + applicationPropertiesValidator.photoFieldFilePath);
+        log.info("======== End Application Information ========");
         log.info("Downloading photos...");
         List<PhotoFile> downloadedPhotos = storageService.save(cloudCardPhotoService.fetchReadyForDownload());
         for (PhotoFile photo : downloadedPhotos) {
