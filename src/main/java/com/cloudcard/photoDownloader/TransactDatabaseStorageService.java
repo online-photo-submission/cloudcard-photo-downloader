@@ -1,7 +1,9 @@
 package com.cloudcard.photoDownloader;
 
+import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.dao.EmptyResultDataAccessException;
 import org.springframework.jdbc.core.JdbcTemplate;
 
@@ -13,6 +15,10 @@ import java.util.List;
 public class TransactDatabaseStorageService extends DatabaseStorageService {
     private static final Logger log = LoggerFactory.getLogger(TransactDatabaseStorageService.class);
 
+    @Value("${downloader.minPhotoIdLength}")
+    private Integer minPhotoIdLength;
+    @Value("${db.mapping.table.photos}")
+    String tableName;
 
     @Override
     public List<PhotoFile> save(Collection<Photo> photos) throws Exception {
@@ -24,8 +30,10 @@ public class TransactDatabaseStorageService extends DatabaseStorageService {
 
         for (Photo photo : photos) {
 
+            String personIdentifier = StringUtils.leftPad(photo.getPerson().getIdentifier(), minPhotoIdLength, '0');
+
 //            TODO: Create SELECT query for getting needed customer info
-            String customerQuery = "";
+            String customerQuery = "SELECT CUST_ID FROM " + tableName + " WHERE CUSTNUM = " + personIdentifier;
 
             TransactCustomer record = null;
 
@@ -38,8 +46,7 @@ public class TransactDatabaseStorageService extends DatabaseStorageService {
             if (record == null) {
                 log.error("No record to update.");
             } else {
-//                TODO: Create MERGE statement (https://t5.si/f2418) for inserting/updating records
-                String photoQuery = "";
+                String photoQuery = "UPDATE ";
                 try {
                     jdbcPhotoTable.update(photoQuery);
 //                    TODO: This should work but is untested. Verify before shipping

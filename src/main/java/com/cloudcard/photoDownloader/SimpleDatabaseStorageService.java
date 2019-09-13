@@ -18,7 +18,7 @@ public class SimpleDatabaseStorageService extends DatabaseStorageService {
     String studentIdColumnName;
     @Value("${db.mapping.column.photoId}")
     String photoColumnName;
-    @Value("${db.mapping.table}")
+    @Value("${db.mapping.table.photos}")
     String tableName;
 
     @Override

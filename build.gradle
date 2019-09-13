@@ -31,4 +31,6 @@ dependencies {
     compile group: 'org.springframework', name: 'spring-jdbc', version: '5.1.4.RELEASE'
     compile group: 'mysql', name: 'mysql-connector-java', version: '5.1.6'
 
+    compile group: 'org.apache.commons', name: 'commons-lang3', version: '3.9'
+    compile files('libs/ojdbc14-10.2.0.4.0.jar')
 }
