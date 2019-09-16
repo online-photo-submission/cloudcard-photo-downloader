@@ -35,6 +35,7 @@ public abstract class DatabaseStorageService implements StorageService {
             customerDataSource.setUrl(customerUrl);
             customerDataSource.setUsername(username);
             customerDataSource.setPassword(password);
+            if (!schemaName.isEmpty()) customerDataSource.setSchema(schemaName);
         }
     }
 }

@@ -26,11 +26,12 @@ repositories {
 dependencies {
     compile("org.springframework.boot:spring-boot-starter")
     testCompile('org.springframework.boot:spring-boot-starter-test')
+    compile("org.springframework:spring-jdbc")
     compile('com.mashape.unirest:unirest-java:1.4.9')
     compile('com.fasterxml.jackson.core:jackson-databind')
-    compile group: 'org.springframework', name: 'spring-jdbc', version: '5.1.4.RELEASE'
+//    compile group: 'org.springframework', name: 'spring-jdbc', version: '5.1.4.RELEASE'
     compile group: 'mysql', name: 'mysql-connector-java', version: '5.1.6'
 
     compile group: 'org.apache.commons', name: 'commons-lang3', version: '3.9'
-    compile files('libs/ojdbc14-10.2.0.4.0.jar')
+    compile files('libs/ojdbc8.jar')
 }
