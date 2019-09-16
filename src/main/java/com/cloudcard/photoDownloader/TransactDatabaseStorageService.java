@@ -57,7 +57,6 @@ public class TransactDatabaseStorageService extends DatabaseStorageService {
             if (custId == -1) {
                 log.error("No record to update.");
             } else {
-//                String photoQuery = "UPDATE " + tableName + " SET PHOTO = " + photo.getBytes() + "] WHERE CUST_ID = " + custId;
                 String preparedPhotoQuery = "UPDATE " + tableName + " SET PHOTO = :photoBytes WHERE CUST_ID = :custId" ;
                 MapSqlParameterSource params = new MapSqlParameterSource();
                 params.addValue("tableName", tableName);
