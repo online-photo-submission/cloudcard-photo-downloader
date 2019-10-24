@@ -15,7 +15,7 @@ apply plugin: 'eclipse'
 apply plugin: 'org.springframework.boot'
 
 group = 'com.onlinephotosubmission'
-version = '19.01.25.1700'
+version = '19.10.24.1515-sql-server'
 sourceCompatibility = 1.8
 
 repositories {
@@ -29,6 +29,6 @@ dependencies {
     compile('com.mashape.unirest:unirest-java:1.4.9')
     compile('com.fasterxml.jackson.core:jackson-databind')
     compile group: 'org.springframework', name: 'spring-jdbc', version: '5.1.4.RELEASE'
-    compile group: 'mysql', name: 'mysql-connector-java', version: '5.1.6'
+    compile group: 'com.microsoft.sqlserver', name: 'mssql-jdbc', version: '7.0.0.jre8'
 
 }
