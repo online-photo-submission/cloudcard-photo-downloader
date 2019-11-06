@@ -9,8 +9,8 @@ https://youtu.be/8qUS-rLeZlM
 
 ## Requirements
 
-- Java 1.8 (to run from the Jar file)
-- Java 1.6+ (to build from Source)
+- [JDK 1.8](https://www.oracle.com/technetwork/java/javase/downloads/jdk8-downloads-2133151.html) (see also: [JDK Requirements](https://docs.oracle.com/javase/8/docs/technotes/guides/install/windows_system_requirements.html#A1097784))
+- 512MB RAM
 - Office level access to [CloudCard Online Photo Submission](http://onlinephotosubmission.com/)
 
 ## Usage
