@@ -26,7 +26,17 @@ To test your system, run `java -version`.  The output should look like the follo
 1. Get your access token (Instructions are included in the [service account video](https://www.youtube.com/watch?v=ZfrjFwrkwZQ).)
 1. Configure `application.properties`
 1. Run `java -jar cloudcard-photo-downloader.jar` from within the same directory as the JAR and application.properties files.
-1. You can also specify config values without an application.properties file using the following syntax
+1. *Recommended:* Set up the command to run as a service that starts automatically when the server starts.  The process for doing this is outside the scope of these instructions.
+
+## Troubleshooting
+
+Immediatly upon startup you get the following error:
+
+    com.cloudcard.photoDownloader.ApplicationPropertiesException: The CloudCard API access token must be specified. Please update the 'application.properties' file.
+    
+1. Make sure the `application.properties` is in the same directory.
+1. Make sure the `application.properties` is not named `application.properties.txt`.
+1. As a workaround, You can also specify config values without an `application.properties` file using the following syntax
     1. `java -Dconfig.key=config.value -jar cloudcard-photo-downloader.jar`
     1. For example: `java -Dcloudcard.api.accessToken=abc123 -jar cloudcard-photo-downloader.jar`
 
