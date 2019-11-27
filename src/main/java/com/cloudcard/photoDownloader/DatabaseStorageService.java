@@ -31,10 +31,7 @@ public abstract class DatabaseStorageService implements StorageService {
         dataSource.setUrl(url);
         dataSource.setUsername(username);
         dataSource.setPassword(password);
-        Properties connectionProperties = dataSource.getConnectionProperties();
-        if (connectionProperties == null)
-            connectionProperties = new Properties();
-        connectionProperties.setProperty("oracle.jdbc.timezoneAsRegion", "false");
+        addConnectionProperties(dataSource);
         if (!schemaName.isEmpty()) dataSource.setSchema(schemaName);
         if (!customerUrl.isEmpty()) {
             customerDataSource = new DriverManagerDataSource();
@@ -42,11 +39,16 @@ public abstract class DatabaseStorageService implements StorageService {
             customerDataSource.setUrl(customerUrl);
             customerDataSource.setUsername(username);
             customerDataSource.setPassword(password);
-            connectionProperties = customerDataSource.getConnectionProperties();
-            if (connectionProperties == null)
-                connectionProperties = new Properties();
-            connectionProperties.setProperty("oracle.jdbc.timezoneAsRegion", "false");
+            addConnectionProperties(customerDataSource);
             if (!schemaName.isEmpty()) customerDataSource.setSchema(schemaName);
         }
+    }
+
+    private void addConnectionProperties(DriverManagerDataSource dataSource) {
+
+        Properties connectionProperties = dataSource.getConnectionProperties();
+        if (connectionProperties == null)
+            connectionProperties = new Properties();
+        connectionProperties.setProperty("oracle.jdbc.timezoneAsRegion", "false");
     }
 }
