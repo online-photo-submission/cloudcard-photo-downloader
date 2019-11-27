@@ -21,6 +21,7 @@ import java.util.List;
 
 @Service
 public class TransactDatabaseStorageService extends DatabaseStorageService {
+
     private static final Logger log = LoggerFactory.getLogger(TransactDatabaseStorageService.class);
 
     @Value("${downloader.minPhotoIdLength}")
@@ -43,7 +44,7 @@ public class TransactDatabaseStorageService extends DatabaseStorageService {
 
             String personIdentifier = StringUtils.leftPad(photo.getPerson().getIdentifier(), minPhotoIdLength, '0');
 
-//            TODO: Create SELECT query for getting needed customer info
+            //            TODO: Create SELECT query for getting needed customer info
             String customerQuery = "SELECT CUST_ID FROM " + lookupTableName + " WHERE CUSTNUM = " + personIdentifier;
 
             int custId = -1;
@@ -51,23 +52,35 @@ public class TransactDatabaseStorageService extends DatabaseStorageService {
             try {
                 custId = jdbcCustomerTable.queryForObject(customerQuery, Integer.class);
             } catch (EmptyResultDataAccessException e) {
-                log.error("No record in DB for given id.");
+                log.error("EmptyResultDataAccessException: " + e.getMessage());
             }
 
             if (custId == -1) {
-                log.error("No record to update.");
+                log.error("No record in " + lookupTableName + " for '" + personIdentifier + "'.");
             } else {
-                String preparedPhotoQuery = "UPDATE " + tableName + " SET PHOTO = :photoBytes WHERE CUST_ID = :custId" ;
+
+                // select count(CUST_ID) from ENVISION.CUSTOMER_PHOTO where CUST_ID = ;
+                String photoCountQuery = "SELECT COUNT(CUST_ID) FROM " + tableName + "  where CUST_ID = " + custId;
+                int rowCount = jdbcCustomerTable.queryForObject(photoCountQuery, Integer.class);
+                String preparedPhotoQuery;
+                if (rowCount == 0) {
+                    log.info("Preparing insert for : " + personIdentifier);
+                    preparedPhotoQuery = "INSERT INTO " + tableName + " (CUST_ID, PHOTO) VALUES (:custId, :photoBytes)";
+                } else {
+                    log.info("Preparing update for : " + personIdentifier);
+                    preparedPhotoQuery = "UPDATE " + tableName + " SET PHOTO = :photoBytes WHERE CUST_ID = :custId";
+                }
                 MapSqlParameterSource params = new MapSqlParameterSource();
                 params.addValue("tableName", tableName);
                 params.addValue("photoBytes", new SqlLobValue(new ByteArrayInputStream(photo.getBytes()), photo.getBytes().length, new DefaultLobHandler()), OracleTypes.BLOB);
                 params.addValue("custId", custId);
                 try {
                     jdbcPhotoTable.update(preparedPhotoQuery, params);
-//                    TODO: This should work but is untested. Verify before shipping
+                    //                    TODO: This should work but is untested. Verify before shipping
                     photoFiles.add(new PhotoFile(photo.getPerson().getIdentifier(), null, photo.getId()));
+                    log.info("Downloaded: " + personIdentifier);
                 } catch (Exception e) {
-                    log.error("Failed to update photo table. Reason: " + e.getMessage() + ", Stacktrace: " + Arrays.toString(e.getStackTrace()));
+                    log.error("Failed to download photo for '" + personIdentifier + "' to table '" + tableName + "'. Reason: " + e.getMessage() + "\nStacktrace Follows:\n" + Arrays.toString(e.getStackTrace()));
                 }
             }
         }
