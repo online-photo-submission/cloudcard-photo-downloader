@@ -4,21 +4,37 @@ This project automatically downloads photos from [CloudCard Online Photo Submiss
 
 ## Requirements
 
-- Java 1.8
+- [JDK 1.8](https://www.oracle.com/technetwork/java/javase/downloads/jdk8-downloads-2133151.html) (see also: [JDK Requirements](https://docs.oracle.com/javase/8/docs/technotes/guides/install/windows_system_requirements.html#A1097784))
+- 512MB RAM
 - Office level access to [CloudCard Online Photo Submission](http://onlinephotosubmission.com/)
+
+To test your system, run `java -version`.  The output should look like the following.  The exact version isn't important as long as it starts with `1.8`.
+> java version "1.8.0_72"<br/>
+> Java(TM) SE Runtime Environment (build 1.8.0_72-b15)<br/>
+> Java HotSpot(TM) 64-Bit Server VM (build 25.72-b15, mixed mode)<br/>
 
 ## Usage
 
-1. Create a separate service account for CloudCard Photo Downloader to use. ([Instructions](https://youtu.be/IvVXNgeipO0))
+1. Create a separate service account for CloudCard Photo Downloader to use. ([Instructions](https://www.youtube.com/watch?v=ZfrjFwrkwZQ))
 1. Download the [jar file](https://github.com/online-photo-submission/cloudcard-photo-downloader/raw/master/cloudcard-photo-downloader.jar).
 1. Download [application.properties](https://raw.githubusercontent.com/online-photo-submission/cloudcard-photo-downloader/master/src/main/resources/application.properties) into the same directory
-1. Get your access token
-    1. Download [get-token.sh](https://raw.githubusercontent.com/online-photo-submission/cloudcard-photo-downloader/master/get-token.sh) (for Linux) or [get-token.ps1](https://raw.githubusercontent.com/online-photo-submission/cloudcard-photo-downloader/master/get-token.ps1) (for Windows).
-    1. If necessary, make the `get-token` script executable, i.e. `chmod +x get-token.sh`
-    1. Run the `get-token` script, i.e. `./get-token.sh` and follow the prompts.
-    1. You will copy the output of the script into `application.properties` in the next step.
+1. Get your access token (Instructions are included in the [service account video](https://www.youtube.com/watch?v=ZfrjFwrkwZQ).)
 1. Configure `application.properties`
-1. Run `java -jar cloudcard-photo-downloader.jar`
+1. Run `java -jar cloudcard-photo-downloader.jar` from within the same directory as the JAR and application.properties files.
+1. *Recommended:* Set up the command to run as a service that starts automatically when the server starts.  The process for doing this is outside the scope of these instructions.
+
+## Troubleshooting
+
+Immediatly upon startup you get the following error:
+
+    com.cloudcard.photoDownloader.ApplicationPropertiesException: The CloudCard API access token must be specified. Please update the 'application.properties' file.
+    
+1. Make sure the `application.properties` is in the same directory.
+1. Make sure the `application.properties` is not named `application.properties.txt`.
+1. As a workaround, You can also specify config values without an `application.properties` file using the following syntax
+    1. `java -Dconfig.key=config.value -jar cloudcard-photo-downloader.jar`
+    1. For example: `java -Dcloudcard.api.accessToken=abc123 -jar cloudcard-photo-downloader.jar`
+
 
 ## Configuration
 
