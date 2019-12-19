@@ -6,6 +6,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 
+import javax.annotation.PostConstruct;
 import java.util.List;
 
 @Service
@@ -22,19 +23,23 @@ public class DownloaderService {
     @Autowired
     ApplicationPropertiesValidator applicationPropertiesValidator;
 
-    @Scheduled(fixedDelayString = "${downloader.delay.milliseconds}")
-    public void downloadPhotos() throws Exception {
+    @PostConstruct
+    public void init() {
 
         applicationPropertiesValidator.validate();
 
         log.info("========== Application Information ==========");
-        log.info("          App Version : " + applicationPropertiesValidator.version);
-        log.info("         Access Token : " + applicationPropertiesValidator.accessToken);
+        log.info("         Access Token : " + applicationPropertiesValidator.accessToken.substring(0, 4) + "****");
         log.info("Wildcard Photo Folder : " + applicationPropertiesValidator.photoDirectoryWildcard);
         log.info(" Outlook Photo Folder : " + applicationPropertiesValidator.photoDirectoryOutlook);
         log.info("          DB filepath : " + applicationPropertiesValidator.photoFieldFilePath);
         log.info("======== End Application Information ========");
-        log.info("Downloading photos...");
+    }
+
+    @Scheduled(fixedDelayString = "${downloader.delay.milliseconds}")
+    public void downloadPhotos() throws Exception {
+
+        log.info("  ==========  Downloading photos  ==========  ");
         List<PhotoFile> downloadedPhotos = storageService.save(cloudCardPhotoService.fetchReadyForDownload());
         for (PhotoFile photo : downloadedPhotos) {
             cloudCardPhotoService.markAsDownloaded(new Photo(photo.getPhotoId()));
