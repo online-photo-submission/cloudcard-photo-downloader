@@ -16,9 +16,10 @@ https://youtu.be/8qUS-rLeZlM
 - Office level access to [CloudCard Online Photo Submission](http://onlinephotosubmission.com/)
 
 To test your system, run `java -version`.  The output should look like the following.  The exact version isn't important as long as it starts with `1.8`.
-> java version "1.8.0_72"<br/>
-> Java(TM) SE Runtime Environment (build 1.8.0_72-b15)<br/>
-> Java HotSpot(TM) 64-Bit Server VM (build 25.72-b15, mixed mode)<br/>
+> openjdk version "1.8.0_232" <br/>
+> OpenJDK Runtime Environment Corretto-8.232.09.2 (build 1.8.0_232-b09) <br/>
+> OpenJDK 64-Bit Server VM Corretto-8.232.09.2 (build 25.232-b09, mixed mode)
+
 
 ## Usage
 
