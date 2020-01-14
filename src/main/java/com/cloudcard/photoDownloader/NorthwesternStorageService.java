@@ -57,7 +57,9 @@ public class NorthwesternStorageService extends DatabaseStorageService {
             Person person = photo.getPerson();
             log.info("Downloading photo for person: " + person.getIdentifier());
 
-            String query = "select firstname, lastname, IDNumber, ssnnumber, photoupdated, expirationdate from WILDCARD where NetID = '" + person.getIdentifier() + "' and SSNNumber like '99%'";
+            String query = "select top 1 firstname, lastname, IDNumber, ssnnumber, photoupdated, expirationdate " +
+                "from WILDCARD where NetID = '" + person.getIdentifier() + "' and SSNNumber like '99%' " +
+                "order by expirationdate desc";
 
             NorthwesternPersonRecord record = null;
             try {
@@ -97,7 +99,7 @@ public class NorthwesternStorageService extends DatabaseStorageService {
             String fileName = photoFieldFilePath.equals("") ? file.getFileName() : photoFieldFilePath + file.getStudentId() + ".jpg";
             log.info("updating database: Picture = " + fileName + ", PhotoUpdated = " + photoUpdated.toString());
             try {
-                jdbcTemplate.update("update WILDCARD set PhotoUpdated = '" + photoUpdated + "', Picture = '" + fileName + "' where NetID = '" + person.getIdentifier() + "' and SSNNumber like '99%'");
+                jdbcTemplate.update("update WILDCARD set PhotoUpdated = '" + photoUpdated + "', Picture = '" + fileName + "' where NetID = '" + person.getIdentifier() + "'");
             } catch (Exception e) {
                 log.error("Unable to push update to database for ID: '" + person.getIdentifier() + "'. " + e.getMessage());
             }
