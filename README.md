@@ -9,7 +9,9 @@ https://youtu.be/8qUS-rLeZlM
 
 ## Requirements
 
-- [JDK 1.8](https://www.oracle.com/technetwork/java/javase/downloads/jdk8-downloads-2133151.html) (see also: [JDK Requirements](https://docs.oracle.com/javase/8/docs/technotes/guides/install/windows_system_requirements.html#A1097784))
+- JDK 1.8 
+  - [Amazon Corretto 8](https://docs.aws.amazon.com/corretto/latest/corretto-8-ug/downloads-list.html) (recommended)
+  - [Red Hat OpenJDK 8](https://developers.redhat.com/products/openjdk/download)
 - 512MB RAM
 - Office level access to [CloudCard Online Photo Submission](http://onlinephotosubmission.com/)
 
