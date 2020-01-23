@@ -1,4 +1,7 @@
-# cloudcard-photo-downloader
+# CloudCard Photo Downloader 
+(cloudcard-photo-downloader)
+
+---
 
 This project automatically downloads photos from [CloudCard Online Photo Submission](http://onlinephotosubmission.com/).
 
