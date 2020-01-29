@@ -74,6 +74,7 @@ public class NorthwesternPersonRecord {
 
     public boolean needsCardPhoto() {
 
+        if (expirationDate == null) return true;
         LocalDateTime expirationDate = this.expirationDate.toLocalDateTime();
         LocalDateTime sixtyOneDaysFromNow = LocalDateTime.now().plusDays(61);
         return expirationDate.isBefore(sixtyOneDaysFromNow);
