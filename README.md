@@ -1,19 +1,28 @@
-# northwestern-photo-downloader
+# CloudCard Photo Downloader 
+(cloudcard-photo-downloader)
+
+---
 
 This project automatically downloads photos from [CloudCard Online Photo Submission](http://onlinephotosubmission.com/).
 
 ## Requirements
 
-- [JDK 1.8](https://www.oracle.com/technetwork/java/javase/downloads/jdk8-downloads-2133151.html) (see also: [JDK Requirements](https://docs.oracle.com/javase/8/docs/technotes/guides/install/windows_system_requirements.html#A1097784))
+- JDK 1.8 
+  - Amazon Corretto 8 (recommended)
+    - [Download](https://docs.aws.amazon.com/corretto/latest/corretto-8-ug/downloads-list.html)
+    - [Windows Installation Instructions](https://docs.aws.amazon.com/corretto/latest/corretto-8-ug/windows-7-install.html)
+    - [Linux Installation Instructions](https://docs.aws.amazon.com/corretto/latest/corretto-8-ug/generic-linux-install.html)
+  - [Red Hat OpenJDK 8](https://developers.redhat.com/products/openjdk/download)
 - 512MB RAM
 - Office level access to [CloudCard Online Photo Submission](http://onlinephotosubmission.com/)
 
 To test your system, run `java -version`.  The output should look like the following.  The exact version isn't important as long as it starts with `1.8`.
-> java version "1.8.0_72"<br/>
-> Java(TM) SE Runtime Environment (build 1.8.0_72-b15)<br/>
-> Java HotSpot(TM) 64-Bit Server VM (build 25.72-b15, mixed mode)<br/>
+> openjdk version "1.8.0_232" <br/>
+> OpenJDK Runtime Environment Corretto-8.232.09.2 (build 1.8.0_232-b09) <br/>
+> OpenJDK 64-Bit Server VM Corretto-8.232.09.2 (build 25.232-b09, mixed mode)
 
-## Usage
+
+## Installation and Configuration
 
 1. Create a separate service account for CloudCard Photo Downloader to use. ([Instructions](https://www.youtube.com/watch?v=ZfrjFwrkwZQ))
 1. Download the [jar file](https://github.com/online-photo-submission/cloudcard-photo-downloader/raw/master/cloudcard-photo-downloader.jar).
