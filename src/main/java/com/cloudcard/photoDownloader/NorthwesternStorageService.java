@@ -46,50 +46,59 @@ public class NorthwesternStorageService extends DatabaseStorageService {
     @Value("${downloader.minPhotoIdLength}")
     Integer minPhotoIdLength;
 
+    JdbcTemplate jdbcTemplate;
+
     @Override
     public List<PhotoFile> save(Collection<Photo> photos) throws Exception {
 
-        JdbcTemplate jdbcTemplate = new JdbcTemplate(dataSource);
+        jdbcTemplate = new JdbcTemplate(dataSource);
 
         List<PhotoFile> photoFiles = new ArrayList<>();
 
         for (Photo photo : photos) {
-            Person person = photo.getPerson();
-            log.info("Downloading photo for person: " + person.getIdentifier());
-
-            String query = "select top 1 firstname, lastname, IDNumber, ssnnumber, photoupdated, expirationdate " +
-                "from WILDCARD where NetID = '" + person.getIdentifier() + "' and SSNNumber like '99%' " +
-                "order by expirationdate desc";
-
-            NorthwesternPersonRecord record = null;
-            try {
-                record = jdbcTemplate.queryForObject(query, new NorthwesternPersonRecordMapper());
-            } catch (EmptyResultDataAccessException e) {
-                log.error("No record in database for ID: " + person.getIdentifier());
-            }
-
-            if (record == null) {
-                log.error("Null record returned from database for ID: " + person.getIdentifier());
-                photoFiles.add(saveToFile(photo, photoDirectoryError, person.getIdentifier(), person.getIdentifier()));
-            } else {
-                log.info("Person " + person.getIdentifier() + " has an expiration date of " + record.getExpirationDate());
-                PhotoFile file;
-                if (!record.needsCardPhoto()) {
-                    log.info("Saving person " + person.getIdentifier() + " as Outlook");
-                    file = saveToFile(photo, photoDirectoryOutlook, record.getPrefixedIdNumber(), record.getIdNumber());
-                    photoFiles.add(file);
-                    //                    updateDatabase(jdbcTemplate, person, file, photoDirectoryOutlook);
-                } else {
-                    log.info("Saving person " + person.getIdentifier() + " as Wildcard");
-                    file = saveToFile(photo, photoDirectoryWildcard, record.getPrefixedIdNumber(), record.getPrefixedIdNumber());
-                    photoFiles.add(file);
-                    updateDatabase(jdbcTemplate, person, file, photoDirectoryWildcard);
-                }
-                log.info("Saved photo for person " + person.getIdentifier() + " to path " + file.getFileName());
-            }
+            PhotoFile photoFile = save(photo);
+            photoFiles.add(photoFile);
         }
 
         return photoFiles;
+    }
+
+    private PhotoFile save(Photo photo) throws Exception {
+
+        Person person = photo.getPerson();
+        log.info("Downloading photo for person: " + person.getIdentifier());
+
+        String query = "select top 1 firstname, lastname, IDNumber, ssnnumber, photoupdated, expirationdate " +
+            "from WILDCARD where NetID = '" + person.getIdentifier() + "' and SSNNumber like '99%' " +
+            "order by expirationdate desc";
+
+        NorthwesternPersonRecord record = null;
+        try {
+            record = jdbcTemplate.queryForObject(query, new NorthwesternPersonRecordMapper());
+        } catch (EmptyResultDataAccessException e) {
+            log.error("No record in database for ID: " + person.getIdentifier());
+        }
+
+        if (record == null) {
+            log.error("Null record returned from database for ID: " + person.getIdentifier());
+            return saveToFile(photo, photoDirectoryError, person.getIdentifier(), person.getIdentifier());
+        } else {
+            log.info("Person " + person.getIdentifier() + " has an expiration date of " + record.getExpirationDate());
+            PhotoFile file;
+            if (!record.needsCardPhoto()) {
+                log.info("Saving person " + person.getIdentifier() + " as Outlook");
+                file = saveToFile(photo, photoDirectoryOutlook, record.getPrefixedIdNumber(), record.getIdNumber());
+                log.info("Saved photo for person " + person.getIdentifier() + " to path " + file.getFileName());
+                return file;
+                //                    updateDatabase(jdbcTemplate, person, file, photoDirectoryOutlook);
+            } else {
+                log.info("Saving person " + person.getIdentifier() + " as Wildcard");
+                file = saveToFile(photo, photoDirectoryWildcard, record.getPrefixedIdNumber(), record.getPrefixedIdNumber());
+                updateDatabase(jdbcTemplate, person, file, photoDirectoryWildcard);
+                log.info("Saved photo for person " + person.getIdentifier() + " to path " + file.getFileName());
+                return file;
+            }
+        }
     }
 
     private void updateDatabase(JdbcTemplate jdbcTemplate, Person person, PhotoFile file, String photoDirectory) {
