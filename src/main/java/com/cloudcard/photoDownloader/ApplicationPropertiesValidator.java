@@ -8,9 +8,9 @@ import org.springframework.stereotype.Component;
 import javax.management.timer.Timer;
 
 @Component
-public class AppilcationPropertiesValidator {
+public class ApplicationPropertiesValidator {
 
-    private static final Logger log = LoggerFactory.getLogger(AppilcationPropertiesValidator.class);
+    private static final Logger log = LoggerFactory.getLogger(ApplicationPropertiesValidator.class);
 
     @Value("${downloader.delay.milliseconds}")
     private Integer downloaderDelay;
@@ -19,10 +19,20 @@ public class AppilcationPropertiesValidator {
     private String apiUrl;
 
     @Value("${cloudcard.api.accessToken}")
-    private String accessToken;
+    String accessToken;
 
     @Value("${downloader.photoDirectories}")
     String[] photoDirectories;
+
+    // TODO: Get rid of these one-off directories
+    @Value("${downloader.photoDirectoryWildcard}")
+    String photoDirectoryWildcard;
+    @Value("${downloader.photoDirectoryOutlook}")
+    String photoDirectoryOutlook;
+    @Value("${downloader.photoDirectoryError}")
+    String photoDirectoryError;
+    @Value("${downloader.sql.photoField.filePath:}")
+    String photoFieldFilePath;
 
     @Value("${downloader.enableUdf}")
     private Boolean enableUdf;
@@ -66,6 +76,7 @@ public class AppilcationPropertiesValidator {
         throwIfBlank(apiUrl, "The CloudCard API URL must be specified.");
         throwIfBlank(accessToken, "The CloudCard API access token must be specified.");
         throwIfTrue(photoDirectories == null || photoDirectories.length == 0, "The Photo Directory(ies) must be specified.");
+        throwIfTrue(photoDirectoryWildcard == null || photoDirectoryOutlook == null || photoDirectoryError == null, "The Photo Directories must be specified.");
 
         if (enableUdf) {
             throwIfBlank(udfDirectory, "The UDF Directory must be specified.");

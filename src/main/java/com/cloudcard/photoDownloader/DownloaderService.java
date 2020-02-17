@@ -6,6 +6,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 
+import javax.annotation.PostConstruct;
 import java.util.List;
 
 @Service
@@ -20,19 +21,33 @@ public class DownloaderService {
     StorageService storageService;
 
     @Autowired
-    AppilcationPropertiesValidator appilcationPropertiesValidator;
+    ApplicationPropertiesValidator applicationPropertiesValidator;
+
+    @PostConstruct
+    public void init() {
+
+        applicationPropertiesValidator.validate();
+
+        // TODO: Move this to the application properties validator
+        log.info("========== Application Information ==========");
+        log.info("         Access Token : " + applicationPropertiesValidator.accessToken.substring(0, 4) + "****");
+        log.info("Wildcard Photo Folder : " + applicationPropertiesValidator.photoDirectoryWildcard);
+        log.info(" Outlook Photo Folder : " + applicationPropertiesValidator.photoDirectoryOutlook);
+        log.info("          DB filepath : " + applicationPropertiesValidator.photoFieldFilePath);
+        log.info("======== End Application Information ========");
+    }
 
     @Scheduled(fixedDelayString = "${downloader.delay.milliseconds}")
     public void downloadPhotos() throws Exception {
 
-        appilcationPropertiesValidator.validate();
-
-        log.info("Downloading photos...");
-        List<PhotoFile> downloadedPhotos = storageService.save(cloudCardPhotoService.fetchReadyForDownload());
-        for (PhotoFile photo : downloadedPhotos) {
-            cloudCardPhotoService.markAsDownloaded(new Photo(photo.getPhotoId()));
+        log.info("  ==========  Downloading photos  ==========  ");
+        List<Photo> photosToDownload = cloudCardPhotoService.fetchReadyForDownload();
+        List<PhotoFile> downloadedPhotoFiles = storageService.save(photosToDownload);
+        for (PhotoFile photoFile : downloadedPhotoFiles) {
+            Photo downloadedPhoto = new Photo(photoFile.getPhotoId());
+            cloudCardPhotoService.markAsDownloaded(downloadedPhoto);
         }
 
-        log.info("Completed downloading " + downloadedPhotos.size() + " photos.");
+        log.info("Completed downloading " + downloadedPhotoFiles.size() + " photos.");
     }
 }
