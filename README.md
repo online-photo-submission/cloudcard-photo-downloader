@@ -5,11 +5,6 @@
 
 This project automatically downloads photos from [CloudCard Online Photo Submission](http://onlinephotosubmission.com/).
 
-## Video Tutorial
-https://youtu.be/8qUS-rLeZlM
-
-[![Tutorial Video](https://img.youtube.com/vi/0KcCnMOf1jA/0.jpg)](https://youtu.be/8qUS-rLeZlM)
-
 ## Requirements
 
 - JDK 1.8 
@@ -71,6 +66,17 @@ Below are descriptions of each option:
   - default: `DOWNLOADED`
   - allowed values: `PENDING`,`APPROVED`,`DENIED`,`READY_FOR_DOWNLOAD`,`DOWNLOADED`,`DISCARDED`,`DONE`
   - description: Downloaded photos will be marked with this status in the CloudCard web application.
+
+#### Folder Settings
+- downloader.photoDirectoryWildcard
+  - default: `./wildcard`
+  - description: Photos for ID cards will be sent to this folder.
+- downloader.photoDirectoryOutlook
+  - default: `./outlook`
+  - description: Photos for Outlook will be sent to this folder.
+- downloader.photoDirectoryError
+  - default: `./error`
+  - description: Photos that exist in an error state - usually lacking a database record associated with the ID in CloudCard - will be sent to this folder.
 
 #### General Settings
 - downloader.delay.milliseconds

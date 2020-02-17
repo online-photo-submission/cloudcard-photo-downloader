@@ -30,6 +30,7 @@ public class DownloaderService {
 
         // TODO: Move this to the application properties validator
         log.info("========== Application Information ==========");
+        log.info("              Version : " + applicationPropertiesValidator.version);
         log.info("         Access Token : " + applicationPropertiesValidator.accessToken.substring(0, 4) + "****");
         log.info("Wildcard Photo Folder : " + applicationPropertiesValidator.photoDirectoryWildcard);
         log.info(" Outlook Photo Folder : " + applicationPropertiesValidator.photoDirectoryOutlook);

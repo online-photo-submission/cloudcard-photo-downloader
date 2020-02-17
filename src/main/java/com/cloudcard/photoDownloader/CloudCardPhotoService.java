@@ -55,6 +55,18 @@ public class CloudCardPhotoService {
         return fetch(fetchStatuses);
     }
 
+    public List<Photo> fetch(String[] statuses) throws Exception {
+
+        List<Photo> photoList = new ArrayList<>();
+
+        for (String status : statuses) {
+            List<Photo> photos = fetch(status);
+            photoList.addAll(photos);
+        }
+
+        return photoList;
+    }
+
     public List<Photo> fetch(String status) throws Exception {
 
         HttpResponse<String> response = Unirest.get(apiUrl + "/photos?status=" + status).headers(standardHeaders()).asString();
@@ -66,18 +78,6 @@ public class CloudCardPhotoService {
 
         return new ObjectMapper().readValue(response.getBody(), new TypeReference<List<Photo>>() {
         });
-    }
-
-    public List<Photo> fetch(String[] statuses) throws Exception {
-
-        List<Photo> photoList = new ArrayList<>();
-
-        for (String status : statuses) {
-            List<Photo> photos = fetch(status);
-            photoList.addAll(photos);
-        }
-
-        return photoList;
     }
 
     public Photo markAsDownloaded(Photo photo) throws Exception {

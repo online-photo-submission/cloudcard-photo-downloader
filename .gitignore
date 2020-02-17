@@ -26,3 +26,7 @@ nbdist/
 
 out/*
 temp
+error/
+outlook/
+wildcard/
+application.properties
