@@ -33,6 +33,8 @@ public class ApplicationPropertiesValidator {
     String photoDirectoryOutlook;
     @Value("${downloader.photoDirectoryError}")
     String photoDirectoryError;
+
+    // TODO: Remove this; build it into the custom query
     @Value("${downloader.sql.photoField.filePath:}")
     String photoFieldFilePath;
 
@@ -94,6 +96,23 @@ public class ApplicationPropertiesValidator {
             throwIfBlank(csvBatchIdDateFormat, "The Batch ID Date Format must be specified.");
         }
 
+        logConfigValues();
+    }
+
+    private void logConfigValues() {
+
+        log.info("========== Configuration Information ==========");
+        log.info("              Version : " + version);
+        log.info("                ---------------                ");
+        log.info("         Access Token : " + "..." + accessToken.substring(2, 6) + "...");
+        log.info("     Downloader Delay : " + downloaderDelay / 1000 + " secs");
+        log.info("              API URL : " + apiUrl);
+        log.info("                ---------------                ");
+        log.info(" Photo Directory(ies) : " + photoDirectories);
+        log.info("Wildcard Photo Folder : " + photoDirectoryWildcard);
+        log.info(" Outlook Photo Folder : " + photoDirectoryOutlook);
+        log.info("          DB filepath : " + photoFieldFilePath);
+        log.info("======== End Configuration Information ========");
     }
 
     private void throwIfBlank(String string, String message) {
