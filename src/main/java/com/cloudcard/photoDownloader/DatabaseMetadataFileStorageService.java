@@ -5,7 +5,10 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.dao.EmptyResultDataAccessException;
 import org.springframework.jdbc.core.JdbcTemplate;
+import org.springframework.jdbc.datasource.DriverManagerDataSource;
+import org.springframework.stereotype.Service;
 
+import javax.annotation.PostConstruct;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
@@ -15,9 +18,10 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 
-public class NorthwesternStorageService extends DatabaseStorageService {
+@Service
+public class DatabaseMetadataFileStorageService extends FileStorageService {
 
-    private static final Logger log = LoggerFactory.getLogger(NorthwesternStorageService.class);
+    private static final Logger log = LoggerFactory.getLogger(DatabaseMetadataFileStorageService.class);
 
     @Value("${cloudcard.api.url}")
     private String apiUrl;
@@ -45,6 +49,31 @@ public class NorthwesternStorageService extends DatabaseStorageService {
     Integer minPhotoIdLength;
 
     JdbcTemplate jdbcTemplate;
+
+
+    protected DriverManagerDataSource dataSource;
+    @Value("${db.datasource.driverClassName}")
+    String driverClassName;
+    @Value("${db.datasource.url}")
+    String url;
+    @Value("${db.datasource.username}")
+    String username;
+    @Value("${db.datasource.password}")
+    String password;
+    @Value("${db.datasource.schema:}")
+    String schemaName;
+
+    @PostConstruct
+    public void init() {
+
+        dataSource = new DriverManagerDataSource();
+        dataSource.setDriverClassName(driverClassName);
+        dataSource.setUrl(url);
+        dataSource.setUsername(username);
+        dataSource.setPassword(password);
+        if (!schemaName.isEmpty()) dataSource.setSchema(schemaName);
+    }
+
 
     @Override
     public List<PhotoFile> save(Collection<Photo> photos) throws Exception {
