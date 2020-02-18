@@ -14,7 +14,6 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.sql.Timestamp;
 import java.time.LocalDateTime;
-import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 
@@ -72,22 +71,44 @@ public class DatabaseMetadataFileStorageService extends FileStorageService {
         dataSource.setUsername(username);
         dataSource.setPassword(password);
         if (!schemaName.isEmpty()) dataSource.setSchema(schemaName);
+
+        jdbcTemplate = new JdbcTemplate(dataSource);
     }
 
 
     @Override
     public List<PhotoFile> save(Collection<Photo> photos) throws Exception {
 
-        jdbcTemplate = new JdbcTemplate(dataSource);
-
-        List<PhotoFile> photoFiles = new ArrayList<>();
-
-        for (Photo photo : photos) {
-            PhotoFile photoFile = save(photo);
-            photoFiles.add(photoFile);
-        }
+        List<PhotoFile> photoFiles = super.save(photos);
 
         return photoFiles;
+    }
+
+    @Override
+    protected String getFileName(Photo photo) {
+
+        Person person = photo.getPerson();
+        log.info("Downloading photo for person: " + person.getIdentifier());
+
+        String query = "select top 1 firstname, lastname, IDNumber, ssnnumber, photoupdated, expirationdate " +
+            "from WILDCARD where NetID = '" + person.getIdentifier() + "' and SSNNumber like '99%' " +
+            "order by expirationdate desc";
+
+        NorthwesternPersonRecord record = null;
+        try {
+            record = jdbcTemplate.queryForObject(query, new NorthwesternPersonRecordMapper());
+        } catch (EmptyResultDataAccessException e) {
+            log.error("No record in database for ID: " + person.getIdentifier());
+        }
+
+        if (record == null) {
+            log.error("Null record returned from database for ID: " + person.getIdentifier());
+            return null;
+        }
+        log.info("Person " + person.getIdentifier() + " has an expiration date of " + record.getExpirationDate());
+        PhotoFile file;
+        log.info("Saving person " + person.getIdentifier() + " as Wildcard");
+        return record.getPrefixedIdNumber();
     }
 
     private PhotoFile save(Photo photo) throws Exception {

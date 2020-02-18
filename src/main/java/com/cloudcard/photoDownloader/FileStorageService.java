@@ -11,6 +11,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 
+//@Service
 public class FileStorageService implements StorageService {
 
     private static final Logger log = LoggerFactory.getLogger(FileStorageService.class);
@@ -48,9 +49,9 @@ public class FileStorageService implements StorageService {
 
     protected PhotoFile save(Photo photo, String photoDirectory) throws Exception {
 
-        String studentID = getStudentID(photo);
+        String fileName = getFileName(photo);
 
-        if (studentID == null || studentID.isEmpty()) {
+        if (fileName == null || fileName.isEmpty()) {
             log.error(photo.getPerson().getEmail() + " is missing an ID number, so photo " + photo.getId() + " cannot be saved.");
             return null;
         }
@@ -60,9 +61,14 @@ public class FileStorageService implements StorageService {
             return null;
         }
 
-        String fileName = writeBytesToFile(photoDirectory, studentID + ".jpg", photo.getBytes());
+        String fullFileName = writeBytesToFile(photoDirectory, fileName + ".jpg", photo.getBytes());
 
-        return new PhotoFile(studentID, fileName, photo.getId());
+        return new PhotoFile(getStudentID(photo), fullFileName, photo.getId());
+    }
+
+    protected String getFileName(Photo photo) {
+
+        return getStudentID(photo);
     }
 
     protected String getStudentID(Photo photo) {
