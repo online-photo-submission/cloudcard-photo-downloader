@@ -25,7 +25,7 @@ public class DatabaseMetadataFileStorageService extends FileStorageService {
     @Value("${db.mapping.table}")
     String tableName;
 
-    @Value("${downloader.metadata.overide.photoFilePath:}")
+    @Value("${downloader.metadata.override.photoFilePath:}")
     String photoFieldFilePath;
 
     @Value("${downloader.sql.query.baseFileName:}")
