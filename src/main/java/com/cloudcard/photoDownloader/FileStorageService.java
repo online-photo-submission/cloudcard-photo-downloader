@@ -3,6 +3,8 @@ package com.cloudcard.photoDownloader;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
+import org.springframework.stereotype.Service;
 
 import java.io.File;
 import java.io.FileOutputStream;
@@ -11,7 +13,8 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 
-//@Service
+@Service
+@ConditionalOnProperty(value = "downloader.storageService", havingValue = "FileStorageService")
 public class FileStorageService implements StorageService {
 
     private static final Logger log = LoggerFactory.getLogger(FileStorageService.class);

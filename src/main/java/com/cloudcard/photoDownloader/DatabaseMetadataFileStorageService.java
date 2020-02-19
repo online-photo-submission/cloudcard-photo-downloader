@@ -4,6 +4,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.dao.EmptyResultDataAccessException;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Service;
@@ -14,6 +15,7 @@ import java.util.Collection;
 import java.util.List;
 
 @Service
+@ConditionalOnProperty(value = "downloader.storageService", havingValue = "DatabaseMetadataFileStorageService")
 public class DatabaseMetadataFileStorageService extends FileStorageService {
 
     private static final Logger log = LoggerFactory.getLogger(DatabaseMetadataFileStorageService.class);

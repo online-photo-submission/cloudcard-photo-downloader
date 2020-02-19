@@ -26,6 +26,9 @@ public class ApplicationPropertiesValidator {
     @Value("${downloader.photoDirectories}")
     String[] photoDirectories;
 
+    @Value("${downloader.storageService}")
+    String storageService;
+
     // TODO: Get rid of these one-off directories
     @Value("${downloader.photoDirectoryWildcard}")
     String photoDirectoryWildcard;
@@ -108,7 +111,8 @@ public class ApplicationPropertiesValidator {
         log.info("     Downloader Delay : " + downloaderDelay / 1000 + " secs");
         log.info("              API URL : " + apiUrl);
         log.info("                ---------------                ");
-        log.info(" Photo Directory(ies) : " + photoDirectories);
+        log.info("      Storage Service : " + storageService);
+        log.info(" Photo Directory(ies) : " + String.join(" , ", photoDirectories));
         log.info("Wildcard Photo Folder : " + photoDirectoryWildcard);
         log.info(" Outlook Photo Folder : " + photoDirectoryOutlook);
         log.info("          DB filepath : " + photoFieldFilePath);
