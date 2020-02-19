@@ -37,7 +37,7 @@ public class FileStorageService implements StorageService {
 
         List<PhotoFile> photoFiles = new ArrayList<>();
         for (Photo photo : photos) {
-            log.info("Saving: " + photo.getPublicKey());
+            log.info("Saving: " + photo.getId() + " for person: " + photo.getPerson().getEmail());
             for (String photoDirectory : photoDirectories) {
                 PhotoFile photoFile = save(photo, photoDirectory);
                 if (photoFile != null) photoFiles.add(photoFile);
