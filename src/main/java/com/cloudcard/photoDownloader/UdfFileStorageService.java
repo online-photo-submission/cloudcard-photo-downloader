@@ -99,7 +99,7 @@ public class UdfFileStorageService extends FileStorageService implements Storage
 
         data.add("!BeginData");
         for (PhotoFile photoFile : photoFiles) {
-            data.add(fixedLengthString(photoFile.getStudentId(), longestId) + photoFile.getFileName());
+            data.add(fixedLengthString(photoFile.getBaseName(), longestId) + photoFile.getFileName());
         }
         data.add("!EndData");
         return data;
@@ -118,7 +118,7 @@ public class UdfFileStorageService extends FileStorageService implements Storage
 
         int longestId = 0;
         for (PhotoFile photoFile : photoFiles) {
-            longestId = Math.max(photoFile.getStudentId().length(), longestId);
+            longestId = Math.max(photoFile.getBaseName().length(), longestId);
         }
         return longestId;
     }

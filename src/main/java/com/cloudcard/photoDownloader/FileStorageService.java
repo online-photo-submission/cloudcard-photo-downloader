@@ -49,9 +49,9 @@ public class FileStorageService implements StorageService {
 
     protected PhotoFile save(Photo photo, String photoDirectory) throws Exception {
 
-        String fileName = getFileName(photo);
+        String baseName = getBaseName(photo);
 
-        if (fileName == null || fileName.isEmpty()) {
+        if (baseName == null || baseName.isEmpty()) {
             log.error(photo.getPerson().getEmail() + " is missing an ID number, so photo " + photo.getId() + " cannot be saved.");
             return null;
         }
@@ -61,17 +61,25 @@ public class FileStorageService implements StorageService {
             return null;
         }
 
-        String fullFileName = writeBytesToFile(photoDirectory, fileName + ".jpg", photo.getBytes());
+        String fullFileName = writeBytesToFile(photoDirectory, baseName + ".jpg", photo.getBytes());
 
-        return new PhotoFile(getStudentID(photo), fullFileName, photo.getId());
+        PhotoFile photoFile = new PhotoFile(baseName, fullFileName, photo.getId());
+
+        postProcess(photo, photoDirectory, photoFile);
+
+        return photoFile;
     }
 
-    protected String getFileName(Photo photo) {
-
-        return getStudentID(photo);
+    /**
+     * This is a place holder for child classes to execute a post processing strategy
+     *
+     * @param photoFile
+     */
+    protected void postProcess(Photo photo, String photoDirectory, PhotoFile photoFile) {
+        // do nothing
     }
 
-    protected String getStudentID(Photo photo) {
+    protected String getBaseName(Photo photo) {
 
         String identifier = photo.getPerson().getIdentifier();
         if (identifier == null || identifier.isEmpty() || minPhotoIdLength < identifier.length()) return identifier;

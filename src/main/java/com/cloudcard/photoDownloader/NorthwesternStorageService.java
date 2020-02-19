@@ -103,7 +103,7 @@ public class NorthwesternStorageService extends DatabaseStorageService {
 
         if (file != null) {
             Timestamp photoUpdated = Timestamp.valueOf(LocalDateTime.now().withSecond(0).withNano(0));
-            String fileName = photoFieldFilePath.equals("") ? file.getFileName() : photoFieldFilePath + file.getStudentId() + ".jpg";
+            String fileName = photoFieldFilePath.equals("") ? file.getFileName() : photoFieldFilePath + file.getBaseName() + ".jpg";
             log.info("updating database: Picture = " + fileName + ", PhotoUpdated = " + photoUpdated.toString());
             try {
                 jdbcTemplate.update("update WILDCARD set PhotoUpdated = '" + photoUpdated + "', Picture = '" + fileName + "' where NetID = '" + person.getIdentifier() + "'");

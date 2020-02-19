@@ -4,20 +4,20 @@ import java.util.Objects;
 
 public class PhotoFile {
 
-    private String studentId;
+    private String baseName;
     private String fileName;
     private Integer photoId;
 
-    public PhotoFile(String studentId, String fileName, Integer photoId) {
+    public PhotoFile(String baseName, String fileName, Integer photoId) {
 
-        this.studentId = studentId;
+        this.baseName = baseName;
         this.fileName = fileName;
         this.photoId = photoId;
     }
 
-    public String getStudentId() {
+    public String getBaseName() {
 
-        return studentId;
+        return baseName;
     }
 
     public String getFileName() {
@@ -36,18 +36,18 @@ public class PhotoFile {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
         PhotoFile photoFile = (PhotoFile) o;
-        return Objects.equals(studentId, photoFile.studentId) && Objects.equals(fileName, photoFile.fileName);
+        return Objects.equals(baseName, photoFile.baseName) && Objects.equals(fileName, photoFile.fileName);
     }
 
     @Override
     public int hashCode() {
 
-        return Objects.hash(studentId, fileName);
+        return Objects.hash(baseName, fileName);
     }
 
     @Override
     public String toString() {
 
-        return "PhotoFile{" + "studentId='" + studentId + '\'' + ", fileName='" + fileName + '\'' + ", photoId=" + photoId + '}';
+        return "PhotoFile{" + "baseName='" + baseName + '\'' + ", fileName='" + fileName + '\'' + ", photoId=" + photoId + '}';
     }
 }
