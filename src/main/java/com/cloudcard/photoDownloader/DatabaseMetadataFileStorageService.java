@@ -51,16 +51,16 @@ public class DatabaseMetadataFileStorageService extends FileStorageService {
         String baseName = null;
         try {
             baseName = jdbcTemplate.queryForObject(baseFileNameQuery, new Object[]{identifier}, String.class);
-            log.info("The base name for person: " + identifier + " is: " + baseName);
         } catch (EmptyResultDataAccessException e) {
             log.error("No record in database for person: " + identifier);
         }
 
         if (baseName == null) {
-            log.error("Null record returned from database for person: " + identifier);
+            log.error("The base file name returned from database for person: '" + identifier + "' was NULL.");
             return null;
         }
 
+        log.info("The base file name for person: '" + identifier + "' is: " + baseName);
         return baseName;
     }
 
