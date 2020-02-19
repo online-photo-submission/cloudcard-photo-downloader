@@ -26,6 +26,8 @@ public class DatabaseMetadataFileStorageService extends FileStorageService {
     @Value("${downloader.sql.photoField.filePath:}")
     String photoFieldFilePath;
 
+    @Value("${downloader.sql.query.baseFileName:}")
+    String baseFileNameQuery;
 
     @Autowired
     JdbcTemplate jdbcTemplate;
@@ -41,26 +43,25 @@ public class DatabaseMetadataFileStorageService extends FileStorageService {
     @Override
     protected String getBaseName(Photo photo) {
 
-        Person person = photo.getPerson();
-        log.info("Downloading photo for person: " + person.getIdentifier());
-
-        String query = "select top 1 firstname, lastname, IDNumber, ssnnumber, photoupdated, expirationdate " +
-            "from WILDCARD where NetID = '" + person.getIdentifier() + "' and SSNNumber like '99%' " +
-            "order by expirationdate desc";
-
-        NorthwesternPersonRecord record = null;
-        try {
-            record = jdbcTemplate.queryForObject(query, new NorthwesternPersonRecordMapper());
-        } catch (EmptyResultDataAccessException e) {
-            log.error("No record in database for ID: " + person.getIdentifier());
+        String identifier = photo.getPerson().getIdentifier();
+        if (baseFileNameQuery.isEmpty()) {
+            return identifier;
         }
 
-        if (record == null) {
-            log.error("Null record returned from database for ID: " + person.getIdentifier());
+        String baseName = null;
+        try {
+            baseName = jdbcTemplate.queryForObject(baseFileNameQuery, new Object[]{identifier}, String.class);
+            log.info("The base name for person: " + identifier + " is: " + baseName);
+        } catch (EmptyResultDataAccessException e) {
+            log.error("No record in database for person: " + identifier);
+        }
+
+        if (baseName == null) {
+            log.error("Null record returned from database for person: " + identifier);
             return null;
         }
 
-        return record.getPrefixedIdNumber();
+        return baseName;
     }
 
     @Override
