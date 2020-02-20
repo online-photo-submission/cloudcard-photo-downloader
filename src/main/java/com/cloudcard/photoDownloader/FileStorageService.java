@@ -55,7 +55,8 @@ public class FileStorageService implements StorageService {
         String baseName = getBaseName(photo);
 
         if (baseName == null || baseName.isEmpty()) {
-            log.error(photo.getPerson().getEmail() + " is missing an ID number, so photo " + photo.getId() + " cannot be saved.");
+            log.error("We could not resolve the base file name for '" + photo.getPerson().getEmail() + "' with ID number '"
+                + photo.getPerson().getIdentifier() + "', so photo " + photo.getId() + " cannot be saved.");
             return null;
         }
 
@@ -66,9 +67,7 @@ public class FileStorageService implements StorageService {
 
         String fullFileName = writeBytesToFile(photoDirectory, baseName + ".jpg", photo.getBytes());
 
-        PhotoFile photoFile = new PhotoFile(baseName, fullFileName, photo.getId());
-
-        postProcess(photo, photoDirectory, photoFile);
+        PhotoFile photoFile = postProcess(photo, photoDirectory, new PhotoFile(baseName, fullFileName, photo.getId()));
 
         return photoFile;
     }
@@ -78,8 +77,9 @@ public class FileStorageService implements StorageService {
      *
      * @param photoFile
      */
-    protected void postProcess(Photo photo, String photoDirectory, PhotoFile photoFile) {
+    protected PhotoFile postProcess(Photo photo, String photoDirectory, PhotoFile photoFile) {
         // do nothing
+        return photoFile;
     }
 
     protected String getBaseName(Photo photo) {
