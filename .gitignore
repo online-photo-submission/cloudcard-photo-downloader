@@ -29,4 +29,4 @@ temp
 error/
 outlook/
 wildcard/
-application.properties
+application.properties*
