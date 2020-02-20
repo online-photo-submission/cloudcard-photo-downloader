@@ -5,7 +5,9 @@ import org.springframework.jdbc.datasource.DriverManagerDataSource;
 
 import javax.annotation.PostConstruct;
 
+@Deprecated
 public abstract class DatabaseStorageService implements StorageService {
+
     protected DriverManagerDataSource dataSource;
     @Value("${db.datasource.driverClassName}")
     String driverClassName;
@@ -20,6 +22,7 @@ public abstract class DatabaseStorageService implements StorageService {
 
     @PostConstruct
     public void init() {
+
         dataSource = new DriverManagerDataSource();
         dataSource.setDriverClassName(driverClassName);
         dataSource.setUrl(url);

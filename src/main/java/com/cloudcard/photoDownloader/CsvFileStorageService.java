@@ -35,6 +35,15 @@
 //    private String csvBatchIdDateFormat;
 //
 //
+//@PostConstruct
+//    void init() {
+//
+//        throwIfBlank(csvDirectory, "The CSV Directory must be specified.");
+//        throwIfBlank(csvFilePrefix, "The CSV File Prefix must be specified.");
+//        throwIfBlank(csvFileExtension, "The CSV File Extension must be specified.");
+//        throwIfBlank(csvBatchIdDateFormat, "The Batch ID Date Format must be specified.");
+//
+//        }
 //
 //    /*************************************************************************************************/
 //

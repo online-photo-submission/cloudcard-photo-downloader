@@ -29,20 +29,9 @@ public class ApplicationPropertiesValidator {
     @Value("${downloader.storageService}")
     String storageService;
 
-    // TODO: Get rid of these one-off directories
-    @Value("${downloader.photoDirectoryWildcard}")
-    String photoDirectoryWildcard;
-    @Value("${downloader.photoDirectoryOutlook}")
-    String photoDirectoryOutlook;
-    @Value("${downloader.photoDirectoryError}")
-    String photoDirectoryError;
-
     // TODO: Remove this; build it into the custom query
     @Value("${downloader.sql.photoField.filePath:}")
     String photoFieldFilePath;
-
-    @Value("${downloader.enableUdf}")
-    private Boolean enableUdf;
 
     @Value("${downloader.udfDirectory}")
     String udfDirectory;
@@ -82,22 +71,9 @@ public class ApplicationPropertiesValidator {
         throwIfTrue(downloaderDelay < Timer.ONE_MINUTE, "The minimum downloader delay is 60000 milliseconds (one minute).");
         throwIfBlank(apiUrl, "The CloudCard API URL must be specified.");
         throwIfBlank(accessToken, "The CloudCard API access token must be specified.");
+        throwIfBlank(storageService, "The Storage Service must be specified.");
         throwIfTrue(photoDirectories == null || photoDirectories.length == 0, "The Photo Directory(ies) must be specified.");
-        throwIfTrue(photoDirectoryWildcard == null || photoDirectoryOutlook == null || photoDirectoryError == null, "The Photo Directories must be specified.");
 
-        if (enableUdf) {
-            throwIfBlank(udfDirectory, "The UDF Directory must be specified.");
-            throwIfBlank(udfFilePrefix, "The UDF File Prefix must be specified.");
-            throwIfBlank(udfFileExtension, "The UDF File Extension must be specified.");
-            throwIfBlank(descriptionDateFormat, "The Description Date Format must be specified.");
-            throwIfBlank(udfBatchIdDateFormat, "The Batch ID Date Format must be specified.");
-            throwIfBlank(createdDateFormat, "The Created Date Format must be specified.");
-
-            throwIfBlank(csvDirectory, "The CSV Directory must be specified.");
-            throwIfBlank(csvFilePrefix, "The CSV File Prefix must be specified.");
-            throwIfBlank(csvFileExtension, "The CSV File Extension must be specified.");
-            throwIfBlank(csvBatchIdDateFormat, "The Batch ID Date Format must be specified.");
-        }
 
         logConfigValues();
     }
@@ -113,18 +89,16 @@ public class ApplicationPropertiesValidator {
         log.info("                ---------------                ");
         log.info("      Storage Service : " + storageService);
         log.info(" Photo Directory(ies) : " + String.join(" , ", photoDirectories));
-        log.info("Wildcard Photo Folder : " + photoDirectoryWildcard);
-        log.info(" Outlook Photo Folder : " + photoDirectoryOutlook);
         log.info("          DB filepath : " + photoFieldFilePath);
         log.info("======== End Configuration Information ========");
     }
 
-    private void throwIfBlank(String string, String message) {
+    public static void throwIfBlank(String string, String message) {
 
         throwIfTrue(string == null || string.isEmpty(), message);
     }
 
-    private void throwIfTrue(boolean condition, String message) {
+    public static void throwIfTrue(boolean condition, String message) {
 
         if (condition) {
             log.error(message);

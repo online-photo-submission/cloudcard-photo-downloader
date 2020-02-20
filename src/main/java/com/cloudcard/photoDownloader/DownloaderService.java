@@ -18,6 +18,7 @@ public class DownloaderService {
     CloudCardPhotoService cloudCardPhotoService;
 
     @Autowired
+    @SuppressWarnings("SpringJavaInjectionPointsAutowiringInspection")
     StorageService storageService;
 
     @Autowired

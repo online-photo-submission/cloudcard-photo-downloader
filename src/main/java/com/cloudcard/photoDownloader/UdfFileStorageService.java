@@ -3,7 +3,10 @@ package com.cloudcard.photoDownloader;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
+import org.springframework.stereotype.Service;
 
+import javax.annotation.PostConstruct;
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
@@ -13,14 +16,16 @@ import java.util.Collection;
 import java.util.Date;
 import java.util.List;
 
-//@Service
+import static com.cloudcard.photoDownloader.ApplicationPropertiesValidator.throwIfBlank;
+
+@Service
+@ConditionalOnProperty(value = "downloader.storageService", havingValue = "UdfFileStorageService")
 public class UdfFileStorageService extends FileStorageService implements StorageService {
 
     private static final Logger log = LoggerFactory.getLogger(UdfFileStorageService.class);
     @Value("${downloader.udfDirectory}")
     String udfDirectory;
-    @Value("${downloader.enableUdf}")
-    private boolean enableUdf;
+
     @Value("${downloader.udfFilePrefix}")
     private String udfFilePrefix;
 
@@ -41,12 +46,23 @@ public class UdfFileStorageService extends FileStorageService implements Storage
         return String.format("%1$-" + length + "s", string);
     }
 
+    @PostConstruct
+    void init() {
+
+        throwIfBlank(udfDirectory, "The UDF Directory must be specified.");
+        throwIfBlank(udfFilePrefix, "The UDF File Prefix must be specified.");
+        throwIfBlank(udfFileExtension, "The UDF File Extension must be specified.");
+        throwIfBlank(descriptionDateFormat, "The Description Date Format must be specified.");
+        throwIfBlank(udfBatchIdDateFormat, "The Batch ID Date Format must be specified.");
+        throwIfBlank(createdDateFormat, "The Created Date Format must be specified.");
+    }
+
     @Override
     public List<PhotoFile> save(Collection<Photo> photos) throws Exception {
 
         List<PhotoFile> photoFiles = super.save(photos);
 
-        if (enableUdf) createUdfFile(photoFiles);
+        createUdfFile(photoFiles);
 
         return photoFiles;
     }
