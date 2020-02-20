@@ -2,6 +2,7 @@ package com.cloudcard.photoDownloader;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.stereotype.Service;
@@ -22,18 +23,9 @@ public class FileStorageService implements StorageService {
     @Value("${downloader.photoDirectories}")
     private String[] photoDirectories;
 
-    @Value("${downloader.minPhotoIdLength}")
-    private Integer minPhotoIdLength;
-
-    public FileStorageService() {
-
-    }
-
-    public FileStorageService(String[] photoDirectories, Integer minPhotoIdLength) {
-
-        this.photoDirectories = photoDirectories;
-        this.minPhotoIdLength = minPhotoIdLength;
-    }
+    @Autowired
+    @SuppressWarnings("SpringJavaInjectionPointsAutowiringInspection")
+    private FileNameResolver fileNameResolver;
 
     @Override
     public List<PhotoFile> save(Collection<Photo> photos) throws Exception {
@@ -52,7 +44,7 @@ public class FileStorageService implements StorageService {
 
     protected PhotoFile save(Photo photo, String photoDirectory) throws Exception {
 
-        String baseName = getBaseName(photo);
+        String baseName = fileNameResolver.getBaseName(photo);
 
         if (baseName == null || baseName.isEmpty()) {
             log.error("We could not resolve the base file name for '" + photo.getPerson().getEmail() + "' with ID number '"
@@ -80,13 +72,6 @@ public class FileStorageService implements StorageService {
     protected PhotoFile postProcess(Photo photo, String photoDirectory, PhotoFile photoFile) {
         // do nothing
         return photoFile;
-    }
-
-    protected String getBaseName(Photo photo) {
-
-        String identifier = photo.getPerson().getIdentifier();
-        if (identifier == null || identifier.isEmpty() || minPhotoIdLength < identifier.length()) return identifier;
-        return String.format("%" + minPhotoIdLength + "s", identifier).replace(' ', '0');
     }
 
     private String writeBytesToFile(String directoryName, String fileName, byte[] bytes) throws IOException {

@@ -29,6 +29,9 @@ public class ApplicationPropertiesValidator {
     @Value("${downloader.storageService}")
     String storageService;
 
+    @Value("${downloader.fileNameResolver}")
+    String fileNameResolver;
+
     // TODO: Remove this; build it into the custom query
     @Value("${downloader.sql.photoField.filePath:}")
     String photoFieldFilePath;
@@ -72,6 +75,7 @@ public class ApplicationPropertiesValidator {
         throwIfBlank(apiUrl, "The CloudCard API URL must be specified.");
         throwIfBlank(accessToken, "The CloudCard API access token must be specified.");
         throwIfBlank(storageService, "The Storage Service must be specified.");
+        throwIfBlank(fileNameResolver, "The File Name Resolver must be specified.");
         throwIfTrue(photoDirectories == null || photoDirectories.length == 0, "The Photo Directory(ies) must be specified.");
 
 
@@ -88,6 +92,7 @@ public class ApplicationPropertiesValidator {
         log.info("              API URL : " + apiUrl);
         log.info("                ---------------                ");
         log.info("      Storage Service : " + storageService);
+        log.info("   File Name Resolver : " + fileNameResolver);
         log.info(" Photo Directory(ies) : " + String.join(" , ", photoDirectories));
         log.info("          DB filepath : " + photoFieldFilePath);
         log.info("======== End Configuration Information ========");

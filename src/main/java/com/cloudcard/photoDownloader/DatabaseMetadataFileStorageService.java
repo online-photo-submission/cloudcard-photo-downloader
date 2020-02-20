@@ -30,9 +30,6 @@ public class DatabaseMetadataFileStorageService extends FileStorageService {
     @Value("${downloader.metadata.override.photoFilePath:}")
     String filePathOverride;
 
-    @Value("${downloader.sql.query.baseFileName:}")
-    String baseFileNameQuery;
-
     @Value("${downloader.metadata.db.update.query:}")
     String updateQuery;
 
@@ -53,30 +50,6 @@ public class DatabaseMetadataFileStorageService extends FileStorageService {
                 "\n - downloader.metadata.db.update.params \n - downloader.metadata.db.update.paramTypes");
             System.exit(1);
         }
-    }
-
-    @Override
-    protected String getBaseName(Photo photo) {
-
-        String identifier = photo.getPerson().getIdentifier();
-        if (baseFileNameQuery.isEmpty()) {
-            return identifier;
-        }
-
-        String baseName = null;
-        try {
-            baseName = jdbcTemplate.queryForObject(baseFileNameQuery, new Object[]{identifier}, String.class);
-        } catch (EmptyResultDataAccessException e) {
-            log.error("No record in database for person: " + identifier);
-        }
-
-        if (baseName == null) {
-            log.error("The base file name returned from database for person: '" + identifier + "' was NULL.");
-            return null;
-        }
-
-        log.info("The base file name for person: '" + identifier + "' is: " + baseName);
-        return baseName;
     }
 
     @Override
