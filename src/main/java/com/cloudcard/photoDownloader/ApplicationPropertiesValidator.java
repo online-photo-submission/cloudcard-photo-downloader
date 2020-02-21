@@ -12,7 +12,7 @@ public class ApplicationPropertiesValidator {
 
     private static final Logger log = LoggerFactory.getLogger(ApplicationPropertiesValidator.class);
 
-    String version = "20.02.20";
+    String version = "20.02.21";
 
     @Value("${downloader.delay.milliseconds}")
     private Integer downloaderDelay;
