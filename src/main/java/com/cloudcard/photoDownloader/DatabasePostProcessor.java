@@ -21,16 +21,16 @@ public class DatabasePostProcessor implements PostProcessor {
 
     private static final Logger log = LoggerFactory.getLogger(DatabasePostProcessor.class);
 
-    @Value("${downloader.metadata.override.photoFilePath:}")
+    @Value("${DatabasePostProcessor.override.photoFilePath:}")
     private String filePathOverride;
 
-    @Value("${downloader.metadata.db.update.query:}")
+    @Value("${DatabasePostProcessor.query:}")
     private String updateQuery;
 
-    @Value("${downloader.metadata.db.update.params:}")
+    @Value("${DatabasePostProcessor.query.paramNames:}")
     private String[] paramNames;
 
-    @Value("${downloader.metadata.db.update.paramTypes:}")
+    @Value("${DatabasePostProcessor.query.paramTypes:}")
     private String[] paramTypes;
 
     @Autowired
@@ -44,6 +44,13 @@ public class DatabasePostProcessor implements PostProcessor {
                 "\n - downloader.metadata.db.update.params \n - downloader.metadata.db.update.paramTypes");
             System.exit(1);
         }
+
+        log.info("========== DatabasePostProcessor Configuration ==========");
+        log.info("         Update Query : " + updateQuery);
+        log.info("          Param Names : " + String.join(" , ", paramNames));
+        log.info("          Param Types : " + String.join(" , ", paramTypes));
+        log.info("   File Path Override : " + filePathOverride);
+        log.info("======== End DatabasePostProcessor Configuration ========");
     }
 
     @Override

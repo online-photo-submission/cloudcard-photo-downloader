@@ -9,17 +9,27 @@ import org.springframework.dao.EmptyResultDataAccessException;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Service;
 
+import javax.annotation.PostConstruct;
+
 @Service
 @ConditionalOnProperty(value = "downloader.fileNameResolver", havingValue = "DatabaseFileNameResolver")
 public class DatabaseFileNameResolver implements FileNameResolver {
 
     private static final Logger log = LoggerFactory.getLogger(DatabaseFileNameResolver.class);
 
-    @Value("${downloader.sql.query.baseFileName:}")
+    @Value("${DatabaseFileNameResolver.baseFileName.query:}")
     String baseFileNameQuery;
 
     @Autowired
     JdbcTemplate jdbcTemplate;
+
+    @PostConstruct
+    void init() {
+
+        log.info("========== DatabaseFileNameResolver Configuration ==========");
+        log.info(" Base File Name Query : " + baseFileNameQuery);
+        log.info("======== End DatabaseFileNameResolver Configuration ========");
+    }
 
     @Override
     public String getBaseName(Photo photo) {

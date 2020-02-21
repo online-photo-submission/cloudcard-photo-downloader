@@ -32,42 +32,11 @@ public class ApplicationPropertiesValidator {
     @Value("${downloader.fileNameResolver}")
     String fileNameResolver;
 
-    // TODO: Remove this; build it into the custom query
-    @Value("${downloader.sql.photoField.filePath:}")
-    String photoFieldFilePath;
-
     @Value("${downloader.udfDirectory}")
     String udfDirectory;
 
-    @Value("${downloader.udfFilePrefix}")
-    private String udfFilePrefix;
-
-    @Value("${downloader.udfFileExtension}")
-    private String udfFileExtension;
-
-    @Value("${downloader.descriptionDateFormat}")
-    private String descriptionDateFormat;
-
-    @Value("${downloader.udfBatchIdDateFormat}")
-    private String udfBatchIdDateFormat;
-
-    @Value("${downloader.createdDateFormat}")
-    private String createdDateFormat;
-
-    @Value("${downloader.enableCsv}")
-    private boolean enableCsv;
-
     @Value("${downloader.csvDirectory}")
     String csvDirectory;
-
-    @Value("${downloader.csvFilePrefix}")
-    private String csvFilePrefix;
-
-    @Value("${downloader.csvFileExtension}")
-    private String csvFileExtension;
-
-    @Value("${downloader.csvBatchIdDateFormat}")
-    private String csvBatchIdDateFormat;
 
     public void validate() {
 
@@ -94,7 +63,6 @@ public class ApplicationPropertiesValidator {
         log.info("      Storage Service : " + storageService);
         log.info("   File Name Resolver : " + fileNameResolver);
         log.info(" Photo Directory(ies) : " + String.join(" , ", photoDirectories));
-        log.info("          DB filepath : " + photoFieldFilePath);
         log.info("======== End Configuration Information ========");
     }
 
