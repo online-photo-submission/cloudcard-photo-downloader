@@ -27,6 +27,10 @@ public class FileStorageService implements StorageService {
     @SuppressWarnings("SpringJavaInjectionPointsAutowiringInspection")
     private FileNameResolver fileNameResolver;
 
+    @Autowired
+    @SuppressWarnings("SpringJavaInjectionPointsAutowiringInspection")
+    private PostProcessor postProcessor;
+
     @Override
     public List<PhotoFile> save(Collection<Photo> photos) throws Exception {
 
@@ -59,18 +63,8 @@ public class FileStorageService implements StorageService {
 
         String fullFileName = writeBytesToFile(photoDirectory, baseName + ".jpg", photo.getBytes());
 
-        PhotoFile photoFile = postProcess(photo, photoDirectory, new PhotoFile(baseName, fullFileName, photo.getId()));
+        PhotoFile photoFile = postProcessor.process(photo, photoDirectory, new PhotoFile(baseName, fullFileName, photo.getId()));
 
-        return photoFile;
-    }
-
-    /**
-     * This is a place holder for child classes to execute a post processing strategy
-     *
-     * @param photoFile
-     */
-    protected PhotoFile postProcess(Photo photo, String photoDirectory, PhotoFile photoFile) {
-        // do nothing
         return photoFile;
     }
 

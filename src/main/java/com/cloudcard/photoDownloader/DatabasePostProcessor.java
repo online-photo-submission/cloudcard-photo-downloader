@@ -6,7 +6,6 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
-import org.springframework.dao.EmptyResultDataAccessException;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Service;
 
@@ -17,30 +16,25 @@ import java.time.LocalDateTime;
 import java.util.Map;
 
 @Service
-@ConditionalOnProperty(value = "downloader.storageService", havingValue = "DatabaseMetadataFileStorageService")
-public class DatabaseMetadataFileStorageService extends FileStorageService {
+@ConditionalOnProperty(value = "downloader.postProcessor", havingValue = "DatabasePostProcessor")
+public class DatabasePostProcessor implements PostProcessor {
 
-    private static final Logger log = LoggerFactory.getLogger(DatabaseMetadataFileStorageService.class);
-
-    @Value("${db.mapping.column.studentId}")
-    String studentIdColumnName;
-    @Value("${db.mapping.table}")
-    String tableName;
+    private static final Logger log = LoggerFactory.getLogger(DatabasePostProcessor.class);
 
     @Value("${downloader.metadata.override.photoFilePath:}")
-    String filePathOverride;
+    private String filePathOverride;
 
     @Value("${downloader.metadata.db.update.query:}")
-    String updateQuery;
+    private String updateQuery;
 
     @Value("${downloader.metadata.db.update.params:}")
-    String[] paramNames;
+    private String[] paramNames;
 
     @Value("${downloader.metadata.db.update.paramTypes:}")
-    String[] paramTypes;
+    private String[] paramTypes;
 
     @Autowired
-    JdbcTemplate jdbcTemplate;
+    private JdbcTemplate jdbcTemplate;
 
     @PostConstruct
     public void init() {
@@ -53,7 +47,7 @@ public class DatabaseMetadataFileStorageService extends FileStorageService {
     }
 
     @Override
-    protected PhotoFile postProcess(Photo photo, String photoDirectory, PhotoFile photoFile) {
+    public PhotoFile process(Photo photo, String photoDirectory, PhotoFile photoFile) {
 
         try {
             updateDatabase(photo, photoFile);
