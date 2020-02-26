@@ -28,6 +28,9 @@ public class FileStorageService implements StorageService {
     private FileNameResolver fileNameResolver;
 
     @Autowired
+    PreProcessor preProcessor;
+
+    @Autowired
     @SuppressWarnings("SpringJavaInjectionPointsAutowiringInspection")
     private PostProcessor postProcessor;
 
@@ -47,6 +50,8 @@ public class FileStorageService implements StorageService {
     }
 
     protected PhotoFile save(Photo photo, String photoDirectory) throws Exception {
+
+        photo = preProcessor.process(photo);
 
         String baseName = fileNameResolver.getBaseName(photo);
 
