@@ -6,6 +6,8 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.stereotype.Component;
 
+import javax.annotation.PostConstruct;
+
 @Component
 @ConditionalOnProperty(value = "downloader.preProcessor", havingValue = "BytesLinkPreProcessor")
 public class BytesLinkPreProcessor implements PreProcessor {
@@ -15,6 +17,12 @@ public class BytesLinkPreProcessor implements PreProcessor {
 
     @Value("${BytesLinkPreprocessor.urlTemplate:}")
     String urlTemplate;
+
+    @PostConstruct
+    void init() {
+
+        ApplicationPropertiesValidator.throwIfBlank(urlTemplate, "BytesLinkPreprocessor.urlTemplate cannot be blank in application.properties.");
+    }
 
     public Photo process(Photo photo) {
 
