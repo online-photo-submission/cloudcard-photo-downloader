@@ -24,6 +24,9 @@ public class DownloaderService {
     @Autowired
     ApplicationPropertiesValidator applicationPropertiesValidator;
 
+    @Autowired
+    ShellCommandService shellCommandService;
+
     @PostConstruct
     public void init() {
 
@@ -34,13 +37,17 @@ public class DownloaderService {
     public void downloadPhotos() throws Exception {
 
         log.info("  ==========  Downloading photos  ==========  ");
+        shellCommandService.preExecute();
         List<Photo> photosToDownload = cloudCardPhotoService.fetchReadyForDownload();
+        shellCommandService.preDownload(photosToDownload);
         List<PhotoFile> downloadedPhotoFiles = storageService.save(photosToDownload);
         for (PhotoFile photoFile : downloadedPhotoFiles) {
             Photo downloadedPhoto = new Photo(photoFile.getPhotoId());
             cloudCardPhotoService.markAsDownloaded(downloadedPhoto);
         }
 
+        shellCommandService.postDownload(downloadedPhotoFiles);
+        shellCommandService.postExecute();
         log.info("Completed downloading " + downloadedPhotoFiles.size() + " photos.");
     }
 }
