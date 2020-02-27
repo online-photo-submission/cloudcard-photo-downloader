@@ -8,6 +8,8 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.stereotype.Service;
 
+import javax.annotation.PostConstruct;
+import java.io.File;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
@@ -30,6 +32,13 @@ public class SimpleSummaryService implements SummaryService {
 
     @Autowired
     private FileUtil fileUtil;
+
+    @PostConstruct
+    public void init() {
+
+        ApplicationPropertiesValidator.throwIfTrue(!(new File(directory).exists()), "SimpleSummaryService.directory is set to '" + directory + "', which does not exist. Please create it or change the value of SimpleSummaryService.directory");
+        ApplicationPropertiesValidator.throwIfTrue(!(new File(directory).isDirectory()), "SimpleSummaryService.directory is set to '" + directory + "', which is not a directory. Please change the value of SimpleSummaryService.directory");
+    }
 
     @Override
     public void createSummary(List<Photo> photos, List<PhotoFile> photoFiles) throws Exception {
