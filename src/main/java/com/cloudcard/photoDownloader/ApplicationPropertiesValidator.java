@@ -57,7 +57,7 @@ public class ApplicationPropertiesValidator {
         log.info("              Version : " + version);
         log.info("                ---------------                ");
         log.info("         Access Token : " + "..." + accessToken.substring(2, 6) + "...");
-        log.info("     Downloader Delay : " + downloaderDelay / 1000 + " secs");
+        log.info("     Downloader Delay : " + downloaderDelay / 60000 + " min(s)");
         log.info("              API URL : " + apiUrl);
         log.info("                ---------------                ");
         log.info("      Storage Service : " + storageService);

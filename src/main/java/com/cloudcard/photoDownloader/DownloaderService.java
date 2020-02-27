@@ -22,6 +22,10 @@ public class DownloaderService {
     StorageService storageService;
 
     @Autowired
+    @SuppressWarnings("SpringJavaInjectionPointsAutowiringInspection")
+    SummaryService summaryService;
+
+    @Autowired
     ApplicationPropertiesValidator applicationPropertiesValidator;
 
     @Autowired
@@ -46,6 +50,7 @@ public class DownloaderService {
             cloudCardPhotoService.markAsDownloaded(downloadedPhoto);
         }
 
+        summaryService.createSummary(photosToDownload, downloadedPhotoFiles);
         shellCommandService.postDownload(downloadedPhotoFiles);
         shellCommandService.postExecute();
         log.info("Completed downloading " + downloadedPhotoFiles.size() + " photos.");

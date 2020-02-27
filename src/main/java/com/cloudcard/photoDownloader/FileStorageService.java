@@ -28,6 +28,7 @@ public class FileStorageService implements StorageService {
     private FileNameResolver fileNameResolver;
 
     @Autowired
+    @SuppressWarnings("SpringJavaInjectionPointsAutowiringInspection")
     PreProcessor preProcessor;
 
     @Autowired
