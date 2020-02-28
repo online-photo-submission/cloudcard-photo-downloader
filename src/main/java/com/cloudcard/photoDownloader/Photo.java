@@ -38,6 +38,8 @@ public class Photo {
     private Person person;
     @JsonProperty("publicKey")
     private String publicKey;
+    @JsonProperty("externalURL")
+    private String externalURL;
     @JsonProperty("status")
     private String status;
     private byte[] bytes;
@@ -185,6 +187,17 @@ public class Photo {
         this.status = status;
     }
 
+    public String getExternalURL() {
+
+        return externalURL;
+    }
+
+    @JsonProperty("externalURL")
+    public void setExternalURL(String externalURL) {
+
+        this.externalURL = externalURL;
+    }
+
     public byte[] getBytes() {
 
         if (bytes == null) {
@@ -212,7 +225,7 @@ public class Photo {
 
     private void fetchBytes() throws Exception {
 
-        String bytesURL = links.getBytes();
+        String bytesURL = externalURL == null ? links.getBytes() : externalURL;
         HttpResponse<String> response = Unirest.get(bytesURL).header("accept", "image/jpeg;charset=utf-8").header("Content-Type", "image/jpeg;charset=utf-8").asString();
 
         if (response.getStatus() != 200) {
