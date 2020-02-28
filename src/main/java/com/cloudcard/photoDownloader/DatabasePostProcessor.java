@@ -45,12 +45,10 @@ public class DatabasePostProcessor implements PostProcessor {
             System.exit(1);
         }
 
-        log.info("========== DatabasePostProcessor Configuration ==========");
         log.info("         Update Query : " + updateQuery);
         log.info("          Param Names : " + String.join(" , ", paramNames));
         log.info("          Param Types : " + String.join(" , ", paramTypes));
         log.info("   File Path Override : " + filePathOverride);
-        log.info("======== End DatabasePostProcessor Configuration ========");
     }
 
     @Override

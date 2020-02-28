@@ -3,11 +3,16 @@ package com.cloudcard.photoDownloader;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 
 import javax.annotation.PostConstruct;
+import javax.management.timer.Timer;
 import java.util.List;
+
+import static com.cloudcard.photoDownloader.ApplicationPropertiesValidator.logVersion;
+import static com.cloudcard.photoDownloader.ApplicationPropertiesValidator.throwIfTrue;
 
 @Service
 public class DownloaderService {
@@ -26,15 +31,22 @@ public class DownloaderService {
     SummaryService summaryService;
 
     @Autowired
-    ApplicationPropertiesValidator applicationPropertiesValidator;
-
-    @Autowired
     ShellCommandService shellCommandService;
+
+    @Value("${downloader.delay.milliseconds}")
+    private Integer downloaderDelay;
 
     @PostConstruct
     public void init() {
 
-        applicationPropertiesValidator.validate();
+        throwIfTrue(downloaderDelay < Timer.ONE_MINUTE, "The minimum downloader delay is 60000 milliseconds (one minute).");
+        throwIfTrue(storageService == null, "The Storage Service must be specified.");
+        throwIfTrue(summaryService == null, "The Summary Service must be specified.");
+
+        logVersion();
+        log.info("     Downloader Delay : " + downloaderDelay / 60000 + " min(s)");
+        log.info("      Storage Service : " + storageService);
+        log.info("      Summary Service : " + summaryService);
     }
 
     @Scheduled(fixedDelayString = "${downloader.delay.milliseconds}")

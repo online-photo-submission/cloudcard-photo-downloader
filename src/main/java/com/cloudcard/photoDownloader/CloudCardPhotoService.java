@@ -9,10 +9,13 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
+import javax.annotation.PostConstruct;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+
+import static com.cloudcard.photoDownloader.ApplicationPropertiesValidator.throwIfBlank;
 
 @Service
 public class CloudCardPhotoService {
@@ -44,6 +47,17 @@ public class CloudCardPhotoService {
         this.accessToken = accessToken;
     }
 
+    @PostConstruct
+    void init() {
+
+        throwIfBlank(apiUrl, "The CloudCard API URL must be specified.");
+        throwIfBlank(accessToken, "The CloudCard API access token must be specified.");
+
+        log.info("         Access Token : " + "..." + accessToken.substring(3, 8) + "...");
+        log.info("              API URL : " + apiUrl);
+        log.info("           PUT Status : " + putStatus);
+        log.info("       Fetch Statuses : " + String.join(" , ", fetchStatuses));
+    }
 
     public List<Photo> fetchApproved() throws Exception {
 

@@ -7,12 +7,15 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.stereotype.Service;
 
+import javax.annotation.PostConstruct;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
+
+import static com.cloudcard.photoDownloader.ApplicationPropertiesValidator.throwIfTrue;
 
 @Service
 @ConditionalOnProperty(value = "downloader.storageService", havingValue = "FileStorageService")
@@ -34,6 +37,16 @@ public class FileStorageService implements StorageService {
     @Autowired
     @SuppressWarnings("SpringJavaInjectionPointsAutowiringInspection")
     private PostProcessor postProcessor;
+
+    @PostConstruct
+    void init() {
+
+        throwIfTrue(fileNameResolver == null, "The File Name Resolver must be specified.");
+        throwIfTrue(photoDirectories == null || photoDirectories.length == 0, "The Photo Directory(ies) must be specified.");
+
+        log.info("   File Name Resolver : " + fileNameResolver);
+        log.info(" Photo Directory(ies) : " + String.join(" , ", photoDirectories));
+    }
 
     @Override
     public List<PhotoFile> save(Collection<Photo> photos) throws Exception {

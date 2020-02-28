@@ -26,9 +26,7 @@ public class DatabaseFileNameResolver implements FileNameResolver {
     @PostConstruct
     void init() {
 
-        log.info("========== DatabaseFileNameResolver Configuration ==========");
         log.info(" Base File Name Query : " + baseFileNameQuery);
-        log.info("======== End DatabaseFileNameResolver Configuration ========");
     }
 
     @Override
