@@ -22,6 +22,8 @@ public class Person {
     private Organization organization;
     @JsonProperty("additionalPhotos")
     private List<Object> additionalPhotos = null;
+    @JsonProperty("customFields")
+    private Map<String, String> customFields;
     @JsonIgnore
     private Map<String, Object> additionalProperties = new HashMap<String, Object>();
 
@@ -99,6 +101,17 @@ public class Person {
         this.additionalPhotos = additionalPhotos;
     }
 
+    public Map<String, String> getCustomFields() {
+
+        return customFields;
+    }
+
+    @JsonProperty("customFields")
+    public void setCustomFields(Map<String, String> customFields) {
+
+        this.customFields = customFields;
+    }
+
     @JsonAnyGetter
     public Map<String, Object> getAdditionalProperties() {
 
@@ -112,10 +125,12 @@ public class Person {
     }
 
     public String getEmployeeNumber() {
+
         return employeeNumber;
     }
 
     public void setEmployeeNumber(String employeeNumber) {
+
         this.employeeNumber = employeeNumber;
     }
 }
