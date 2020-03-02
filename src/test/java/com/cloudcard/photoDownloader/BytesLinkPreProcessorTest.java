@@ -34,7 +34,7 @@ public class BytesLinkPreProcessorTest {
         photo.setPublicKey(publicKey);
         photo.setLinks(new Links());
         Photo result = preProcessor.process(photo);
-        assertThat(result.getLinks().getBytes()).isEqualTo(expected);
+        assertThat(result.getExternalURL()).isEqualTo(expected);
         assertThat(preProcessor.urlTemplate).contains("{publicKey}");
     }
 }

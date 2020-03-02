@@ -28,7 +28,7 @@ public class BytesLinkPreProcessor implements PreProcessor {
 
         String bytesLink = urlTemplate.replace(PUBLIC_KEY_TOKEN, photo.getPublicKey());
         log.info("Rewriting the bytes link for photo '" + photo.getId() + "' to: " + bytesLink);
-        photo.getLinks().setBytes(bytesLink);
+        photo.setExternalURL(bytesLink);
         return photo;
     }
 }
