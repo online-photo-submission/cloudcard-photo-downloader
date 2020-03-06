@@ -36,6 +36,9 @@ public class DownloaderService {
     @Value("${downloader.delay.milliseconds}")
     private Integer downloaderDelay;
 
+    @Value("${downloader.repeat:true}")
+    private boolean repeat;
+
     @PostConstruct
     public void init() {
 
@@ -66,5 +69,10 @@ public class DownloaderService {
         shellCommandService.postDownload(downloadedPhotoFiles);
         shellCommandService.postExecute();
         log.info("Completed downloading " + downloadedPhotoFiles.size() + " photos.");
+
+        if (!repeat) {
+            log.info("downloader.repeat is set to false. Exiting application now.");
+            System.exit(0);
+        }
     }
 }
