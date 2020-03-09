@@ -25,11 +25,12 @@ To test your system, run `java -version`.  The output should look like the follo
 ## Installation and Configuration
 
 1. Create a separate service account for CloudCard Photo Downloader to use. ([Instructions](https://www.youtube.com/watch?v=ZfrjFwrkwZQ))
-1. Download the [jar file](https://github.com/online-photo-submission/cloudcard-photo-downloader/raw/master/cloudcard-photo-downloader.jar).
-1. Download [application.properties](https://raw.githubusercontent.com/online-photo-submission/cloudcard-photo-downloader/master/src/main/resources/application.properties) into the same directory
+1. Download the [zip file](https://github.com/online-photo-submission/cloudcard-photo-downloader/raw/master/cloudcard-photo-downloader.zip).
 1. Get your access token (Instructions are included in the [service account video](https://www.youtube.com/watch?v=ZfrjFwrkwZQ).)
 1. Configure `application.properties` ([Instructions](https://github.com/online-photo-submission/cloudcard-photo-downloader#configuration))
-1. Run `java -jar cloudcard-photo-downloader.jar` from within the same directory as the JAR and application.properties files.
+1. Open a terminal/command prompt and navigate to the cloudcard-photo-downloader directory.
+1. Run `run` (Windows) or `./run.sh` (Linux/Mac).
+1. Check the file `downloader.log` for output from the downloader.
 1. *Recommended:* Set up the command to run as a service that starts automatically when the server starts.  The process for doing this is dependent on your operating system and is outside the scope of these instructions.
 
 ## Troubleshooting
