@@ -10,13 +10,11 @@ import org.springframework.stereotype.Service;
 
 import javax.annotation.PostConstruct;
 import java.io.File;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
-
-import static java.time.LocalDateTime.now;
-import static java.time.format.DateTimeFormatter.ofPattern;
 
 @Service
 @ConditionalOnProperty(value = "downloader.summaryService", havingValue = "SimpleSummaryService", matchIfMissing = true)
@@ -36,8 +34,10 @@ public class SimpleSummaryService implements SummaryService {
     @PostConstruct
     public void init() {
 
-        ApplicationPropertiesValidator.throwIfTrue(!(new File(directory).exists()), "SimpleSummaryService.directory is set to '" + directory + "', which does not exist. Please create it or change the value of SimpleSummaryService.directory");
-        ApplicationPropertiesValidator.throwIfTrue(!(new File(directory).isDirectory()), "SimpleSummaryService.directory is set to '" + directory + "', which is not a directory. Please change the value of SimpleSummaryService.directory");
+        File directory = new File(this.directory);
+        if (!directory.exists()) {
+            directory.mkdirs();
+        }
     }
 
     @Override
@@ -64,7 +64,7 @@ public class SimpleSummaryService implements SummaryService {
 
     private String getFileName() {
 
-        return this.fileName.isEmpty() ? directory + "/cloudcard-download-summary_" + now().format(ofPattern("MM-dd")) + ".txt" : directory + "/" + fileName;
+        return this.fileName.isEmpty() ? directory + "/cloudcard-download-summary_" + LocalDate.now() + ".txt" : directory + "/" + fileName;
     }
 
 }
