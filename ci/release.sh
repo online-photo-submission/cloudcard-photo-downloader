@@ -38,5 +38,6 @@ git add cloudcard-photo-downloader.jar
 git add $PROP_CONF
 git add $GRADLE_CONF
 
-#git commit -m "$version"
-#git tag "$version"
+git commit -m "$version"
+git tag "$version"
+git push origin master
