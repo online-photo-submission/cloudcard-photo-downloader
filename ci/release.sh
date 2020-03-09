@@ -28,13 +28,19 @@ rm "${PROP_CONF}$BACKUP"
 rm "${GRADLE_CONF}$BACKUP"
 
 # build
-rm cloudcard-photo-downloader.jar
+rm cloudcard-photo-downloader.*
 ./gradlew clean test build
 ./clean.sh
-cp build/libs/cloudcard-photo-downloader-*.jar cloudcard-photo-downloader.jar
+
+# package
+mkdir cloudcard-photo-downloader
+cp build/libs/cloudcard-photo-downloader-*.jar cloudcard-photo-downloader/cloudcard-photo-downloader.jar
+echo cloudcard.api.accessToken= >cloudcard-photo-downloader/application.properties
+zip -r cloudcard-photo-downloader.zip cloudcard-photo-downloader
+rm -rf cloudcard-photo-downloader
 
 # commit
-git add cloudcard-photo-downloader.jar
+git add cloudcard-photo-downloader.zip
 git add $PROP_CONF
 git add $GRADLE_CONF
 
