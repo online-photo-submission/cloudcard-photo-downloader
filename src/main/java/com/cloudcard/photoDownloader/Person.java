@@ -27,8 +27,6 @@ public class Person {
     @JsonIgnore
     private Map<String, Object> additionalProperties = new HashMap<String, Object>();
 
-    private String employeeNumber;
-
     @JsonProperty("id")
     public Integer getId() {
 
@@ -122,15 +120,5 @@ public class Person {
     public void setAdditionalProperty(String name, Object value) {
 
         this.additionalProperties.put(name, value);
-    }
-
-    public String getEmployeeNumber() {
-
-        return employeeNumber;
-    }
-
-    public void setEmployeeNumber(String employeeNumber) {
-
-        this.employeeNumber = employeeNumber;
     }
 }
