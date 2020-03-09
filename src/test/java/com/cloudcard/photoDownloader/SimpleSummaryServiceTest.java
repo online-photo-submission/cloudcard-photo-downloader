@@ -9,6 +9,7 @@ import org.mockito.runners.MockitoJUnitRunner;
 import org.springframework.test.util.ReflectionTestUtils;
 
 import java.io.IOException;
+import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -53,7 +54,7 @@ public class SimpleSummaryServiceTest {
 
         service.createSummary(generatePhotoList(), generatePhotoFileList());
 
-        verify(mockFileUtil, times(1)).writeFile(expectedLines, "summary/cloudcard-download-summary_" + now().format(ofPattern("MM-dd")) + ".txt");
+        verify(mockFileUtil, times(1)).writeFile(expectedLines, "summary/cloudcard-download-summary_" + LocalDate.now() + ".txt");
     }
 
     @Test
