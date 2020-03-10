@@ -6,6 +6,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
+import javax.annotation.PostConstruct;
 import java.util.List;
 
 @Service
@@ -27,6 +28,15 @@ public class ShellCommandService {
 
     @Autowired
     private ShellCommandRunner shellCommandRunner;
+
+    @PostConstruct
+    void init() {
+
+        log.info("  Pre-Execute Command : " + printCommand(preExecuteCommand));
+        log.info(" Pre-Download Command : " + printCommand(preDownloadCommand));
+        log.info("Post-Download Command : " + printCommand(postDownloadCommand));
+        log.info(" Post-Execute Command : " + printCommand(postExecuteCommand));
+    }
 
     public boolean preExecute() {
 
@@ -57,4 +67,10 @@ public class ShellCommandService {
         log.info("Running " + description + " command: " + command);
         return shellCommandRunner.run(command);
     }
+
+    private String printCommand(String command) {
+
+        return command == null || command.isEmpty() ? "none" : command;
+    }
+
 }

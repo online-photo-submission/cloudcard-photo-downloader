@@ -47,9 +47,10 @@ public class DownloaderService {
         throwIfTrue(summaryService == null, "The Summary Service must be specified.");
 
         logVersion();
+        log.info("          Repeat Mode : " + (repeat ? "Run Continually" : "Run Once & Stop"));
         log.info("     Downloader Delay : " + downloaderDelay / 60000 + " min(s)");
-        log.info("      Storage Service : " + storageService);
-        log.info("      Summary Service : " + summaryService);
+        log.info("      Storage Service : " + storageService.getClass().getSimpleName());
+        log.info("      Summary Service : " + summaryService.getClass().getSimpleName());
     }
 
     @Scheduled(fixedDelayString = "${downloader.delay.milliseconds}")
