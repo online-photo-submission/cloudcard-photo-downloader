@@ -3,7 +3,11 @@
 
 ---
 
+## Summary
 This project automatically downloads photos from [CloudCard Online Photo Submission](http://onlinephotosubmission.com/).
+
+## Tutorial Videos
+[![Image of Yaktocat](https://online-photo-submission.github.io/cloudcard-photo-downloader/video-preview.png)](https://www.youtube.com/playlist?list=PLBUntFa_QZcw6mOV96Fy4NyGVpTR6_6pA)
 
 ## Requirements
 
@@ -22,7 +26,7 @@ To test your system, run `java -version`.  The output should look like the follo
 > OpenJDK 64-Bit Server VM Corretto-8.232.09.2 (build 25.232-b09, mixed mode)
 
 
-## Installation and Configuration
+## Installation and Configuration ([Video](https://youtu.be/a9P57lKKo2Q))
 
 1. Create a separate service account for CloudCard Photo Downloader to use. ([Instructions](https://www.youtube.com/watch?v=ZfrjFwrkwZQ))
 1. Download the [zip file](https://github.com/online-photo-submission/cloudcard-photo-downloader/raw/master/cloudcard-photo-downloader.zip).
@@ -55,7 +59,7 @@ for more information on those options.
 
 Below are descriptions of each option:
 
-#### General Settings
+#### General Settings ([Video](https://youtu.be/B4xGNDWkk00))
 - cloudcard.api.url  
   - default: `https://api.onlinephotosubmission.com/api`
   - description: This option allows you to specify the URL of your CloudCard Online Photo Submission API.  Most users will not need to change this setting.  Generally, this is only useful if you are testing the integration using the test intance `https://test-api.onlinephotosubmission.com/api`.
@@ -87,7 +91,7 @@ Below are descriptions of each option:
   - default: `0`
   - description: This setting causes photo IDs to be left padded with zeros (0) until they have at least this many digits.
   
-#### Shell/Batch Script Hook Settings
+#### Shell/Batch Script Hook Settings ([Video](https://youtu.be/aJvwVxZtNTQ))
 - ShellCommandService.preExecuteCommand
   - default: none
   - description: this shell / batch script will be executed before each time that the downloader executes regardless of whether any photos are ready to be downloaded
@@ -102,13 +106,13 @@ Below are descriptions of each option:
   - default: none
   - description: this shell / batch script will be executed after each time that the downloader executes regardless of whether any photos were downloaded
 
-#### FileStorageService Settings
+#### FileStorageService Settings ([Video](https://youtu.be/rfAIyniCDAw))
 *Note: `downloader.storageService` must be set to `FileStorageService` for these to have any effect.*
 - downloader.photoDirectories
   - default: `.`
   - description: This is the absolute path to the directory(ies) into which the photos will be saved. Separate multiple directories with commas.  If multiple directories are specified, a copy of each downloaded photo will be saved to each directory. 
 
-#### SimpleDatabaseStorageService Settings
+#### SimpleDatabaseStorageService Settings ([Video](https://youtu.be/rCdqabrcrJA))
 *Note: `downloader.storageService` must be set to `SimpleDatabaseStorageService` for these to have any effect.*
 - db.mapping.table
   - default: `CLOUDCARD_PHOTOS`
@@ -213,7 +217,7 @@ marked as downloaded in CloudCard
   - example: `TIMESTAMP,NVARCHAR,VARCHAR`
     - Note: Order is important. The order in which the parameter types are listed must match the order in which they occur in `DatabasePostProcessor.query` 
 
-### Summary Service Settings  
+### Summary Service Settings ([Video](https://youtu.be/u33vJqTPPAg))  
 - downloader.summaryService
   - default: `SimpleSummaryService`
   - description: After successfully downloading photos, the summary service prepares and saves a summary report
