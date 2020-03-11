@@ -7,7 +7,7 @@
 This project automatically downloads photos from [CloudCard Online Photo Submission](http://onlinephotosubmission.com/).
 
 ## Tutorial Videos
-[![Image of Yaktocat](https://online-photo-submission.github.io/cloudcard-photo-downloader/video-preview.png)](https://www.youtube.com/playlist?list=PLBUntFa_QZcw6mOV96Fy4NyGVpTR6_6pA)
+[![Tutorial Videos](https://online-photo-submission.github.io/cloudcard-photo-downloader/video-preview.png)](https://www.youtube.com/playlist?list=PLBUntFa_QZcw6mOV96Fy4NyGVpTR6_6pA)
 
 ## Requirements
 
