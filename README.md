@@ -109,7 +109,7 @@ Below are descriptions of each option:
 #### FileStorageService Settings ([Video](https://youtu.be/rfAIyniCDAw))
 *Note: `downloader.storageService` must be set to `FileStorageService` for these to have any effect.*
 - downloader.photoDirectories
-  - default: `.`
+  - default: `downloaded-photos`
   - description: This is the absolute path to the directory(ies) into which the photos will be saved. Separate multiple directories with commas.  If multiple directories are specified, a copy of each downloaded photo will be saved to each directory. 
 
 #### SimpleDatabaseStorageService Settings ([Video](https://youtu.be/rCdqabrcrJA))
