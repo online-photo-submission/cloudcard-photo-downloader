@@ -19,6 +19,9 @@ This project automatically downloads photos from [CloudCard Online Photo Submiss
   - [Red Hat OpenJDK 8](https://developers.redhat.com/products/openjdk/download)
 - 512MB RAM
 - Office level access to [CloudCard Online Photo Submission](http://onlinephotosubmission.com/)
+- Outbound network access to the following servers/ports
+  - api.onlinephotosubmission.com:443
+  - s3.amazonaws.com:443
 
 To test your system, run `java -version`.  The output should look like the following.  The exact version isn't important as long as it starts with `1.8`.
 > openjdk version "1.8.0_232" <br/>
