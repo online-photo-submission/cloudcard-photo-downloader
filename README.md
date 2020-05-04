@@ -18,6 +18,11 @@ This project automatically downloads photos from [CloudCard Online Photo Submiss
     - [Linux Installation Instructions](https://docs.aws.amazon.com/corretto/latest/corretto-8-ug/generic-linux-install.html)
   - [Red Hat OpenJDK 8](https://developers.redhat.com/products/openjdk/download)
 - 512MB RAM
+- Storage: 1GB 
+- OS: Any
+- Processor: Any
+- Storage Location - OS or Data: Any
+- OS/Security Roles: Access to photo storage destination 
 - Office level access to [CloudCard Online Photo Submission](http://onlinephotosubmission.com/)
 
 To test your system, run `java -version`.  The output should look like the following.  The exact version isn't important as long as it starts with `1.8`.
