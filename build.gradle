@@ -30,8 +30,7 @@ dependencies {
     compile('com.fasterxml.jackson.core:jackson-databind')
     compile group: 'org.springframework', name: 'spring-jdbc'
     compile group: 'mysql', name: 'mysql-connector-java', version: '5.1.6'
-    // https://mvnrepository.com/artifact/com.microsoft.sqlserver/mssql-jdbc
     compile group: 'com.microsoft.sqlserver', name: 'mssql-jdbc', version: '7.2.1.jre8'
     compile 'org.apache.commons:commons-lang3:3.8'
-
+    compile files('lib/ojdbc7.jar')
 }
