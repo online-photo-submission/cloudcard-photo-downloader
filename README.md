@@ -132,12 +132,13 @@ Below are descriptions of each option:
   - default: `PHOTO`
   - description: This is the name of the `BLOB` column into which the cardholder's jpeg encoded image will be stored.
 
-### Database Connection Settings
+### Database Connection Settings ([Video](https://youtu.be/JeykYIykI6k))
 - db.datasource.enabled
   - default: `false`
 - db.datasource.driverClassName
-  - default: `com.microsoft.sqlserver.jdbc.SQLServerDriver`
+  - default: none
   - options:
+    - Oracle: `oracle.jdbc.OracleDriver`
     - MS SQLServer: `com.microsoft.sqlserver.jdbc.SQLServerDriver` 
     - MySQL: `com.mysql.jdbc.Driver`
 - db.datasource.url
@@ -149,8 +150,9 @@ Below are descriptions of each option:
 - db.datasource.schema
   - default: none
 - spring.jpa.hibernate.dialect
-  - default: `org.hibernate.dialect.SQLServer2012Dialect`
+  - default: none
   - options:
+    - Oracle: `org.hibernate.dialect.Oracle10gDialect`
     - MS SQLServer: `org.hibernate.dialect.SQLServer2012Dialect`
     - MySQL: `org.hibernate.dialect.MySQL5InnoDBDialect`
     
