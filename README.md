@@ -23,7 +23,7 @@ This project automatically downloads photos from [CloudCard Online Photo Submiss
 - Processor: Any
 - Storage Location - OS or Data: Any
 - OS/Security Roles: Access to photo storage destination 
-- Office level access to [CloudCard Online Photo Submission](http://onlinephotosubmission.com/)
+- [Service account with office level access](https://sharptop.atlassian.net/wiki/spaces/CCD/pages/1226440705/User+Roles) to [CloudCard Online Photo Submission](http://onlinephotosubmission.com/)
 - Outbound network access to the following servers/ports
   - api.onlinephotosubmission.com:443
   - s3.amazonaws.com:443
