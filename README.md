@@ -36,7 +36,7 @@ To test your system, run `java -version`.  The output should look like the follo
 
 ## Installation and Configuration ([Video](https://youtu.be/a9P57lKKo2Q))
 
-1. Create a separate service account for CloudCard Photo Downloader to use. ([Instructions](https://www.youtube.com/watch?v=ZfrjFwrkwZQ))
+1. Create a separate [service account](https://sharptop.atlassian.net/wiki/spaces/CCD/pages/1226440705/User+Roles) for CloudCard Photo Downloader to use. ([Instructions](https://www.youtube.com/watch?v=ZfrjFwrkwZQ))
 1. Download the [zip file](https://github.com/online-photo-submission/cloudcard-photo-downloader/raw/master/cloudcard-photo-downloader.zip).
 1. Get your access token (Instructions are included in the [service account video](https://www.youtube.com/watch?v=ZfrjFwrkwZQ).)
 1. Configure `application.properties` ([Instructions](https://github.com/online-photo-submission/cloudcard-photo-downloader#configuration))
