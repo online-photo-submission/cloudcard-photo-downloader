@@ -83,7 +83,8 @@ public class CloudCardPhotoService {
 
     public List<Photo> fetch(String status) throws Exception {
 
-        HttpResponse<String> response = Unirest.get(apiUrl + "/trucredential/" + accessToken + "/photos?status=" + status + "&base64EncodedImage=false").headers(standardHeaders()).asString();
+        String url = apiUrl + "/trucredential/" + accessToken + "/photos?status=" + status + "&base64EncodedImage=false&max=1000";
+        HttpResponse<String> response = Unirest.get(url).headers(standardHeaders()).asString();
 
         if (response.getStatus() != 200) {
             log.error("Status " + response.getStatus() + " returned from CloudCard API when retrieving photo list to download.");
