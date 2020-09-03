@@ -15,7 +15,7 @@ apply plugin: 'eclipse'
 apply plugin: 'org.springframework.boot'
 
 group = 'com.onlinephotosubmission'
-version = '20.06.03'
+version = '20.09.03'
 sourceCompatibility = 1.8
 
 repositories {
