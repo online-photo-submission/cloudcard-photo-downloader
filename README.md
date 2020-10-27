@@ -11,12 +11,13 @@ This project automatically downloads photos from [CloudCard Online Photo Submiss
 
 ## Requirements
 
-- JDK 1.8 
+- JDK 1.8 - Choose one of the following:
   - Amazon Corretto 8 (recommended)
     - [Download](https://docs.aws.amazon.com/corretto/latest/corretto-8-ug/downloads-list.html)
     - [Windows Installation Instructions](https://docs.aws.amazon.com/corretto/latest/corretto-8-ug/windows-7-install.html)
     - [Linux Installation Instructions](https://docs.aws.amazon.com/corretto/latest/corretto-8-ug/generic-linux-install.html)
   - [Red Hat OpenJDK 8](https://developers.redhat.com/products/openjdk/download)
+  - Oracle JDK (requires an Oracle support license)
 - 512MB RAM
 - Storage: 1GB 
 - OS: Any
