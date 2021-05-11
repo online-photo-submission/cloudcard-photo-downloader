@@ -3,7 +3,7 @@ set authToken=
 set outputDir=
 set photoDir=
 
-(for %%f in ("%photoDir%*.jpg") do @echo "%%~nf") >> quotesVar.temp
+(for %%f in ("%photoDir%\*.jpg") do @echo "%%~nf") >> quotesVar.temp
 
 @echo off
 setlocal EnableDelayedExpansion
