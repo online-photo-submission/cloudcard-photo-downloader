@@ -21,7 +21,7 @@ public class Person {
     @JsonProperty("organization")
     private Organization organization;
     @JsonProperty("additionalPhotos")
-    private List<Object> additionalPhotos = null;
+    private List<AdditionalPhoto> additionalPhotos = null;
     @JsonProperty("customFields")
     private Map<String, String> customFields;
     @JsonIgnore
@@ -88,13 +88,13 @@ public class Person {
     }
 
     @JsonProperty("additionalPhotos")
-    public List<Object> getAdditionalPhotos() {
+    public List<AdditionalPhoto> getAdditionalPhotos() {
 
         return additionalPhotos;
     }
 
     @JsonProperty("additionalPhotos")
-    public void setAdditionalPhotos(List<Object> additionalPhotos) {
+    public void setAdditionalPhotos(List<AdditionalPhoto> additionalPhotos) {
 
         this.additionalPhotos = additionalPhotos;
     }
