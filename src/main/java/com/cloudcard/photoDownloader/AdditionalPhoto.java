@@ -12,6 +12,8 @@ public class AdditionalPhoto {
     private Integer id;
     private String typeName;
     private String externalURL;
+    @JsonProperty("publicKey")
+    private String publicKey;
     @JsonIgnore
     private Map<String, Object> additionalProperties = new HashMap<String, Object>();
 
@@ -49,6 +51,18 @@ public class AdditionalPhoto {
 
     public void setExternalURL(String externalURL) {
         this.externalURL = externalURL;
+    }
+
+    @JsonProperty("publicKey")
+    public String getPublicKey() {
+
+        return publicKey;
+    }
+
+    @JsonProperty("publicKey")
+    public void setPublicKey(String publicKey) {
+
+        this.publicKey = publicKey;
     }
 
     @JsonAnyGetter
