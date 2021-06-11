@@ -46,6 +46,8 @@ public class FileStorageService implements StorageService {
 
         log.info("   File Name Resolver : " + fileNameResolver.getClass().getSimpleName());
         log.info(" Photo Directory(ies) : " + String.join(" , ", photoDirectories));
+        log.info("        Pre-Processor : " + preProcessor.getClass().getSimpleName());
+        log.info("       Post-Processor : " + postProcessor.getClass().getSimpleName());
     }
 
     @Override

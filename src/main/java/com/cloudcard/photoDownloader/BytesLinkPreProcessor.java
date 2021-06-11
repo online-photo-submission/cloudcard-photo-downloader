@@ -7,6 +7,7 @@ import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.stereotype.Component;
 
 import javax.annotation.PostConstruct;
+import java.util.List;
 
 @Component
 @ConditionalOnProperty(value = "downloader.preProcessor", havingValue = "BytesLinkPreProcessor")
@@ -25,21 +26,28 @@ public class BytesLinkPreProcessor implements PreProcessor {
     void init() {
 
         ApplicationPropertiesValidator.throwIfBlank(urlTemplate, "BytesLinkPreprocessor.urlTemplate cannot be blank in application.properties.");
+
+        log.info("         URL Template : " + urlTemplate);
+        log.info("Add.Photo URLTemplate : " + additionalPhotoUrlTemplate);
     }
 
     public Photo process(Photo photo) {
+
         String bytesLink = urlTemplate.replace(PUBLIC_KEY_TOKEN, photo.getPublicKey());
         log.info("Rewriting the bytes link for photo '" + photo.getId() + "' to: " + bytesLink);
         photo.setExternalURL(bytesLink);
 
-        if (additionalPhotoUrlTemplate == null) {
+        if (additionalPhotoUrlTemplate == null || !additionalPhotoUrlTemplate.contains(PUBLIC_KEY_TOKEN)) {
             return photo;
         }
 
-        for (AdditionalPhoto additionalPhoto : photo.getPerson().getAdditionalPhotos()) {
-            bytesLink = additionalPhotoUrlTemplate.replace(PUBLIC_KEY_TOKEN, additionalPhoto.getPublicKey());
-            log.info("Rewriting the bytes link for additionalPhoto '" + additionalPhoto.getId() + "' to: " + bytesLink);
-            additionalPhoto.setExternalURL(bytesLink);
+        List<AdditionalPhoto> additionalPhotos = photo.getPerson().getAdditionalPhotos();
+        if (additionalPhotos != null) {
+            for (AdditionalPhoto additionalPhoto : additionalPhotos) {
+                bytesLink = additionalPhotoUrlTemplate.replace(PUBLIC_KEY_TOKEN, additionalPhoto.getPublicKey());
+                log.info("Rewriting the bytes link for additionalPhoto '" + additionalPhoto.getId() + "' to: " + bytesLink);
+                additionalPhoto.setExternalURL(bytesLink);
+            }
         }
 
         return photo;
