@@ -18,6 +18,9 @@ public class BytesLinkPreProcessor implements PreProcessor {
     @Value("${BytesLinkPreprocessor.urlTemplate:}")
     String urlTemplate;
 
+    @Value("${BytesLinkPreprocessor.additionalPhotoUrlTemplate:}")
+    String additionalPhotoUrlTemplate;
+
     @PostConstruct
     void init() {
 
@@ -25,10 +28,20 @@ public class BytesLinkPreProcessor implements PreProcessor {
     }
 
     public Photo process(Photo photo) {
-
         String bytesLink = urlTemplate.replace(PUBLIC_KEY_TOKEN, photo.getPublicKey());
         log.info("Rewriting the bytes link for photo '" + photo.getId() + "' to: " + bytesLink);
         photo.setExternalURL(bytesLink);
+
+        if (additionalPhotoUrlTemplate == null) {
+            return photo;
+        }
+
+        for (AdditionalPhoto additionalPhoto : photo.getPerson().getAdditionalPhotos()) {
+            bytesLink = additionalPhotoUrlTemplate.replace(PUBLIC_KEY_TOKEN, additionalPhoto.getPublicKey());
+            log.info("Rewriting the bytes link for additionalPhoto '" + additionalPhoto.getId() + "' to: " + bytesLink);
+            additionalPhoto.setExternalURL(bytesLink);
+        }
+
         return photo;
     }
 }
