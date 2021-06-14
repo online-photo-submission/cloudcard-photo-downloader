@@ -8,8 +8,8 @@ import org.slf4j.LoggerFactory;
 import java.io.IOException;
 import java.io.InputStream;
 
-public class RestUtil {
-    private static final Logger log = LoggerFactory.getLogger(RestUtil.class);
+public class RestService {
+    private static final Logger log = LoggerFactory.getLogger(RestService.class);
 
     public static byte[] fetchBytes(String externalURL) throws Exception {
 

@@ -1,13 +1,9 @@
 package com.cloudcard.photoDownloader;
 
 import com.fasterxml.jackson.annotation.*;
-import com.mashape.unirest.http.HttpResponse;
-import com.mashape.unirest.http.Unirest;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.IOException;
-import java.io.InputStream;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -202,7 +198,7 @@ public class Photo {
 
         if (bytes == null) {
             try {
-                bytes = RestUtil.fetchBytes(externalURL);
+                bytes = RestService.fetchBytes(externalURL);
             } catch (Exception e) {
                 log.error(e.getMessage());
                 e.printStackTrace();
