@@ -5,6 +5,7 @@ import org.junit.Before;
 import org.junit.Test;
 
 import java.io.BufferedReader;
+import java.io.File;
 import java.io.FileReader;
 import java.io.IOException;
 import java.nio.file.Files;
@@ -20,18 +21,18 @@ public class FileServiceTest {
     Random random = new Random();
     FileService fileService;
     final String fileName = "test-summary-file.log";
+    final String binaryDirectory = "bacon";
+    final String binaryFileName = "eggs.jpg";
 
     @Before
     public void before() throws Exception {
-
         fileService = new FileService();
-        Files.deleteIfExists(Paths.get(fileName));
+        cleanUpFiles();
     }
 
     @After
     public void after() throws Exception {
-
-        Files.deleteIfExists(Paths.get(fileName));
+        cleanUpFiles();
     }
 
     @Test
@@ -81,4 +82,29 @@ public class FileServiceTest {
         }
         assertThat(reader.readLine()).isNullOrEmpty();
     }
+
+    @Test
+    public void testWriteBytesToFile() throws Exception {
+        //set up
+        byte[] bytes = Files.readAllBytes(Paths.get("src/test/resources/example_id_photo.jpg"));
+
+        String fileName = fileService.writeBytesToFile(binaryDirectory, binaryFileName, bytes);
+
+        //check stuff
+        assertThat(fileName).isEqualTo(System.getProperty("user.dir") + "/" + binaryDirectory + "/" + binaryFileName);
+
+        File file = new File(fileName);
+        assertThat(file.exists()).isTrue();
+        assertThat(file.length()).isEqualTo(bytes.length);
+    }
+
+    /* *** PRIVATE HELPER METHODS *** */
+
+    private void cleanUpFiles() throws IOException {
+
+        Files.deleteIfExists(Paths.get(fileName));
+        Files.deleteIfExists(Paths.get(binaryDirectory + "/" + binaryFileName));
+        Files.deleteIfExists(Paths.get(binaryDirectory));
+    }
+
 }

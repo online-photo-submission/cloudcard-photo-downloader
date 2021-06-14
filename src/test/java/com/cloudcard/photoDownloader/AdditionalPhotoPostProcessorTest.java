@@ -2,26 +2,36 @@ package com.cloudcard.photoDownloader;
 
 import org.junit.Before;
 import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.mockito.runners.MockitoJUnitRunner;
 import org.springframework.test.util.ReflectionTestUtils;
 
 import java.io.File;
+import java.nio.file.Files;
+import java.nio.file.Paths;
+import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.Random;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
 
+@RunWith(MockitoJUnitRunner.class)
 public class AdditionalPhotoPostProcessorTest {
 
+    @Mock
+    FileService mockFileService;
+
+    @InjectMocks
     AdditionalPhotoPostProcessor postProcessor;
     Random random = new Random();
-
-    //    private String[] photoDirectories = {"APPROVED", "READY_FOR_DOWNLOAD"};
 
     @Before
     public void setUp() {
 
-        postProcessor = new AdditionalPhotoPostProcessor();
-        ReflectionTestUtils.setField(postProcessor, "fileService", new FileService());
     }
 
     @Test
@@ -36,13 +46,12 @@ public class AdditionalPhotoPostProcessorTest {
         postProcessor.process(photo, "./temp", new PhotoFile(baseFileName, null, 1));
 
         //check stuff
-        File file = new File("./temp/pancakes/" + baseFileName + ".jpg");
-        assertThat(file.exists()).isTrue();
-        assertThat(file.length()).isEqualTo(new File("src/test/resources/example_id_photo.jpg").length());
+        byte[] expectedBytes = Files.readAllBytes(Paths.get("src/test/resources/example_id_photo.jpg"));
+        verify(mockFileService, times(1)).writeBytesToFile("./temp/pancakes", baseFileName + ".jpg", expectedBytes);
     }
 
     @Test
-    public void testProcess_WithTwoAdditionalPhotot() throws Exception {
+    public void testProcess_WithTwoAdditionalPhotos() throws Exception {
 
         //set up
         AdditionalPhoto additionalPhoto = createAdditionalPhoto("https://sharptopco.github.io/cloudcard-custom-assets/example_id_photo.jpg", "pancakes");
@@ -55,10 +64,11 @@ public class AdditionalPhotoPostProcessorTest {
         postProcessor.process(photo, "./temp", new PhotoFile(baseFileName, null, 1));
 
         //check stuff
-        File file = new File("./temp/pancakes/" + baseFileName + ".jpg");
-        assertThat(file.exists()).isTrue();
-        file = new File("./temp/sausage/" + baseFileName + ".jpg");
-        assertThat(file.exists()).isTrue();
+        byte[] expectedBytes = Files.readAllBytes(Paths.get("src/test/resources/example_id_photo.jpg"));
+        verify(mockFileService, times(1)).writeBytesToFile("./temp/pancakes", baseFileName + ".jpg", expectedBytes);
+
+        expectedBytes = Files.readAllBytes(Paths.get("src/test/resources/not-submitted.jpg"));
+        verify(mockFileService, times(1)).writeBytesToFile("./temp/sausage", baseFileName + ".jpg", expectedBytes);
     }
 
     /* *** PRIVATE HELPER METHODS *** */
