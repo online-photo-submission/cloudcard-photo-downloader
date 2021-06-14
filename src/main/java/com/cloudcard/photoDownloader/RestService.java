@@ -4,12 +4,18 @@ import com.mashape.unirest.http.HttpResponse;
 import com.mashape.unirest.http.Unirest;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.stereotype.Component;
 
 import java.io.IOException;
 import java.io.InputStream;
 
+@Component
 public class RestService {
     private static final Logger log = LoggerFactory.getLogger(RestService.class);
+
+    public void fetchBytes(AdditionalPhoto additionalPhoto) throws Exception {
+        additionalPhoto.setBytes(fetchBytes(additionalPhoto.getExternalURL()));
+    }
 
     public static byte[] fetchBytes(String externalURL) throws Exception {
 
@@ -23,6 +29,13 @@ public class RestService {
         return getBytes(response);
     }
 
+    /**
+     * Gets the bytes from the response body
+     *
+     * @param response
+     * @return binary from response body
+     * @throws IOException
+     */
     private static byte[] getBytes(HttpResponse<String> response) throws IOException {
 
         InputStream rawBody = response.getRawBody();
@@ -30,5 +43,4 @@ public class RestService {
         rawBody.read(bytes);
         return bytes;
     }
-
 }

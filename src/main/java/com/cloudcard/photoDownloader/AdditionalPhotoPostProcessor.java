@@ -17,6 +17,9 @@ public class AdditionalPhotoPostProcessor implements PostProcessor {
     @Autowired
     FileService fileService;
 
+    @Autowired
+    RestService restService;
+
     @Override
     public PhotoFile process(Photo photo, String photoDirectory, PhotoFile photoFile) {
 
@@ -24,9 +27,10 @@ public class AdditionalPhotoPostProcessor implements PostProcessor {
         for (AdditionalPhoto additionalPhoto : photo.getPerson().getAdditionalPhotos()) {
             String directoryName = photoDirectory + "/" + additionalPhoto.getTypeName();
             try {
+                restService.fetchBytes(additionalPhoto);
                 // TODO: save all of the additional photos that exist and that are defined in the config value xxx.yyy.zzz
                 fileService.writeBytesToFile(directoryName, photoFile.getBaseName() + ".jpg", additionalPhoto.getBytes());
-            } catch (IOException e) {
+            } catch (Exception e) {
                 log.error(e.getMessage());
                 log.error("Failed to save additional photo (" + additionalPhoto.getTypeName() + ") for person " + photo.getPerson().getIdentifier());
             }

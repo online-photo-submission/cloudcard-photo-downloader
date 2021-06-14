@@ -32,6 +32,7 @@ public class AdditionalPhotoPostProcessorTest {
     @Before
     public void setUp() {
 
+        ReflectionTestUtils.setField(postProcessor, "restService", new RestService());
     }
 
     @Test
