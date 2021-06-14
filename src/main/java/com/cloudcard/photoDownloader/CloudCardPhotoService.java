@@ -6,6 +6,7 @@ import com.mashape.unirest.http.HttpResponse;
 import com.mashape.unirest.http.Unirest;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
@@ -37,6 +38,9 @@ public class CloudCardPhotoService {
     @Value("${downloader.fetchStatuses:READY_FOR_DOWNLOAD}")
     private String[] fetchStatuses;
 
+    @Autowired
+    RestService restService;
+
     public CloudCardPhotoService() {
 
     }
@@ -59,14 +63,13 @@ public class CloudCardPhotoService {
         log.info("       Fetch Statuses : " + String.join(" , ", fetchStatuses));
     }
 
-    public List<Photo> fetchApproved() throws Exception {
-
-        return fetch(APPROVED);
-    }
-
     public List<Photo> fetchReadyForDownload() throws Exception {
 
-        return fetch(fetchStatuses);
+        List<Photo> photos = fetch(fetchStatuses);
+        for(Photo photo : photos) {
+            restService.fetchBytes(photo);
+        }
+        return photos;
     }
 
     public List<Photo> fetch(String[] statuses) throws Exception {

@@ -196,15 +196,12 @@ public class Photo {
 
     public byte[] getBytes() {
 
-        if (bytes == null) {
-            try {
-                bytes = RestService.fetchBytes(externalURL);
-            } catch (Exception e) {
-                log.error(e.getMessage());
-                e.printStackTrace();
-            }
-        }
         return bytes;
+    }
+
+    public void setBytes(byte[] bytes) {
+
+        this.bytes = bytes;
     }
 
     @JsonAnyGetter

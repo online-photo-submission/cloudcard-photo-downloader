@@ -22,10 +22,11 @@ public class CloudCardPhotoServiceTests {
     public void setup() {
 
         service = new CloudCardPhotoService();
-        ReflectionTestUtils.setField(service, "apiUrl", "https://api.onlinephotosubmission.com/api");
-        ReflectionTestUtils.setField(service, "accessToken", "bom0m9qvfpkr42rv3odo41feilmvj740");
+        ReflectionTestUtils.setField(service, "apiUrl", "http://localhost:8080/api");
+        ReflectionTestUtils.setField(service, "accessToken", "tu34pec33k4uait0u12f6c4jujll9s3d");
         ReflectionTestUtils.setField(service, "fetchStatuses", fetchStatuses);
         ReflectionTestUtils.setField(service, "putStatus", "DOWNLOADED");
+        ReflectionTestUtils.setField(service, "restService", new RestService());
     }
 
     @Test
@@ -35,17 +36,8 @@ public class CloudCardPhotoServiceTests {
         assertThat(photos.size()).isGreaterThanOrEqualTo(0);
         for (Photo photo : photos) {
             assertThat(fetchStatuses).contains(photo.getStatus());
-        }
-    }
-
-    @Test
-    public void testFetchApproved() throws Exception {
-
-
-        List<Photo> photos = service.fetchApproved();
-        assertThat(photos.size()).isGreaterThanOrEqualTo(0);
-        for (Photo photo : photos) {
-            assertThat(photo.getStatus()).isEqualTo(APPROVED);
+            assertThat(photo.getBytes()).isNotNull();
+            assertThat(photo.getBytes().length).isGreaterThanOrEqualTo(1);
         }
     }
 

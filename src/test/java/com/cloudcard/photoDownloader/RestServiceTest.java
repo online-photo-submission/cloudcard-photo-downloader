@@ -22,13 +22,17 @@ public class RestServiceTest {
     }
 
     @Test
-    public void testFetchBytes() throws Exception {
+    public void testFetchBytesForPhoto() throws Exception {
+
+        //setup
+        Photo photo = new Photo();
+        photo.setExternalURL(TEST_IMAGE_URL);
 
         //test
-        byte[] bytes = restService.fetchBytes(TEST_IMAGE_URL);
+        restService.fetchBytes(photo);
 
         //verify
-        assertThat(bytes).isEqualTo(expectedTestImageBytes);
+        assertThat(photo.getBytes()).isEqualTo(expectedTestImageBytes);
     }
 
     @Test

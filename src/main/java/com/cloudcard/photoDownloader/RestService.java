@@ -13,11 +13,15 @@ import java.io.InputStream;
 public class RestService {
     private static final Logger log = LoggerFactory.getLogger(RestService.class);
 
+    public void fetchBytes(Photo photo) throws Exception {
+        photo.setBytes(fetchBytes(photo.getExternalURL()));
+    }
+
     public void fetchBytes(AdditionalPhoto additionalPhoto) throws Exception {
         additionalPhoto.setBytes(fetchBytes(additionalPhoto.getExternalURL()));
     }
 
-    public static byte[] fetchBytes(String externalURL) throws Exception {
+    private static byte[] fetchBytes(String externalURL) throws Exception {
 
         HttpResponse<String> response = Unirest.get(externalURL).header("accept", "image/jpeg;charset=utf-8").header("Content-Type", "image/jpeg;charset=utf-8").asString();
 
