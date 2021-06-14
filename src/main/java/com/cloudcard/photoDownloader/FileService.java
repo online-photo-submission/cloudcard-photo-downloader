@@ -11,9 +11,9 @@ import java.io.IOException;
 import java.util.List;
 
 @Component
-public class FileUtil {
+public class FileService {
 
-    static final Logger log = LoggerFactory.getLogger(FileUtil.class);
+    static final Logger log = LoggerFactory.getLogger(FileService.class);
 
     public String writeBytesToFile(String directoryName, String fileName, byte[] bytes) throws IOException {
 

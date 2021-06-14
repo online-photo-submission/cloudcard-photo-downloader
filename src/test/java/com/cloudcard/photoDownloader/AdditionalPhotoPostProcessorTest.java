@@ -21,7 +21,7 @@ public class AdditionalPhotoPostProcessorTest {
     public void setUp() {
 
         postProcessor = new AdditionalPhotoPostProcessor();
-        ReflectionTestUtils.setField(postProcessor, "fileUtil", new FileUtil());
+        ReflectionTestUtils.setField(postProcessor, "fileService", new FileService());
     }
 
     @Test

@@ -29,7 +29,7 @@ public class SimpleSummaryService implements SummaryService {
     private String directory;
 
     @Autowired
-    private FileUtil fileUtil;
+    private FileService fileService;
 
     @PostConstruct
     public void init() {
@@ -54,7 +54,7 @@ public class SimpleSummaryService implements SummaryService {
         lines.add(summary);
 
         log.info("Writing summary to '" + getFileName() + "'\n" + summary);
-        fileUtil.writeFile(lines, getFileName());
+        fileService.writeFile(lines, getFileName());
     }
 
     private String pad(int i) {

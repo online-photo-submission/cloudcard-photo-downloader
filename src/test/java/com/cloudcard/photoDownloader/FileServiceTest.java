@@ -15,16 +15,16 @@ import java.util.Random;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-public class FileUtilTest {
+public class FileServiceTest {
 
     Random random = new Random();
-    FileUtil fileUtil;
+    FileService fileService;
     final String fileName = "test-summary-file.log";
 
     @Before
     public void before() throws Exception {
 
-        fileUtil = new FileUtil();
+        fileService = new FileService();
         Files.deleteIfExists(Paths.get(fileName));
     }
 
@@ -41,7 +41,7 @@ public class FileUtilTest {
         List<String> lines = generateLines();
 
         //test writing
-        fileUtil.writeFile(lines, fileName);
+        fileService.writeFile(lines, fileName);
 
         //verify
         checkFileOutput(lines, 1);
@@ -54,9 +54,9 @@ public class FileUtilTest {
         List<String> lines = generateLines();
 
         //test writing
-        fileUtil.writeFile(lines, fileName);
+        fileService.writeFile(lines, fileName);
         // append more
-        fileUtil.writeFile(lines, fileName);
+        fileService.writeFile(lines, fileName);
 
         //verify
         checkFileOutput(lines, 2);

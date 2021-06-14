@@ -23,7 +23,7 @@ import static org.mockito.Mockito.*;
 public class SimpleSummaryServiceTest {
 
     @Mock
-    FileUtil mockFileUtil;
+    FileService mockFileService;
 
     @InjectMocks
     SimpleSummaryService service;
@@ -43,7 +43,7 @@ public class SimpleSummaryServiceTest {
 
         service.createSummary(generatePhotoList(0), generatePhotoFileList(0));
 
-        verifyZeroInteractions(mockFileUtil);
+        verifyZeroInteractions(mockFileService);
     }
 
     @Test
@@ -54,7 +54,7 @@ public class SimpleSummaryServiceTest {
 
         service.createSummary(generatePhotoList(), generatePhotoFileList());
 
-        verify(mockFileUtil, times(1)).writeFile(expectedLines, "summary/cloudcard-download-summary_" + LocalDate.now() + ".txt");
+        verify(mockFileService, times(1)).writeFile(expectedLines, "summary/cloudcard-download-summary_" + LocalDate.now() + ".txt");
     }
 
     @Test
@@ -67,7 +67,7 @@ public class SimpleSummaryServiceTest {
 
         service.createSummary(generatePhotoList(12345), generatePhotoFileList(1234));
 
-        verify(mockFileUtil, times(1)).writeFile(expectedLines, "eggs/bacon");
+        verify(mockFileService, times(1)).writeFile(expectedLines, "eggs/bacon");
     }
 
     /* *** PRIVATE HELPERS *** */

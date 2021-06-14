@@ -39,7 +39,7 @@ public class FileStorageService implements StorageService {
     private PostProcessor postProcessor;
 
     @Autowired
-    FileUtil fileUtil;
+    FileService fileService;
 
     @PostConstruct
     void init() {
@@ -85,7 +85,7 @@ public class FileStorageService implements StorageService {
             return null;
         }
 
-        String fullFileName = fileUtil.writeBytesToFile(photoDirectory, baseName + ".jpg", photo.getBytes());
+        String fullFileName = fileService.writeBytesToFile(photoDirectory, baseName + ".jpg", photo.getBytes());
 
         PhotoFile photoFile = postProcessor.process(photo, photoDirectory, new PhotoFile(baseName, fullFileName, photo.getId()));
 
