@@ -1,12 +1,20 @@
 package com.cloudcard.photoDownloader;
 
 import com.fasterxml.jackson.annotation.*;
+import com.mashape.unirest.http.HttpResponse;
+import com.mashape.unirest.http.Unirest;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
+import java.io.IOException;
+import java.io.InputStream;
 import java.util.HashMap;
 import java.util.Map;
 
 @JsonInclude(JsonInclude.Include.NON_NULL)
 public class AdditionalPhoto {
+
+    private static final Logger log = LoggerFactory.getLogger(AdditionalPhoto.class);
 
     @JsonProperty("id")
     private Integer id;
@@ -16,6 +24,7 @@ public class AdditionalPhoto {
     private String publicKey;
     @JsonIgnore
     private Map<String, Object> additionalProperties = new HashMap<String, Object>();
+    private byte[] bytes;
 
 
     @JsonProperty("id")
@@ -75,5 +84,18 @@ public class AdditionalPhoto {
     public void setAdditionalProperty(String name, Object value) {
 
         this.additionalProperties.put(name, value);
+    }
+
+    public byte[] getBytes() {
+
+        if (bytes == null) {
+            try {
+                bytes = RestUtil.fetchBytes(externalURL);
+            } catch (Exception e) {
+                log.error(e.getMessage());
+                e.printStackTrace();
+            }
+        }
+        return bytes;
     }
 }

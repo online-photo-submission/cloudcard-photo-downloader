@@ -38,6 +38,9 @@ public class FileStorageService implements StorageService {
     @SuppressWarnings("SpringJavaInjectionPointsAutowiringInspection")
     private PostProcessor postProcessor;
 
+    @Autowired
+    FileUtil fileUtil;
+
     @PostConstruct
     void init() {
 
@@ -82,7 +85,7 @@ public class FileStorageService implements StorageService {
             return null;
         }
 
-        String fullFileName = writeBytesToFile(photoDirectory, baseName + ".jpg", photo.getBytes());
+        String fullFileName = fileUtil.writeBytesToFile(photoDirectory, baseName + ".jpg", photo.getBytes());
 
         PhotoFile photoFile = postProcessor.process(photo, photoDirectory, new PhotoFile(baseName, fullFileName, photo.getId()));
 

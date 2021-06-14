@@ -202,7 +202,7 @@ public class Photo {
 
         if (bytes == null) {
             try {
-                fetchBytes();
+                bytes = RestUtil.fetchBytes(externalURL);
             } catch (Exception e) {
                 log.error(e.getMessage());
                 e.printStackTrace();
@@ -222,26 +222,4 @@ public class Photo {
 
         this.additionalProperties.put(name, value);
     }
-
-    private void fetchBytes() throws Exception {
-
-        String bytesURL = externalURL == null ? links.getBytes() : externalURL;
-        HttpResponse<String> response = Unirest.get(bytesURL).header("accept", "image/jpeg;charset=utf-8").header("Content-Type", "image/jpeg;charset=utf-8").asString();
-
-        if (response.getStatus() != 200) {
-            log.error("Status " + response.getStatus() + "returned from CloudCard API when retrieving photos bytes.");
-            return;
-        }
-
-        bytes = getBytes(response);
-    }
-
-    private byte[] getBytes(HttpResponse<String> response) throws IOException {
-
-        InputStream rawBody = response.getRawBody();
-        byte[] bytes = new byte[ rawBody.available() ];
-        rawBody.read(bytes);
-        return bytes;
-    }
-
 }
