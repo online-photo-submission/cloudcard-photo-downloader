@@ -41,6 +41,9 @@ public class CloudCardPhotoService {
     @Autowired
     RestService restService;
 
+    @Autowired
+    PreProcessor preProcessor;
+
     public CloudCardPhotoService() {
 
     }
@@ -61,13 +64,15 @@ public class CloudCardPhotoService {
         log.info("              API URL : " + apiUrl);
         log.info("           PUT Status : " + putStatus);
         log.info("       Fetch Statuses : " + String.join(" , ", fetchStatuses));
+        log.info("        Pre-Processor : " + preProcessor.getClass().getSimpleName());
     }
 
     public List<Photo> fetchReadyForDownload() throws Exception {
 
         List<Photo> photos = fetch(fetchStatuses);
         for(Photo photo : photos) {
-            restService.fetchBytes(photo);
+            Photo processedPhoto = preProcessor.process(photo);
+            restService.fetchBytes(processedPhoto);
         }
         return photos;
     }

@@ -32,10 +32,6 @@ public class FileStorageService implements StorageService {
 
     @Autowired
     @SuppressWarnings("SpringJavaInjectionPointsAutowiringInspection")
-    PreProcessor preProcessor;
-
-    @Autowired
-    @SuppressWarnings("SpringJavaInjectionPointsAutowiringInspection")
     private PostProcessor postProcessor;
 
     @Autowired
@@ -49,7 +45,6 @@ public class FileStorageService implements StorageService {
 
         log.info("   File Name Resolver : " + fileNameResolver.getClass().getSimpleName());
         log.info(" Photo Directory(ies) : " + String.join(" , ", photoDirectories));
-        log.info("        Pre-Processor : " + preProcessor.getClass().getSimpleName());
         log.info("       Post-Processor : " + postProcessor.getClass().getSimpleName());
     }
 
@@ -69,8 +64,6 @@ public class FileStorageService implements StorageService {
     }
 
     protected PhotoFile save(Photo photo, String photoDirectory) throws Exception {
-
-        photo = preProcessor.process(photo);
 
         String baseName = fileNameResolver.getBaseName(photo);
 
