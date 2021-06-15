@@ -69,6 +69,31 @@ public class AdditionalPhotoPostProcessorTest {
         verify(mockFileService, times(1)).writeBytesToFile("./temp/sausage", baseFileName + ".jpg", additionalPhoto2.getBytes());
     }
 
+    @Test
+    public void testInclude() throws Exception {
+
+        //set up
+        AdditionalPhoto additionalPhoto = createAdditionalPhoto("pancakes");
+        AdditionalPhoto additionalPhoto2 = createAdditionalPhoto("sausage");
+        Photo photo = createPhoto(additionalPhoto);
+        photo.getPerson().getAdditionalPhotos().add(additionalPhoto2);
+        String baseFileName = "id" + random.nextInt();
+
+        //and configure the post-processor to only process one of the additional photo types
+        String[] include = {"pancakes"};
+        ReflectionTestUtils.setField(postProcessor, "include", include);
+
+        //run the test
+        postProcessor.process(photo, "./temp", new PhotoFile(baseFileName, null, 1));
+
+        //check stuff
+        verify(mockRestService, times(1)).fetchBytes(additionalPhoto);
+        verify(mockFileService, times(1)).writeBytesToFile("./temp/pancakes", baseFileName + ".jpg", additionalPhoto.getBytes());
+
+        verify(mockRestService, times(0)).fetchBytes(additionalPhoto2);
+        verify(mockFileService, times(0)).writeBytesToFile("./temp/sausage", baseFileName + ".jpg", additionalPhoto2.getBytes());
+    }
+
     /* *** PRIVATE HELPER METHODS *** */
 
     private AdditionalPhoto createAdditionalPhoto(String typeName) {

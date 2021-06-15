@@ -228,6 +228,13 @@ marked as downloaded in CloudCard
   - example: `TIMESTAMP,NVARCHAR,VARCHAR`
     - Note: Order is important. The order in which the parameter types are listed must match the order in which they occur in `DatabasePostProcessor.query` 
 
+#### AdditionalPhotoPostProcessor Settings
+- AdditionalPhotoPostProcessor.include
+  - default: `null`
+  - description: which supporting document types should be downloaded. If `null`, download all.
+  - example: `Signature,Government ID`
+    - Note: Separate multiple values by commas.
+
 ### Summary Service Settings ([Video](https://youtu.be/u33vJqTPPAg))  
 - downloader.summaryService
   - default: `SimpleSummaryService`

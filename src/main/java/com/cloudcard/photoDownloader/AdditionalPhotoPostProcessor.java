@@ -3,10 +3,11 @@ package com.cloudcard.photoDownloader;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.stereotype.Service;
 
-import java.io.IOException;
+import java.util.Arrays;
 
 @Service
 @ConditionalOnProperty(value = "downloader.postProcessor", havingValue = "AdditionalPhotoPostProcessor")
@@ -20,15 +21,21 @@ public class AdditionalPhotoPostProcessor implements PostProcessor {
     @Autowired
     RestService restService;
 
+    @Value("${AdditionalPhotoPostProcessor.include}")
+    String[] include;
+
     @Override
     public PhotoFile process(Photo photo, String photoDirectory, PhotoFile photoFile) {
 
-        log.error("doing the post-processing");
         for (AdditionalPhoto additionalPhoto : photo.getPerson().getAdditionalPhotos()) {
+
+            if(include != null && !Arrays.asList(include).contains(additionalPhoto.getTypeName())) {
+                continue; //skip this one
+            }
+
             String directoryName = photoDirectory + "/" + additionalPhoto.getTypeName();
             try {
                 restService.fetchBytes(additionalPhoto);
-                // TODO: save all of the additional photos that exist and that are defined in the config value xxx.yyy.zzz
                 fileService.writeBytesToFile(directoryName, photoFile.getBaseName() + ".jpg", additionalPhoto.getBytes());
             } catch (Exception e) {
                 log.error(e.getMessage());
