@@ -113,7 +113,8 @@ public class CloudCardPhotoService {
         HttpResponse<String> response = Unirest.put(apiUrl + "/photos/" + photo.getId()).headers(standardHeaders()).body("{ \"status\": \"" + status + "\" }").asString();
 
         if (response.getStatus() != 200) {
-            log.error("Status " + response.getStatus() + " returned from CloudCard API when updating photo.");
+            log.error("Status " + response.getStatus() + " returned from CloudCard API when updating photo: " + photo.getId());
+            log.error("\t" + response.getBody());
             return null;
         }
 
