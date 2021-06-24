@@ -230,8 +230,7 @@ marked as downloaded in CloudCard
 
 #### AdditionalPhotoPostProcessor Settings
 - AdditionalPhotoPostProcessor.include
-  - default: none
-  - description: which supporting document types should be downloaded. If no value is specified, which is the default, it will download all.
+  - description: which supporting document types should be downloaded.
   - example: `Signature,Government ID`
     - Note: Separate multiple values by commas.
 
