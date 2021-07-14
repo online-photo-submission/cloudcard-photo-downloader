@@ -68,12 +68,12 @@ public class DatabaseStorageService implements StorageService {
                 if (fileName == null || fileName.isEmpty()) {
                     log.error("We could not resolve the base file name for '" + photo.getPerson().getEmail() + "' with ID number '"
                         + photo.getPerson().getIdentifier() + "', so photo " + photo.getId() + " cannot be saved.");
-                    return null;
+                    continue;
                 }
 
                 if (photo.getBytes() == null) {
                     log.error("Photo " + photo.getId() + " for " + photo.getPerson().getEmail() + " is missing binary data, so it cannot be saved.");
-                    return null;
+                    continue;
                 }
 
                 MapSqlParameterSource insertParams = createInsertParams(photo, fileName);
