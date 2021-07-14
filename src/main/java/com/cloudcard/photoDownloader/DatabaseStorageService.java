@@ -40,19 +40,17 @@ public class DatabaseStorageService implements StorageService {
     @SuppressWarnings("SpringJavaInjectionPointsAutowiringInspection")
     private FileNameResolver fileNameResolver;
 
-    JdbcTemplate jdbcCustomerTable;
+    @Autowired
+    JdbcTemplate jdbcTemplate;
+
+    @Autowired
     NamedParameterJdbcTemplate namedParameterJdbcTemplate;
-    String sql;
 
     @PostConstruct
     void init() {
-
-        jdbcCustomerTable = new JdbcTemplate(dataSource);
-        namedParameterJdbcTemplate = new NamedParameterJdbcTemplate(dataSource);
-        sql = "insert into " + tableName + " (" + studentIdColumnName + ", " + photoColumnName + ") VALUES(:id, :photo)";
-
         log.info("   File Name Resolver : " + fileNameResolver.getClass().getSimpleName());
-        log.info("           Insert SQL : " + sql);
+        log.info("           Insert SQL : " + insertSql());
+        log.info("           Update SQL : " + updateSql());
     }
 
 
@@ -62,32 +60,38 @@ public class DatabaseStorageService implements StorageService {
         List<PhotoFile> photoFiles = new ArrayList<>();
 
         for (Photo photo : photos) {
-            try {
-                String fileName = fileNameResolver.getBaseName(photo);
-
-                if (fileName == null || fileName.isEmpty()) {
-                    log.error("We could not resolve the base file name for '" + photo.getPerson().getEmail() + "' with ID number '"
-                        + photo.getPerson().getIdentifier() + "', so photo " + photo.getId() + " cannot be saved.");
-                    continue;
-                }
-
-                if (photo.getBytes() == null) {
-                    log.error("Photo " + photo.getId() + " for " + photo.getPerson().getEmail() + " is missing binary data, so it cannot be saved.");
-                    continue;
-                }
-
-                MapSqlParameterSource insertParams = createInsertParams(photo, fileName);
-                namedParameterJdbcTemplate.update(preparePhotoQuery(photo.getPerson().getIdentifier(), fileName), insertParams);
-
-                photoFiles.add(new PhotoFile(photo.getPerson().getIdentifier(), null, photo.getId()));
-            } catch (Exception e) {
-                log.error("Failed to push photo" + photo.getId() + " to DB.");
-                e.printStackTrace();
-            }
-
+            PhotoFile photoFile = save(photo);
+            if (photoFile != null) photoFiles.add(photoFile);
         }
 
         return photoFiles;
+    }
+
+    private PhotoFile save(Photo photo) {
+
+        try {
+            String dbIdentifier = fileNameResolver.getBaseName(photo);
+
+            if (dbIdentifier == null || dbIdentifier.isEmpty()) {
+                log.error("We could not resolve the base file name for '" + photo.getPerson().getEmail() + "' with ID number '"
+                    + photo.getPerson().getIdentifier() + "', so photo " + photo.getId() + " cannot be saved.");
+                return null;
+            }
+
+            if (photo.getBytes() == null) {
+                log.error("Photo " + photo.getId() + " for " + photo.getPerson().getEmail() + " is missing binary data, so it cannot be saved.");
+                return null;
+            }
+
+            MapSqlParameterSource insertParams = createInsertParams(photo, dbIdentifier);
+            namedParameterJdbcTemplate.update(preparePhotoQuery(photo.getPerson().getIdentifier(), dbIdentifier), insertParams);
+
+            return new PhotoFile(photo.getPerson().getIdentifier(), null, photo.getId());
+        } catch (Exception e) {
+            log.error("Failed to push photo" + photo.getId() + " to DB.");
+            e.printStackTrace();
+            return null;
+        }
     }
 
     /* *** PRIVATE HELPERS *** */
@@ -101,17 +105,25 @@ public class DatabaseStorageService implements StorageService {
         return in;
     }
 
-    private String preparePhotoQuery(String personIdentifier, String fileName) {
+    private String preparePhotoQuery(String personIdentifier, String dbIdentifier) {
         String preparedPhotoQuery;
-        String photoCountQuery = "SELECT COUNT(" + studentIdColumnName + ") FROM " + tableName + "  where " + studentIdColumnName + " = " + fileName;
-        int rowCount = jdbcCustomerTable.queryForObject(photoCountQuery, Integer.class);
+        String photoCountQuery = "SELECT COUNT(" + studentIdColumnName + ") FROM " + tableName + "  where " + studentIdColumnName + " = " + dbIdentifier;
+        int rowCount = jdbcTemplate.queryForObject(photoCountQuery, Integer.class);
         if (rowCount == 0) {
             log.info("Preparing insert for : " + personIdentifier);
-            preparedPhotoQuery = "insert into " + tableName + " (" + studentIdColumnName + ", " + photoColumnName + ") VALUES(:id, :photo)";
+            preparedPhotoQuery = insertSql();
         } else {
             log.info("Preparing update for : " + personIdentifier);
-            preparedPhotoQuery = "UPDATE " + tableName + " SET " + photoColumnName + " = :photo WHERE " + studentIdColumnName + " = :id";
+            preparedPhotoQuery = updateSql();
         }
         return preparedPhotoQuery;
+    }
+
+    private String updateSql() {
+        return "UPDATE " + tableName + " SET " + photoColumnName + " = :photo WHERE " + studentIdColumnName + " = :id";
+    }
+
+    private String insertSql() {
+        return "INSERT INTO " + tableName + " (" + studentIdColumnName + ", " + photoColumnName + ") VALUES(:id, :photo)";
     }
 }
