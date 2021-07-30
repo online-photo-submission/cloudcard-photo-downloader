@@ -1,10 +1,9 @@
-HOST=
-FILE=put-jpgs.sh
-KEY="path to pem file"
-DESTINATION_DIRECTORY=photo
-PHOTO_DIRECTORY=/photo-test
-PORT=
 USER=
+HOST=
+DESTINATION_DIRECTORY=photo
+KEY="path to pem file"
+FILE=put-jpgs.sh
+PHOTO_DIRECTORY=downloaded-photos
 
 set -e
 
