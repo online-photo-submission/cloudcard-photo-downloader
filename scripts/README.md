@@ -48,7 +48,7 @@ The sftp-script sends downloaded photos over SFTP to a remote location. This scr
 - OS/Security Roles: Access to remote storage destination, and a public/private key pair for sending files over SFTP
 
 
-#### Configuration [Video](https://video.drift.com/v/abYGbYsT875/)
+#### Configuration ([Video](https://video.drift.com/v/abYGbYsT875/))
 
 This script has 4 variables:
 
