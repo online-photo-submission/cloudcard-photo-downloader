@@ -35,11 +35,12 @@ This script is designed to be configurable with 4 variables:
 Once these variables are configured, the cloudcard photo downloader needs to be set up to run this script once photos have been sucessfully downloaded (see the Shell/Batch Script Hook Settings in the downloader readme).
 
 
+
 ## sftp-script
 
 ### Summary
 
-The sftp-script is a shell script sends downloadedd photos over SFTP to a remote location. 
+The sftp-script is a shell script sends downloaded photos over SFTP to a remote location. This script should be stored in the main Cloudcard-Photo-Downloader folder if being used.
 
 ### Requirements
 
