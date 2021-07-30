@@ -2,7 +2,7 @@
 
 ---
 
-## download-people-report
+## download-people-report.bat
 
 ### Summary
 
@@ -36,11 +36,11 @@ Once these variables are configured, the cloudcard photo downloader needs to be 
 
 ---
 
-## sftp-script
+## sftp-script.sh
 
 ### Summary
 
-The sftp-script is a shell script sends downloaded photos over SFTP to a remote location. This script should be stored in the main Cloudcard-Photo-Downloader folder if being used.
+The sftp-script sends downloaded photos over SFTP to a remote location. This script should be stored in the main Cloudcard-Photo-Downloader folder if being used.
 
 ### Requirements
 
@@ -48,7 +48,8 @@ The sftp-script is a shell script sends downloaded photos over SFTP to a remote 
 - OS/Security Roles: Access to remote storage destination, and a public/private key pair for sending files over SFTP
 
 
-#### Configuration
+#### Configuration [Video](https://video.drift.com/v/abYGbYsT875/)
+
 This script has 4 variables:
 
 - USER
