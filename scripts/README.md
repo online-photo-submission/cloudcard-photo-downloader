@@ -50,7 +50,7 @@ The sftp-script sends downloaded photos over SFTP to a remote location. This scr
 
 #### Configuration ([Video](https://video.drift.com/v/abYGbYsT875/))
 
-This script has 4 variables:
+This script has 4 variables that you must set:
 
 - USER
   - description: The user of the remote machine that photos are being sent to
