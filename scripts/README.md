@@ -33,3 +33,34 @@ This script is designed to be configurable with 4 variables:
 
 
 Once these variables are configured, the cloudcard photo downloader needs to be set up to run this script once photos have been sucessfully downloaded (see the Shell/Batch Script Hook Settings in the downloader readme).
+
+
+## sftp-script
+
+### Summary
+
+The sftp-script is a shell script sends downloadedd photos over SFTP to a remote location. 
+
+### Requirements
+
+- OS: Mac OSX or Linux
+- OS/Security Roles: Access to remote storage destination, and a public/private key pair for sending files over SFTP
+
+
+#### Configuration
+This script has 4 variables:
+
+- USER
+  - description: The user of the remote machine that photos are being sent to
+  
+- HOST
+  - description: The host name of the remote machine that photos are being sent to
+
+- DESTINATION_DIRECTORY
+  - description: The desired output path on your remote machine where you want photos stored
+
+- KEY
+  - description: The location of your pem file that contains the private key
+
+
+Once these variables are configured, the cloudcard photo downloader needs to be set up to run this script once photos have been sucessfully downloaded. The recommended configuration is: `ShellCommandService.postDownloadCommand=./sftp-script.sh`
