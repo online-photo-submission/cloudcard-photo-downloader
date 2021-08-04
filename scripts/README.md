@@ -30,6 +30,7 @@ This script is designed to be configurable with 4 variables:
 
 - photoDir
   - description: The absolute directory for where the cloudcard photo downloader is saving photos. 
+  - note: we recommend using a temporary directory, rather than the primary folder that the downloader is saving photos to. The downloader can save photos to multiple directories using the downloader.photoDirectories property and specifying multiple destination folders (separated by commas). This way, this script clears out the temporary directory each time it runs (so it is only retrieving info for the photos that were just downloaded). 
 
 
 Once these variables are configured, the cloudcard photo downloader needs to be set up to run this script once photos have been sucessfully downloaded (see the Shell/Batch Script Hook Settings in the downloader readme).
