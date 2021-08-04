@@ -3,6 +3,9 @@ set authToken=
 set outputDir=
 set photoDir=
 
+FOR /f %%a IN ('WMIC OS GET LocalDateTime ^| FIND "."') DO SET DTS=%%a
+SET DateTime=%DTS:~0,4%-%DTS:~4,2%-%DTS:~6,2%_%DTS:~8,2%-%DTS:~10,2%-%DTS:~12,2%
+
 (for %%f in ("%photoDir%\*.jpg") do @echo "%%~nf") >> quotesVar.temp
 
 @echo off
@@ -25,8 +28,9 @@ curl --location --request POST "%curlUrl%" ^
  --header "Accept: text/csv" ^
  --header "Content-Type: application/json" ^
  --data "@request-body.json" ^
- --output "%outputDir%"\downloaded-photo-info_%date:~10,4%-%date:~4,2%-%date:~7,2%_%time:~0,2%%time:~3,2%.csv 2>>&1
+ --output "%outputDir%"\downloaded-photo-info_%DateTime%.csv
 
 del quotesVar.temp
 del commaVar.temp
 del request-body.json
+rem del "%photoDir%\*.jpg"
