@@ -6,7 +6,7 @@
 
 ### Summary
 
-The csv-generator is a batch script that can be called by the cloudcard photo downloader to retrieve user info from the cloudcard API for downloaded photos. 
+This is a batch script that can be called by the cloudcard photo downloader to retrieve user info from the cloudcard API for downloaded photos. 
 
 ### Requirements
 
