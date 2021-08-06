@@ -1,6 +1,6 @@
 USER=
 HOST=
-DESTINATION_DIRECTORY=photo
+DESTINATION_DIRECTORY=
 KEY="path to pem file"
 FILE=put-jpgs.sh
 PHOTO_DIRECTORY=downloaded-photos
