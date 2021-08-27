@@ -15,7 +15,7 @@ if [[ -n $(git status -s) ]]; then
   exit
 fi
 
-export JAVA_HOME=/Library/Java/JavaVirtualMachines/amazon-corretto-8.jdk/Contents/Home
+export JAVA_HOME=/Library/Java/JavaVirtualMachines/amazon-corretto-11.jdk/Contents/Home
 
 GRADLE_CONF="build.gradle"
 PROP_CONF="src/main/java/com/cloudcard/photoDownloader/ApplicationPropertiesValidator.java"
