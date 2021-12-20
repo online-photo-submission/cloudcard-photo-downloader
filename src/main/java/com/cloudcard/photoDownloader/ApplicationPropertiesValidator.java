@@ -7,7 +7,7 @@ public class ApplicationPropertiesValidator {
 
     private static final Logger log = LoggerFactory.getLogger(ApplicationPropertiesValidator.class);
 
-    public static String version = "21.08.27.1228";
+    public static String version = "21.12.20.1231";
 
     public static void logVersion() {
 
