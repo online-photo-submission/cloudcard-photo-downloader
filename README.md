@@ -163,6 +163,7 @@ Below are descriptions of each option:
   - options: 
     - `SimpleFileNameResolver` - uses the cardholder's identifier value as the file name
     - `DatabaseFileNameResolver` - executes select query to determine the file name
+    - `CustomFieldFileNameResolver` - uses custom field values as the file name
 
 #### DatabaseFileNameResolver Settings
  - DatabaseFileNameResolver.baseFileName.query
@@ -171,6 +172,19 @@ Below are descriptions of each option:
    - example: 
      - `SELECT TOP 1 student_id FROM my_table WHERE external_id = ? AND other_column LIKE 'abc%' ORDER BY date_created DESC`
      - Note: the cardholder's `identifier` will inserted into the query to replace the `?` symbol
+
+#### CustomFieldFileNameResolver Settings
+ - CustomFieldFileNameResolver.include
+   - default: none
+   - description: which custom field values should be used to name downloaded photos.
+   - example: `CustomFieldFileNameResolver.include=Full Name`
+     - Note: Separate multiple values by commas (no quotes needed).
+ 
+ - CustomFieldFileNameResolver.delimiter
+   - default: none
+   - description: option to specify a delimiter if you are using multiple custom fields (or at least one custom field and the identifier)
+   - example: `CustomFieldFileNameResolver.delimiter=_`
+
 
 ### Pre-Processor Settings
 Each photo is processed and potentially modified by the specified pre-processor after it is retrieved from CloudCard and before it is saved by the 
