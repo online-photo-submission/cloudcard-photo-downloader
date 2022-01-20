@@ -34,6 +34,8 @@ To test your system, run `java -version`.  The output should look like the follo
 > OpenJDK Runtime Environment Corretto-8.232.09.2 (build 1.8.0_232-b09) <br/>
 > OpenJDK 64-Bit Server VM Corretto-8.232.09.2 (build 25.232-b09, mixed mode)
 
+## Network Diagram
+[![Network Diaram](https://online-photo-submission.github.io/cloudcard-photo-downloader/downloader-diagram.png)](https://online-photo-submission.github.io/cloudcard-photo-downloader/downloader-diagram.png)
 
 ## Installation and Configuration ([Video](https://youtu.be/a9P57lKKo2Q))
 
