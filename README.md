@@ -208,7 +208,7 @@ Each downloaded photo is processed and potentially modified by the specified pos
 marked as downloaded in CloudCard  
 - downloader.postProcessor
   - default: `DoNothingPostProcessor`
-  - description: specifies which pre-processor will be used to pre-process each photo
+  - description: specifies which post-processor will be used to post-process each photo
   - options:
     - `DoNothingPostProcessor` - placeholder service that performs no actions
     - `DatabasePostProcessor` - executes a database query in response after downloading the photo
