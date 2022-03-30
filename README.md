@@ -82,7 +82,7 @@ Below are descriptions of each option:
   - description: this setting determines how the downloaded photos will be stored 
   - options:
     - `FileStorageService` - stores images as jpeg files on the local or network file system
-    - `SimpleDatabaseStorageService` - stores the jpeg encoded images as `BLOBs` in a relational database 
+    - `DatabaseStorageService` - stores the jpeg encoded images as `BLOBs` in a relational database 
 - downloader.repeat
   - default: `true`
   - description: This setting determines if the downloader will run once and exit, `downloader.repeat=false`, or if will run continually, `downloader.repeat=true`
@@ -123,8 +123,8 @@ Below are descriptions of each option:
   - default: `downloaded-photos`
   - description: This is the absolute path to the directory(ies) into which the photos will be saved. Separate multiple directories with commas.  If multiple directories are specified, a copy of each downloaded photo will be saved to each directory. 
 
-#### SimpleDatabaseStorageService Settings ([Video](https://youtu.be/rCdqabrcrJA))
-*Note: `downloader.storageService` must be set to `SimpleDatabaseStorageService` for these to have any effect.*
+#### DatabaseStorageService Settings ([Video](https://youtu.be/rCdqabrcrJA))
+*Note: `downloader.storageService` must be set to `DatabaseStorageService` for these to have any effect.*
 - db.mapping.table
   - default: `CLOUDCARD_PHOTOS`
   - description: This is the name of the table into which photos will be stored.
