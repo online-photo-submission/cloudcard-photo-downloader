@@ -268,6 +268,15 @@ marked as downloaded in CloudCard
   - description: this is the full or relative file path to the directory into which the summary file will be saved
   - note: if this directory does not exist, it will be created
 
+### Encrypting application properties ([Video](https://video.drift.com/v/abfYgZ7R05O/)
+-This method allows for encrypting the run.sh file and any application properties that it contains, utilizing AES-256 encryption
+  -In order to use this, you'll also need to download the `encode-run-sh.sh` script as well as the `decrypt-and-execute-run-sh.sh` script
+  - note: this method only works on linux servers at this point
+  1. Add any properties you want to encrypt to the run.sh as command line variables using Java -D syntax
+  2. Run `encode-run-sh.sh` and enter a password
+  3. Delete your `run.sh` file (or back it up in a secure location)
+  4. Run `decrypt-and-execute-run-sh.sh` (will request your password)
+
 ## Warranty
 THIS PROJECT IS DISTRIBUTED WITH NO WARRANTY.  SEE THE [LICENSE](LICENSE) FOR FULL DETAILS.  
 If your organization needs fully warrantied CloudCard integration software, consider Cloud Photo Connect from [Vision Database Systems](http://www.visiondatabase.com/).
