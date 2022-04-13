@@ -70,7 +70,7 @@ Once these variables are configured, the cloudcard photo downloader needs to be 
 
 ---
 
-## Encrypting application properties ([Video](https://video.drift.com/v/abfYgZ7R05O/))
+## Encrypting application properties
 -This method allows for encrypting the run.sh file and any application properties that it contains, utilizing AES-256 encryption
   -In order to use this, you'll also need to download the `encode-run-sh.sh` script as well as the `decrypt-and-execute-run-sh.sh` script
   - note: this method only works on linux servers at this point
