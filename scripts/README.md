@@ -68,7 +68,9 @@ This script has 4 variables that you must set:
 
 Once these variables are configured, the cloudcard photo downloader needs to be set up to run this script once photos have been sucessfully downloaded. The recommended configuration is: `ShellCommandService.postDownloadCommand=./sftp-script.sh`
 
-#### Encrypting application properties ([Video])(https://video.drift.com/v/abfYgZ7R05O/)
+---
+
+## Encrypting application properties ([Video](https://video.drift.com/v/abfYgZ7R05O/))
 -This method allows for encrypting the run.sh file and any application properties that it contains, utilizing AES-256 encryption
   -In order to use this, you'll also need to download the `encode-run-sh.sh` script as well as the `decrypt-and-execute-run-sh.sh` script
   - note: this method only works on linux servers at this point
