@@ -71,10 +71,10 @@ Once these variables are configured, the cloudcard photo downloader needs to be 
 ---
 
 ## Encrypting application properties ([Video](https://video.drift.com/v/abZMpJLIB5O/))
--This method allows for encrypting the run.sh file and any application properties that it contains, utilizing AES-256 encryption
-  -In order to use this, you'll also need to download the `encode-run-sh.sh` script as well as the `decrypt-and-execute-run-sh.sh` script
-  - note: this method only works on linux servers at this point
-  1. Add any properties you want to encrypt to the run.sh as command line variables using Java -D syntax
-  2. Run `encode-run-sh.sh` and enter a password
-  3. Delete your `run.sh` file (or back it up in a secure location)
-  4. Run `decrypt-and-execute-run-sh.sh` (will request your password)
+-This method uses AES-256 to encrypt the run.sh file and any application properties that it contains
+  - note: this only works on linux at this point
+  1. Download `encode-run-sh.sh` and `decrypt-and-execute-run-sh.sh` from the `Scripts` folder in this repository and add them to your downloader folder
+  2. Add any properties you want to encrypt (such as the access_token) to `run.sh` as command line parameters instead of in application.properties
+  3. Run `encode-run-sh.sh` and create a password
+  4. Delete your un-encrypted `run.sh` file
+  5. To run the downloader, run `decrypt-and-execute-run-sh.sh`. This will ask for your password and then execute the encrypted file, which runs the downloader. 
