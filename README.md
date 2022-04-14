@@ -268,7 +268,7 @@ marked as downloaded in CloudCard
   - description: this is the full or relative file path to the directory into which the summary file will be saved
   - note: if this directory does not exist, it will be created
 
-### Encrypting application properties
+### Encrypting application properties ([Video](https://video.drift.com/v/abZMpJLIB5O/))
 -This method allows for encrypting the run.sh file and any application properties that it contains, utilizing AES-256 encryption
   -In order to use this, you'll also need to download the `encode-run-sh.sh` script as well as the `decrypt-and-execute-run-sh.sh` script
   - note: this method only works on linux servers at this point
