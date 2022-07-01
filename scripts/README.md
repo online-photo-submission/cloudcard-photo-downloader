@@ -2,7 +2,7 @@
 
 ---
 
-## download-people-report.bat
+## download-person-report.bat
 
 ### Summary
 
