@@ -25,9 +25,10 @@ This project automatically downloads photos from [CloudCard Online Photo Submiss
 - Storage Location - OS or Data: Any
 - OS/Security Roles: Access to photo storage destination 
 - [Service account with office level access](https://sharptop.atlassian.net/wiki/spaces/CCD/pages/1226440705/User+Roles) to CloudCard Online Photo Submission
-- Outbound network access to the following servers/ports
+- Outbound network access to the following servers/ports if your organization requires all outbound traffic to be whitelisted
   - api.onlinephotosubmission.com:443
-  - s3.amazonaws.com:443
+  - test-api.onlinephotosubmission.com:443 (only necessary if using CloudCard's test instance)
+  - s3-ca-central-1.amazonaws.com:443
 
 To test your system, run `java -version`.  The output should look like the following.  The exact version isn't important as long as it starts with `1.8`.
 > openjdk version "1.8.0_232" <br/>
