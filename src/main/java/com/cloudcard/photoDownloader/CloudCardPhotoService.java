@@ -29,9 +29,6 @@ public class CloudCardPhotoService {
     @Value("${cloudcard.api.url}")
     private String apiUrl;
 
-    @Value("${cloudcard.api.accessToken}")
-    private String accessToken;
-
     @Value("${downloader.putStatus:DOWNLOADED}")
     private String putStatus;
 
@@ -44,23 +41,23 @@ public class CloudCardPhotoService {
     @Autowired
     PreProcessor preProcessor;
 
+    @Autowired
+    TokenService tokenService;
+
     public CloudCardPhotoService() {
 
     }
 
-    public CloudCardPhotoService(String apiUrl, String accessToken) {
+    public CloudCardPhotoService(String apiUrl) {
 
         this.apiUrl = apiUrl;
-        this.accessToken = accessToken;
     }
 
     @PostConstruct
     void init() {
 
         throwIfBlank(apiUrl, "The CloudCard API URL must be specified.");
-        throwIfBlank(accessToken, "The CloudCard API access token must be specified.");
 
-        log.info("         Access Token : " + "..." + accessToken.substring(3, 8) + "...");
         log.info("              API URL : " + apiUrl);
         log.info("           PUT Status : " + putStatus);
         log.info("       Fetch Statuses : " + String.join(" , ", fetchStatuses));
@@ -91,7 +88,7 @@ public class CloudCardPhotoService {
 
     public List<Photo> fetch(String status) throws Exception {
 
-        String url = apiUrl + "/trucredential/" + accessToken + "/photos?status=" + status + "&base64EncodedImage=false&max=1000&additionalPhotos=true";
+        String url = apiUrl + "/trucredential/" + tokenService.getAuthToken() + "/photos?status=" + status + "&base64EncodedImage=false&max=1000&additionalPhotos=true";
         HttpResponse<String> response = Unirest.get(url).headers(standardHeaders()).asString();
 
         if (response.getStatus() != 200) {
@@ -127,7 +124,7 @@ public class CloudCardPhotoService {
         Map<String, String> headers = new HashMap<>();
         headers.put("accept", "application/json");
         headers.put("Content-Type", "application/json");
-        headers.put("X-Auth-Token", accessToken);
+        headers.put("X-Auth-Token", tokenService.getAuthToken());
         return headers;
     }
 

@@ -23,6 +23,9 @@ public class DownloaderService {
     CloudCardPhotoService cloudCardPhotoService;
 
     @Autowired
+    TokenService tokenService;
+
+    @Autowired
     @SuppressWarnings("SpringJavaInjectionPointsAutowiringInspection")
     StorageService storageService;
 
@@ -60,6 +63,7 @@ public class DownloaderService {
         try {
 
             log.info("  ==========  Downloading photos  ==========  ");
+            tokenService.login();
             shellCommandService.preExecute();
             List<Photo> photosToDownload = cloudCardPhotoService.fetchReadyForDownload();
             shellCommandService.preDownload(photosToDownload);
@@ -73,6 +77,7 @@ public class DownloaderService {
             shellCommandService.postDownload(downloadedPhotoFiles);
             shellCommandService.postExecute();
             log.info("Completed downloading " + downloadedPhotoFiles.size() + " photos.");
+            tokenService.logout();
 
         } catch (Exception e) {
 

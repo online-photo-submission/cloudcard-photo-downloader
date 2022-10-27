@@ -40,7 +40,6 @@ public class CustomFieldFileNameResolver implements FileNameResolver {
         String fileName = "";
 
         for (String i : include) {
-            log.error(i);
             if (!fileName.equals("")) {
                 fileName = fileName + delimiter;
             }
