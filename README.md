@@ -272,7 +272,7 @@ marked as downloaded in CloudCard
 
 ### Encrypting application properties ([Video](https://video.drift.com/v/abZMpJLIB5O/))
 -This method uses AES-256 to encrypt the run.sh file and any application properties that it contains
-  - note: this method only works on linux at this point
+  - note: this method only works on linux
   1. Download `encode-run-sh.sh` and `decrypt-and-execute-run-sh.sh` from the `Scripts` folder in this repository and add them to your downloader folder
   2. Add any properties you want to encrypt (such as the access_token) to `run.sh` as command line parameters instead of in application.properties
   3. Run `encode-run-sh.sh` and create a password
