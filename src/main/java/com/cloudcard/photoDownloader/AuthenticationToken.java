@@ -31,6 +31,9 @@ public class AuthenticationToken {
     @JsonProperty("expirationDate")
     private String expirationDate;
 
+    @JsonProperty("persistentAccessTokenId")
+    private String persistentAccessTokenId;
+
     @JsonProperty("name")
     public String getTokenValue() {
 
