@@ -41,9 +41,9 @@ To test your system, run `java -version`.  The output should look like the follo
 
 ## Installation and Configuration ([Video](https://youtu.be/a9P57lKKo2Q))
 
-1. Create a separate [service account](https://sharptop.atlassian.net/wiki/spaces/CCD/pages/1226440705/User+Roles) for CloudCard Photo Downloader to use. ([Instructions](https://www.youtube.com/watch?v=ZfrjFwrkwZQ))
+1. Create a separate [service account](https://sharptop.atlassian.net/wiki/spaces/CCD/pages/1226440705/User+Roles) for CloudCard Photo Downloader to use. ([Instructions](https://youtu.be/_J9WKAMZOdY))
 1. Download the [zip file](https://github.com/online-photo-submission/cloudcard-photo-downloader/raw/master/cloudcard-photo-downloader.zip).
-1. Get your access token (Instructions are included in the [service account video](https://www.youtube.com/watch?v=ZfrjFwrkwZQ).)
+1. Get your access token (Instructions are included in the [service account video](https://youtu.be/_J9WKAMZOdY).)
 1. Configure `application.properties` ([Instructions](https://github.com/online-photo-submission/cloudcard-photo-downloader#configuration))
 1. Open a terminal/command prompt and navigate to the cloudcard-photo-downloader directory.
 1. Run `run` (Windows) or `./run.sh` (Linux/Mac).
@@ -78,7 +78,7 @@ Below are descriptions of each option:
   - description: This option allows you to specify the URL of your CloudCard Online Photo Submission API.  Most users will not need to change this setting.  Generally, this is only useful if you are testing the integration using the test intance `https://test-api.onlinephotosubmission.com/api`.
 - cloudcard.api.accessToken
   - default: none
-  - description: this setting holds the API access token for your service account and must be set before the exporter to run. On a Unix/Linux based operating system, you can use `get-token.sh` to get your access token. On Windows systems, you can use `get-token.ps1` in a PowerShell window to get your access token. If you have problems with execution policy, see [this StackExchange question](https://superuser.com/questions/106360/how-to-enable-execution-of-powershell-scripts) for how to resolve the issue.
+  - description: this setting holds the API access token for your service account and must be set before the exporter to run. 
 - downloader.storageService
   - default: `FileStorageService`
   - description: this setting determines how the downloaded photos will be stored 
