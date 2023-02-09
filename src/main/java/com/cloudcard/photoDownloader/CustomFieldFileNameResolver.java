@@ -48,7 +48,8 @@ public class CustomFieldFileNameResolver implements FileNameResolver {
             } else {
                 String customFieldValue = customFields.get(i);
                 if (customFieldValue == null || customFieldValue.isEmpty()) {
-                    throw new DownloaderException("Person: " + photo.getPerson().getEmail() + " is missing a value for " + i);
+                    log.error("Person: " + photo.getPerson().getEmail() + " is missing a value for " + i);
+                    return null;
                 }
                 fileName = fileName + customFieldValue;
             }
