@@ -7,7 +7,6 @@ import java.util.HashMap;
 import java.util.Map;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.fail;
 
 public class CustomFieldFileNameResolverTest {
 
@@ -58,22 +57,12 @@ public class CustomFieldFileNameResolverTest {
         customFields.put("John", "");
         customFields.put("Mary", "");
         customFields.put("Bob", "");
-        try {
-            resolver.getBaseName(photo);
-            fail("Exception should have been thrown");
-        } catch(RuntimeException exception) {
-            assertThat(true).isEqualTo(true);
-        }
+        assertThat(resolver.getBaseName(photo)).isNull();
     }
 
     @Test
     public void testNullCustomFields() {
         photo.getPerson().setCustomFields(new HashMap<>());
-        try {
-            resolver.getBaseName(photo);
-            fail("Exception should have been thrown");
-        } catch(DownloaderException exception) {
-            assertThat(true).isEqualTo(true);
-        }
+        assertThat(resolver.getBaseName(photo)).isNull();
     }
 }
