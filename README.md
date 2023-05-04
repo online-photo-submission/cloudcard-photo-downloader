@@ -204,6 +204,7 @@ storage service
 - BytesLinkPreprocessor.urlTemplate
   - default: none
   - description: This is the template to use for rewriting the bytes link. The photo's public key with replace the token `{publicKey}` if it exists in the template.
+  - example: https://api.onlinephotosubmission.com/api/photos/{publicKey}/bytes
 
 ### Post-Processor Settings
 Each downloaded photo is processed and potentially modified by the specified post-processor after it is saved by the storage service and before it
