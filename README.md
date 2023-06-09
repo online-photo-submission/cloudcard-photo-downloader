@@ -27,6 +27,7 @@ This project automatically downloads photos from [CloudCard Online Photo Submiss
 - [Service account with office level access](https://sharptop.atlassian.net/wiki/spaces/CCD/pages/1226440705/User+Roles) to CloudCard Online Photo Submission
 - Outbound network access to the following servers/ports if your organization requires all outbound traffic to be whitelisted
   - api.onlinephotosubmission.com:443
+  - api.cloudcard.ca:443 (only necessary if using CloudCard's Canada specific instance)
   - s3-ca-central-1.amazonaws.com:443
   - test-api.onlinephotosubmission.com:443 (only necessary if using CloudCard's test instance)
   - s3.amazonaws.com:443 (if using CloudCard's test instance)
@@ -75,7 +76,9 @@ Below are descriptions of each option:
 #### General Settings ([Video](https://youtu.be/B4xGNDWkk00))
 - cloudcard.api.url  
   - default: `https://api.onlinephotosubmission.com/api`
-  - description: This option allows you to specify the URL of your CloudCard Online Photo Submission API.  Most users will not need to change this setting.  Generally, this is only useful if you are testing the integration using the test intance `https://test-api.onlinephotosubmission.com/api`.
+  - Canadian customers should use `https://api.cloudcard.ca/api`
+  - Test Instance: `https://test-api.onlinephotosubmission.com/api`
+  - description: This option allows you to specify the URL of your CloudCard Online Photo Submission API.
 - cloudcard.api.accessToken
   - default: none
   - description: this setting holds the API access token for your service account and must be set before the exporter to run. 
