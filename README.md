@@ -28,6 +28,7 @@ This project automatically downloads photos from [CloudCard Online Photo Submiss
 - Outbound network access to the following servers/ports if your organization requires all outbound traffic to be whitelisted
   - api.onlinephotosubmission.com:443
   - api.cloudcard.ca:443 (only necessary if using CloudCard's Canada specific instance)
+  - onlinephoto-api.transactcampus.net:443 (only necessary if using Online Photo Submission through Transact)
   - s3-ca-central-1.amazonaws.com:443
   - test-api.onlinephotosubmission.com:443 (only necessary if using CloudCard's test instance)
   - s3.amazonaws.com:443 (if using CloudCard's test instance)
@@ -78,6 +79,7 @@ Below are descriptions of each option:
   - default: `https://api.onlinephotosubmission.com/api`
   - Canadian customers should use `https://api.cloudcard.ca/api`
   - Test Instance: `https://test-api.onlinephotosubmission.com/api`
+  - Transact Customers: `https://onlinephoto-api.transactcampus.net/api`
   - description: This option allows you to specify the URL of your CloudCard Online Photo Submission API.
 - cloudcard.api.accessToken
   - default: none
