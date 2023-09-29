@@ -20,7 +20,7 @@ public class DownloaderService {
     private static final Logger log = LoggerFactory.getLogger(DownloaderService.class);
 
     @Autowired
-    CloudCardPhotoService cloudCardPhotoService;
+    PhotoService photoService;
 
     @Autowired
     TokenService tokenService;
@@ -65,12 +65,12 @@ public class DownloaderService {
             log.info("  ==========  Downloading photos  ==========  ");
             tokenService.login();
             shellCommandService.preExecute();
-            List<Photo> photosToDownload = cloudCardPhotoService.fetchReadyForDownload();
+            List<Photo> photosToDownload = photoService.fetchReadyForDownload();
             shellCommandService.preDownload(photosToDownload);
             List<PhotoFile> downloadedPhotoFiles = storageService.save(photosToDownload);
             for (PhotoFile photoFile : downloadedPhotoFiles) {
                 Photo downloadedPhoto = new Photo(photoFile.getPhotoId());
-                cloudCardPhotoService.markAsDownloaded(downloadedPhoto);
+                photoService.markAsDownloaded(downloadedPhoto);
             }
 
             summaryService.createSummary(photosToDownload, downloadedPhotoFiles);

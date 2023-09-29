@@ -3,6 +3,7 @@ package com.cloudcard.photoDownloader;
 import com.fasterxml.jackson.annotation.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import software.amazon.awssdk.services.sqs.model.Message;
 
 import java.util.HashMap;
 import java.util.List;
@@ -49,6 +50,14 @@ public class Photo {
     public Photo(Integer id) {
 
         this.id = id;
+    }
+
+    public Photo(Message message) {
+        String messageBody = message.body();
+        System.out.println("vvv");
+        System.out.println(message);
+        System.out.println(messageBody);
+        System.out.println("^^^");
     }
 
     @JsonProperty("aspectRatio")
