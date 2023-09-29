@@ -1,32 +1,51 @@
-package com.cloudcard.photoDownloader;
+package com.cloudcard.photoDownloader
 
+
+import org.slf4j.Logger
+import org.slf4j.LoggerFactory
+
+import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.beans.factory.annotation.Value
 
 class TouchNetStorageService implements StorageService {
 
-    @Value("${TouchNetStorageService.apiUrl}")
+    static final Logger log = LoggerFactory.getLogger(TouchNetStorageService.class);
+
+    @Value('${TouchNetStorageService.apiUrl}')
     String apiUrl
 
-    @Value("${TouchNetStorageService.developerKey}")
+    @Value('${TouchNetStorageService.developerKey}')
     String developerKey
 
-    @Value("${TouchNetStorageService.operatorId}")
-    String operatorId = "CloudCard"
+    @Value('${TouchNetStorageService.operatorId:CloudCard}')
+    String operatorId
 
-    @Value("${TouchNetStorageService.operatorPassword}")
+    @Value('${TouchNetStorageService.operatorPassword}')
     String operatorPassword
 
-    @Value("${TouchNetStorageService.terminalId}")
+    @Value('${TouchNetStorageService.terminalId}')
     String terminalId
 
-    @Value("${TouchNetStorageService.terminalType}")
-    String terminalType = "ThirdParty"
+    @Value('${TouchNetStorageService.terminalType:ThirdParty}')
+    String terminalType
 
-    @Value("${TouchNetStorageService.originId}")
+    @Value('${TouchNetStorageService.originId}')
     int originId
 
+    @Autowired
+    @SuppressWarnings("SpringJavaInjectionPointsAutowiringInspection")
+    private FileNameResolver accountIdResolver;
 
-    List<PhotoFile> save(Collection<Photo> photos) throws Exception {
-        TouchNetClient touchNetClient = new TouchNetClient(
+    private TouchNetClient touchNetClient
+
+    @PostConstruct
+    void init() {
+
+        throwIfTrue(accountIdResolver == null, "The File Name Resolver must be specified.");
+
+        log.info("   File Name Resolver : $accountIdResolver.class.simpleName")
+
+        touchNetClient = new TouchNetClient(
                 apiUrl: apiUrl,
                 developerKey: developerKey,
                 operatorId: operatorId,
@@ -36,22 +55,49 @@ class TouchNetStorageService implements StorageService {
                 originId: originId
         )
 
+    }
+
+    List<PhotoFile> save(Collection<Photo> photos) throws Exception {
+        log.info("Uploading Photos to TouchNet")
+
         String sessionId = touchNetClient.operatorLogin()
 
-        List<PhotoFile> photoFiles = photos.collect {
-            //todo currently assuming that the identifier matches up to the touchnet account ID;
-            //want to include custom field file name resolver so that we can match up by a custom field.
-            String accountId = photo.person.identifier
-            String photoBase64 = Base64.getEncoder().encode(photo.bytes)
+        if (!sessionId) {
+            log.error("Failed to login to the TouchNet API")
+            return []
+        }
 
-            //this should throw an exception if it fails.
-            //should we log antything here?
-            touchNetClient.accountPhotoApprove(sessionId, accountId, photoBase64)
+        List<PhotoFile> photoFiles = photos.collect { Photo photo ->
+            log.info("Uploading to TouchNet: $photo.id for person: $photo.person.email");
+
+            String accountId = accountIdResolver.getBaseName(photo);
+
+            if (!accountId) {
+                log.error(
+                        "We could not resolve the accountId for '$photo.person.email'" +
+                        " with ID number '$photo.person.identifier'," +
+                        " so photo $photo.id cannot be uploaded to TouchNet."
+                );
+                return null
+            }
+
+            if (!photo.bytes) {
+                log.error("Photo $photo.id for $photo.person.email is missing binary data, so it cannot be uploaded to TouchNet.")
+                return null
+            }
+
+            String photoBase64 = Base64.getEncoder().encodeToString(photo.bytes)
+
+            if (!touchNetClient.accountPhotoApprove(sessionId, accountId, photoBase64)) {
+                log.error("Photo $photo.id for $photo.person.email failed to upload into TouchNet.")
+            }
 
             return new PhotoFile(accountId, null, photo.id)
         }
 
-        touchNetClient.operatorLogout(sessionId)
+        if (!touchNetClient.operatorLogout(sessionId)) {
+            log.error("Failed to logout of the TouchNet API")
+        }
 
         return photoFiles
     }

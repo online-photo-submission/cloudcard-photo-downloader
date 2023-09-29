@@ -40,15 +40,16 @@ class TouchNetClient {
         println response.body
 
         def json = new JsonSlurper().parseText(response.body)
-        if (json.Status != "OK") {
-            throw new Exception("operator login failed")
-            //todo include response contents in the exception.
+        boolean success = json.Status == "OK"
+        if (!success) {
+            log.error("OperatorLogin Failed: $response.body")
+            return null;
         }
 
         return json.Result
     }
 
-    void operatorLogout(String sessionId) {
+    boolean operatorLogout(String sessionId) {
         Map request = [
                 SessionID: sessionId,
                 OperatorId: operatorId
@@ -65,13 +66,14 @@ class TouchNetClient {
         println response.body
 
         def json = new JsonSlurper().parseText(response.body)
-        if (json.Status != "OK") {
-            throw new Exception("operator logout failed")
-            //todo include response contents in the exception.
+        boolean success = json.Status == "OK"
+        if (!success) {
+            log.error("OperatorLogout Failed: $response.body")
         }
+        return success
     }
 
-    void accountPhotoApprove(String sessionId, String accountId, String photoBase64) {
+    boolean accountPhotoApprove(String sessionId, String accountId, String photoBase64) {
         Map request = [
             SessionID: sessionId,
             AccountID: accountId,
@@ -93,11 +95,10 @@ class TouchNetClient {
         println response.body
 
         def json = new JsonSlurper().parseText(response.body)
-        if (json.Status != "OK") {
-            throw new Exception("operator logout failed")
-            //todo include response contents in the exception.
+        boolean success = json.Status == "OK"
+        if (!success) {
+            log.error("AccountPhotoApproveRequest Failed: $response.body")
         }
-
-        return true
+        return success
     }
 }
