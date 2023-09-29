@@ -32,3 +32,5 @@ wildcard/
 application.properties*
 downloaded-photos
 summary
+
+lib/

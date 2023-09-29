@@ -20,6 +20,7 @@ repositories {
 dependencies {
     implementation 'org.springframework.boot:spring-boot-starter'
     implementation 'org.apache.groovy:groovy'
+    implementation 'org.apache.groovy:groovy-json'
     implementation 'com.mashape.unirest:unirest-java:1.4.9'
     implementation 'com.fasterxml.jackson.core:jackson-databind:2.15.2'
     implementation 'org.springframework:spring-jdbc:6.0.11'
@@ -44,4 +45,7 @@ dependencies {
 
 tasks.named('test') {
     useJUnitPlatform()
+    testLogging {
+        events "passed", "skipped", "failed"
+    }
 }
