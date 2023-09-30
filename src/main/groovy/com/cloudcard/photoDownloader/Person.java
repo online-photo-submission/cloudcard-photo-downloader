@@ -26,6 +26,7 @@ public class Person {
     private Map<String, String> customFields;
     @JsonIgnore
     private Map<String, Object> additionalProperties = new HashMap<String, Object>();
+    private boolean additionalPhotoRequired = true;
 
     @JsonProperty("id")
     public Integer getId() {

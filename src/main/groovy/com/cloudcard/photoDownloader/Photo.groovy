@@ -1,227 +1,229 @@
-package com.cloudcard.photoDownloader;
+package com.cloudcard.photoDownloader
 
-import com.fasterxml.jackson.annotation.*;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import software.amazon.awssdk.services.sqs.model.Message;
+import com.fasterxml.jackson.annotation.*
+import groovy.json.JsonSlurper
+import groovy.transform.EqualsAndHashCode
+import org.slf4j.Logger
+import org.slf4j.LoggerFactory
+import software.amazon.awssdk.services.sqs.model.Message
 
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.sql.Timestamp
+import java.time.LocalDateTime
+import java.time.format.DateTimeFormatter
 
+import static groovy.json.JsonOutput.prettyPrint
+import static groovy.json.JsonOutput.toJson
+
+@EqualsAndHashCode(includes = ["publicKey"])
 @JsonInclude(JsonInclude.Include.NON_NULL)
-@JsonPropertyOrder({"aspectRatio", "classifications", "domainClass", "id", "isAspectRatioCorrect", "links", "lowestClassification", "originalPhoto", "person", "publicKey", "status"})
-public class Photo {
+@JsonPropertyOrder(["aspectRatio", "classifications", "domainClass", "id", "isAspectRatioCorrect", "links", "lowestClassification", "originalPhoto", "person", "publicKey", "status"])
+class Photo {
 
-    private static final Logger log = LoggerFactory.getLogger(Photo.class);
+    static final Logger log = LoggerFactory.getLogger(Photo.class)
 
     @JsonProperty("aspectRatio")
-    private Double aspectRatio;
+    Double aspectRatio
     @JsonProperty("classifications")
-    private List<Object> classifications = null;
+    List<Object> classifications = null
     @JsonProperty("domainClass")
-    private String domainClass;
+    String domainClass
     @JsonProperty("id")
-    private Integer id;
+    Integer id
     @JsonProperty("isAspectRatioCorrect")
-    private Boolean isAspectRatioCorrect;
+    Boolean isAspectRatioCorrect
     @JsonProperty("links")
-    private Links links;
+    Links links
     @JsonProperty("lowestClassification")
-    private Object lowestClassification;
+    Object lowestClassification
     @JsonProperty("originalPhoto")
-    private Object originalPhoto;
+    Object originalPhoto
     @JsonProperty("person")
-    private Person person;
+    Person person
     @JsonProperty("publicKey")
-    private String publicKey;
+    String publicKey
     @JsonProperty("externalURL")
-    private String externalURL;
+    String externalURL
     @JsonProperty("status")
-    private String status;
-    private byte[] bytes;
+    String status
+    byte[] bytes
     @JsonIgnore
-    private Map<String, Object> additionalProperties = new HashMap<String, Object>();
+    Map<String, Object> additionalProperties = new HashMap<String, Object>()
+    Boolean manuallyEdited
+    String dateCreatedString
+    Date dateCreated
+    Integer version
+    Boolean backgroundReplaced
+    Boolean helperBotReviewed
 
-    public Photo() {
+    Photo() {}
 
+    Photo(int id) {
+        this.id = id
     }
 
-    public Photo(Integer id) {
-
-        this.id = id;
+    static Photo fromSqsMessage(Message message) {
+        Map map = new JsonSlurper().parseText(message.body()) as Map
+        map.person = new Person(map.person as Map)
+        map.links = new Links(map.links as Map)
+        map.dateCreatedString = map.dateCreated
+        map.dateCreated = parseDate(map.dateCreatedString)
+        try {
+            return new Photo(map)
+        } catch (Exception e) {
+            log.error("Error deserializing message ${message?.receiptHandle()}")
+            log.error(e.message)
+            log.error("message body follows:\n${prettyPrint(message.body())}")
+            log.error("mapped values follow:\n${prettyPrint(toJson(map))}")
+            return null
+        }
     }
 
-    public Photo(Message message) {
-        String messageBody = message.body();
-        System.out.println("vvv");
-        System.out.println(message);
-        System.out.println(messageBody);
-        System.out.println("^^^");
+    static Date parseDate(def dateString) {
+        try {
+            String dateStringWithoutOffset = (dateString as String).take(19)
+            LocalDateTime localDateTime = LocalDateTime.parse(dateStringWithoutOffset, DateTimeFormatter.ISO_LOCAL_DATE_TIME)
+            return Timestamp.valueOf(localDateTime)
+        } catch (Exception e) {
+            log.error(e.message)
+        }
+
+        return null
     }
 
     @JsonProperty("aspectRatio")
-    public Double getAspectRatio() {
-
-        return aspectRatio;
+    Double getAspectRatio() {
+        return aspectRatio
     }
 
     @JsonProperty("aspectRatio")
-    public void setAspectRatio(Double aspectRatio) {
-
-        this.aspectRatio = aspectRatio;
+    void setAspectRatio(Double aspectRatio) {
+        this.aspectRatio = aspectRatio
     }
 
     @JsonProperty("classifications")
-    public List<Object> getClassifications() {
-
-        return classifications;
+    List<Object> getClassifications() {
+        return classifications
     }
 
     @JsonProperty("classifications")
-    public void setClassifications(List<Object> classifications) {
-
-        this.classifications = classifications;
+    void setClassifications(List<Object> classifications) {
+        this.classifications = classifications
     }
 
     @JsonProperty("domainClass")
-    public String getDomainClass() {
-
-        return domainClass;
+    String getDomainClass() {
+        return domainClass
     }
 
     @JsonProperty("domainClass")
-    public void setDomainClass(String domainClass) {
-
-        this.domainClass = domainClass;
+    void setDomainClass(String domainClass) {
+        this.domainClass = domainClass
     }
 
     @JsonProperty("id")
-    public Integer getId() {
-
-        return id;
+    Integer getId() {
+        return id
     }
 
     @JsonProperty("id")
-    public void setId(Integer id) {
-
-        this.id = id;
+    void setId(Integer id) {
+        this.id = id
     }
 
     @JsonProperty("isAspectRatioCorrect")
-    public Boolean getIsAspectRatioCorrect() {
-
-        return isAspectRatioCorrect;
+    Boolean getIsAspectRatioCorrect() {
+        return isAspectRatioCorrect
     }
 
     @JsonProperty("isAspectRatioCorrect")
-    public void setIsAspectRatioCorrect(Boolean isAspectRatioCorrect) {
-
-        this.isAspectRatioCorrect = isAspectRatioCorrect;
+    void setIsAspectRatioCorrect(Boolean isAspectRatioCorrect) {
+        this.isAspectRatioCorrect = isAspectRatioCorrect
     }
 
     @JsonProperty("links")
-    public Links getLinks() {
-
-        return links;
+    Links getLinks() {
+        return links
     }
 
     @JsonProperty("links")
-    public void setLinks(Links links) {
-
-        this.links = links;
+    void setLinks(Links links) {
+        this.links = links
     }
 
     @JsonProperty("lowestClassification")
-    public Object getLowestClassification() {
-
-        return lowestClassification;
+    Object getLowestClassification() {
+        return lowestClassification
     }
 
     @JsonProperty("lowestClassification")
-    public void setLowestClassification(Object lowestClassification) {
-
-        this.lowestClassification = lowestClassification;
+    void setLowestClassification(Object lowestClassification) {
+        this.lowestClassification = lowestClassification
     }
 
     @JsonProperty("originalPhoto")
-    public Object getOriginalPhoto() {
-
-        return originalPhoto;
+    Object getOriginalPhoto() {
+        return originalPhoto
     }
 
     @JsonProperty("originalPhoto")
-    public void setOriginalPhoto(Object originalPhoto) {
-
-        this.originalPhoto = originalPhoto;
+    void setOriginalPhoto(Object originalPhoto) {
+        this.originalPhoto = originalPhoto
     }
 
     @JsonProperty("person")
-    public Person getPerson() {
-
-        return person;
+    Person getPerson() {
+        return person
     }
 
     @JsonProperty("person")
-    public void setPerson(Person person) {
-
-        this.person = person;
+    void setPerson(Person person) {
+        this.person = person
     }
 
     @JsonProperty("publicKey")
-    public String getPublicKey() {
-
-        return publicKey;
+    String getPublicKey() {
+        return publicKey
     }
 
     @JsonProperty("publicKey")
-    public void setPublicKey(String publicKey) {
-
-        this.publicKey = publicKey;
+    void setPublicKey(String publicKey) {
+        this.publicKey = publicKey
     }
 
     @JsonProperty("status")
-    public String getStatus() {
-
-        return status;
+    String getStatus() {
+        return status
     }
 
     @JsonProperty("status")
-    public void setStatus(String status) {
-
-        this.status = status;
+    void setStatus(String status) {
+        this.status = status
     }
 
-    public String getExternalURL() {
-
-        return externalURL;
+    String getExternalURL() {
+        return externalURL ?: links?.bytes
     }
 
     @JsonProperty("externalURL")
-    public void setExternalURL(String externalURL) {
-
-        this.externalURL = externalURL;
+    void setExternalURL(String externalURL) {
+        this.externalURL = externalURL
     }
 
-    public byte[] getBytes() {
-
-        return bytes;
+    byte[] getBytes() {
+        return bytes
     }
 
-    public void setBytes(byte[] bytes) {
-
-        this.bytes = bytes;
+    void setBytes(byte[] bytes) {
+        this.bytes = bytes
     }
 
     @JsonAnyGetter
-    public Map<String, Object> getAdditionalProperties() {
-
-        return this.additionalProperties;
+    Map<String, Object> getAdditionalProperties() {
+        return this.additionalProperties
     }
 
     @JsonAnySetter
-    public void setAdditionalProperty(String name, Object value) {
-
-        this.additionalProperties.put(name, value);
+    void setAdditionalProperty(String name, Object value) {
+        this.additionalProperties.put(name, value)
     }
 }
