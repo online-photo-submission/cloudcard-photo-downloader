@@ -1,6 +1,8 @@
 package com.cloudcard.photoDownloader
 
 
+import javax.annotation.PostConstruct
+
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 
@@ -68,7 +70,12 @@ class TouchNetStorageService implements StorageService {
         }
 
         List<PhotoFile> photoFiles = photos.collect { Photo photo ->
-            log.info("Uploading to TouchNet: $photo.id for person: $photo.person.email");
+            if (!photo.person) {
+                log.error("Person does not exist for photo $photo.id and it cannot be uploaded to TouchNet.")
+                return null
+            }
+
+            log.info("Uploading to TouchNet: $photo.id for person: $photo.person.email")
 
             String accountId = accountIdResolver.getBaseName(photo);
 
@@ -77,7 +84,7 @@ class TouchNetStorageService implements StorageService {
                         "We could not resolve the accountId for '$photo.person.email'" +
                         " with ID number '$photo.person.identifier'," +
                         " so photo $photo.id cannot be uploaded to TouchNet."
-                );
+                )
                 return null
             }
 
@@ -90,6 +97,7 @@ class TouchNetStorageService implements StorageService {
 
             if (!touchNetClient.accountPhotoApprove(sessionId, accountId, photoBase64)) {
                 log.error("Photo $photo.id for $photo.person.email failed to upload into TouchNet.")
+                return null
             }
 
             return new PhotoFile(accountId, null, photo.id)

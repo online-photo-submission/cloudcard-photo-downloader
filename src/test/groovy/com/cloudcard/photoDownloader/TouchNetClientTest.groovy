@@ -1,10 +1,14 @@
 package com.cloudcard.photoDownloader;
 
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.junit.jupiter.MockitoExtension;
 
+//This test actually calls out to the TouchNet API.
+//It is really an integration test, should only be turned on when integration with this api needs to be tested directly.
+@Disabled
 @ExtendWith(MockitoExtension.class)
 class TouchNetClientTest {
 
@@ -20,7 +24,6 @@ class TouchNetClientTest {
         // https://ca-central-1.console.aws.amazon.com/secretsmanager/secret?name=touchnet-devtest-properties&region=ca-central-1
         appProps.load(new FileInputStream("application-test.properties"))
 
-        //TODO mock the TouchNetClient (first test the service logic iwthout mocking it, then mock it.
         client = new TouchNetClient([
                 apiUrl: appProps.getProperty("TouchNetStorageService.apiUrl"),
                 developerKey: appProps.getProperty("TouchNetStorageService.developerKey"),
