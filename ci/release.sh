@@ -32,7 +32,7 @@ rm cloudcard-photo-downloader.*
 
 # package
 mkdir cloudcard-photo-downloader
-cp build/libs/cloudcard-photo-downloader-*.jar cloudcard-photo-downloader/cloudcard-photo-downloader.jar
+cp "build/libs/cloudcard-photo-downloader-$version.jar" "cloudcard-photo-downloader/cloudcard-photo-downloader.jar"
 echo cloudcard.api.accessToken= >cloudcard-photo-downloader/application.properties
 echo "java ^ " >cloudcard-photo-downloader/run.bat
 echo "  -Dcloudcard.api.accessToken=put_a_valid_token_here ^ " >> cloudcard-photo-downloader/run.bat
