@@ -67,12 +67,7 @@ public class CloudCardPhotoService implements PhotoService {
         log.info("        Pre-Processor : " + preProcessor.getClass().getSimpleName());
     }
 
-<<<<<<< HEAD
-    public List<Photo> fetchReadyForDownload() throws Exception {
-
-        List<Photo> photos = fetch(fetchStatuses);
-        for(Photo photo : photos) {
-=======
+    @Override
     public long minDownloaderDelay() {
         return Timer.ONE_MINUTE * 10;
     }
@@ -82,7 +77,6 @@ public class CloudCardPhotoService implements PhotoService {
 
         List<Photo> photos = fetch(fetchStatuses);
         for (Photo photo : photos) {
->>>>>>> master
             Photo processedPhoto = preProcessor.process(photo);
             restService.fetchBytes(processedPhoto);
         }
@@ -115,10 +109,7 @@ public class CloudCardPhotoService implements PhotoService {
         });
     }
 
-<<<<<<< HEAD
-=======
     @Override
->>>>>>> master
     public Photo markAsDownloaded(Photo photo) throws Exception {
 
         return updateStatus(photo, putStatus);
