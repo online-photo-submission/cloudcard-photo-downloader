@@ -8,7 +8,6 @@ import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 
 import javax.annotation.PostConstruct;
-import javax.management.timer.Timer;
 import java.util.List;
 
 import static com.cloudcard.photoDownloader.ApplicationPropertiesValidator.logVersion;
@@ -20,17 +19,15 @@ public class DownloaderService {
     private static final Logger log = LoggerFactory.getLogger(DownloaderService.class);
 
     @Autowired
-    CloudCardPhotoService cloudCardPhotoService;
+    PhotoService photoService;
 
     @Autowired
     TokenService tokenService;
 
     @Autowired
-    @SuppressWarnings("SpringJavaInjectionPointsAutowiringInspection")
     StorageService storageService;
 
     @Autowired
-    @SuppressWarnings("SpringJavaInjectionPointsAutowiringInspection")
     SummaryService summaryService;
 
     @Autowired
@@ -45,7 +42,7 @@ public class DownloaderService {
     @PostConstruct
     public void init() {
 
-        throwIfTrue(downloaderDelay < Timer.ONE_MINUTE, "The minimum downloader delay is 60000 milliseconds (one minute).");
+        throwIfTrue(downloaderDelay < photoService.minDownloaderDelay(), "The minimum downloader delay is " + photoService.minDownloaderDelay() + " milliseconds.");
         throwIfTrue(storageService == null, "The Storage Service must be specified.");
         throwIfTrue(summaryService == null, "The Summary Service must be specified.");
 
@@ -65,12 +62,12 @@ public class DownloaderService {
             log.info("  ==========  Downloading photos  ==========  ");
             tokenService.login();
             shellCommandService.preExecute();
-            List<Photo> photosToDownload = cloudCardPhotoService.fetchReadyForDownload();
+            List<Photo> photosToDownload = photoService.fetchReadyForDownload();
             shellCommandService.preDownload(photosToDownload);
             List<PhotoFile> downloadedPhotoFiles = storageService.save(photosToDownload);
             for (PhotoFile photoFile : downloadedPhotoFiles) {
                 Photo downloadedPhoto = new Photo(photoFile.getPhotoId());
-                cloudCardPhotoService.markAsDownloaded(downloadedPhoto);
+                photoService.markAsDownloaded(downloadedPhoto);
             }
 
             summaryService.createSummary(photosToDownload, downloadedPhotoFiles);
