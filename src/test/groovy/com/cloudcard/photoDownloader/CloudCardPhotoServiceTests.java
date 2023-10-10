@@ -1,25 +1,24 @@
 package com.cloudcard.photoDownloader;
 
-import org.junit.Before;
-import org.junit.Ignore;
-import org.junit.Test;
-import org.junit.runner.RunWith;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Disabled;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
-import org.mockito.Mockito;
-import org.mockito.runners.MockitoJUnitRunner;
+import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.test.util.ReflectionTestUtils;
 
 import java.util.List;
 
-import static com.cloudcard.photoDownloader.CloudCardPhotoService.*;
+import static com.cloudcard.photoDownloader.CloudCardPhotoService.DOWNLOADED;
+import static com.cloudcard.photoDownloader.CloudCardPhotoService.READY_FOR_DOWNLOAD;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.Assume.assumeTrue;
-import static org.mockito.Matchers.any;
 import static org.mockito.Mockito.*;
 
-@Ignore
-@RunWith(MockitoJUnitRunner.class)
+@Disabled
+@ExtendWith(MockitoExtension.class)
 public class CloudCardPhotoServiceTests {
 
     private String[] fetchStatuses = {"APPROVED", "READY_FOR_DOWNLOAD"};
@@ -30,25 +29,29 @@ public class CloudCardPhotoServiceTests {
     @Mock
     RestService mockRestService;
 
+    @Mock
+    TokenService mockTokenService;
+
     @InjectMocks
     CloudCardPhotoService service;
 
-    @Before
+    @BeforeEach
     public void setup() {
 
         service = new CloudCardPhotoService();
-        ReflectionTestUtils.setField(service, "apiUrl", "http://localhost:8080/api");
-        ReflectionTestUtils.setField(service, "accessToken", "tu34pec33k4uait0u12f6c4jujll9s3d");
+        ReflectionTestUtils.setField(service, "apiUrl", "http://localhost:8082/api");
         ReflectionTestUtils.setField(service, "fetchStatuses", fetchStatuses);
         ReflectionTestUtils.setField(service, "putStatus", "DOWNLOADED");
         ReflectionTestUtils.setField(service, "restService", mockRestService);
         ReflectionTestUtils.setField(service, "preProcessor", mockPreProcessor);
+        ReflectionTestUtils.setField(service, "tokenService", mockTokenService);
     }
 
     @Test
     public void testFetchReadyForDownload() throws Exception {
         Photo processedPhoto = new Photo();
         when(mockPreProcessor.process(any(Photo.class))).thenReturn(processedPhoto);
+        when(mockTokenService.getAuthToken()).thenReturn("via76odv674i54eenhqvuf3v8cpverv79tj1bhak9u4u0ktheqa3qg2186srrt1g");
 
         List<Photo> photos = service.fetchReadyForDownload();
         assertThat(photos.size()).isGreaterThanOrEqualTo(0);
@@ -60,6 +63,7 @@ public class CloudCardPhotoServiceTests {
         }
 
         verify(mockRestService, times(photos.size())).fetchBytes(processedPhoto);
+        verify(mockTokenService, times(4)).getAuthToken();
     }
 
     @Test

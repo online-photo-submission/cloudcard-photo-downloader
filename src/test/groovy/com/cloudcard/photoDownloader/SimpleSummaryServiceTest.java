@@ -1,11 +1,11 @@
 package com.cloudcard.photoDownloader;
 
-import org.junit.Before;
-import org.junit.Test;
-import org.junit.runner.RunWith;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
-import org.mockito.runners.MockitoJUnitRunner;
+import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.test.util.ReflectionTestUtils;
 
 import java.io.IOException;
@@ -17,9 +17,7 @@ import static java.time.LocalDateTime.now;
 import static java.time.format.DateTimeFormatter.ofPattern;
 import static org.mockito.Mockito.*;
 
-//import static org.assertj.core.api.Assertions.assertThat;
-
-@RunWith(MockitoJUnitRunner.class)
+@ExtendWith(MockitoExtension.class)
 public class SimpleSummaryServiceTest {
 
     @Mock
@@ -28,9 +26,8 @@ public class SimpleSummaryServiceTest {
     @InjectMocks
     SimpleSummaryService service;
 
-    @Before
+    @BeforeEach
     public void before() throws IOException {
-
         ReflectionTestUtils.setField(service, "fileName", "");
         ReflectionTestUtils.setField(service, "directory", "summary");
     }
@@ -43,7 +40,7 @@ public class SimpleSummaryServiceTest {
 
         service.createSummary(generatePhotoList(0), generatePhotoFileList(0));
 
-        verifyZeroInteractions(mockFileService);
+        verifyNoInteractions(mockFileService);
     }
 
     @Test
@@ -73,7 +70,6 @@ public class SimpleSummaryServiceTest {
     /* *** PRIVATE HELPERS *** */
 
     private List<PhotoFile> generatePhotoFileList() {
-
         return generatePhotoFileList(1);
     }
 
@@ -87,7 +83,6 @@ public class SimpleSummaryServiceTest {
     }
 
     private List<Photo> generatePhotoList() {
-
         return generatePhotoList(1);
     }
 

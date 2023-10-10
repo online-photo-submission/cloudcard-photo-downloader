@@ -8,9 +8,11 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.stereotype.Service;
 
 import javax.annotation.PostConstruct;
+import javax.management.timer.Timer;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -19,7 +21,8 @@ import java.util.Map;
 import static com.cloudcard.photoDownloader.ApplicationPropertiesValidator.throwIfBlank;
 
 @Service
-public class CloudCardPhotoService {
+@ConditionalOnProperty(value = "downloader.photoService", havingValue = "CloudCardPhotoService")
+public class CloudCardPhotoService implements PhotoService {
 
     private static final Logger log = LoggerFactory.getLogger(CloudCardPhotoService.class);
     public static final String READY_FOR_DOWNLOAD = "READY_FOR_DOWNLOAD";
@@ -64,10 +67,15 @@ public class CloudCardPhotoService {
         log.info("        Pre-Processor : " + preProcessor.getClass().getSimpleName());
     }
 
+    public long minDownloaderDelay() {
+        return Timer.ONE_MINUTE * 10;
+    }
+
+    @Override
     public List<Photo> fetchReadyForDownload() throws Exception {
 
         List<Photo> photos = fetch(fetchStatuses);
-        for(Photo photo : photos) {
+        for (Photo photo : photos) {
             Photo processedPhoto = preProcessor.process(photo);
             restService.fetchBytes(processedPhoto);
         }
@@ -100,6 +108,7 @@ public class CloudCardPhotoService {
         });
     }
 
+    @Override
     public Photo markAsDownloaded(Photo photo) throws Exception {
 
         return updateStatus(photo, putStatus);
