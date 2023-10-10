@@ -27,10 +27,10 @@ class SqsPhotoService implements PhotoService {
     @Value('${sqsPhotoService.queueUrl}')
     String queueUrl
 
-    @Value('${sqsPhotoService.pollingIntervalSeconds}')
+    @Value('${sqsPhotoService.pollingIntervalSeconds:0}')
     int pollingIntervalSeconds
 
-    @Value('${sqsPhotoService.pollingDurationSeconds}')
+    @Value('${sqsPhotoService.pollingDurationSeconds:20}')
     int pollingDurationSeconds
 
     SqsClient sqsClient

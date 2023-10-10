@@ -129,6 +129,26 @@ Below are descriptions of each option:
     - description: This setting causes photo IDs to be left padded with zeros (0) until they have at least this many
       digits.
 
+#### PhotoService Settings
+
+- downloader.photoService
+    - default: `SqsPhotoService`
+    - description: Allows downloading photos in near real-time by making use of queueing with AWS SQS. Please contact support@cloudcard.us to have a queue configured for you in AWS.
+    - options: `CloudCardPhotoService` - Legacy photo service that allows scheduled polling for photos to download. This option may be helpful if managing the Downloader with the Windows Task Scheduler.
+
+#### SqsPhotoService Settings
+
+- sqsPhotoService.queueUrl
+    - default: none
+    - description: The URL of the SQS queue. This will be provided by support once configured upon request. 
+        - note: This is required if using the SqsPhotoService.
+  
+- sqsPhotoService.pollingIntervalSeconds
+    - default: 0
+  
+- sqsPhotoService.pollingDurationSeconds
+    - default: 20
+
 #### Shell/Batch Script Hook Settings ([Video](https://youtu.be/aJvwVxZtNTQ))
 
 - ShellCommandService.preExecuteCommand
