@@ -38,6 +38,7 @@ echo "java ^ " >cloudcard-photo-downloader/run.bat
 echo "  -Dcloudcard.api.accessToken=put_a_valid_token_here ^ " >> cloudcard-photo-downloader/run.bat
 echo "  -jar cloudcard-photo-downloader.jar >> downloader.log" >> cloudcard-photo-downloader/run.bat
 echo "java -jar cloudcard-photo-downloader.jar >> downloader.log" >cloudcard-photo-downloader/run.sh
+echo "CloudCard Photo Downloader version $version" > cloudcard-photo-downloader/version.txt
 chmod +x cloudcard-photo-downloader/run.sh
 zip -r cloudcard-photo-downloader.zip cloudcard-photo-downloader
 rm -rf cloudcard-photo-downloader
