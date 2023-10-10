@@ -16,7 +16,7 @@ if [[ -n $(git status -s) ]]; then
 fi
 
 GRADLE_CONF="build.gradle"
-PROP_CONF="src/main/java/com/cloudcard/photoDownloader/ApplicationPropertiesValidator.java"
+PROP_CONF="src/main/groovy/com/cloudcard/photoDownloader/ApplicationPropertiesValidator.java"
 
 BACKUP=".tmp"
 sed -i"$BACKUP" -e "s/String version = .*$/String version = \"$version\";/" $PROP_CONF
