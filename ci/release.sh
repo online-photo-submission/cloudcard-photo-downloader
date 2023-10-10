@@ -16,7 +16,7 @@ if [[ -n $(git status -s) ]]; then
 fi
 
 GRADLE_CONF="build.gradle"
-PROP_CONF="src/main/java/com/cloudcard/photoDownloader/ApplicationPropertiesValidator.java"
+PROP_CONF="src/main/groovy/com/cloudcard/photoDownloader/ApplicationPropertiesValidator.java"
 
 BACKUP=".tmp"
 sed -i"$BACKUP" -e "s/String version = .*$/String version = \"$version\";/" $PROP_CONF
@@ -32,12 +32,13 @@ rm cloudcard-photo-downloader.*
 
 # package
 mkdir cloudcard-photo-downloader
-cp build/libs/cloudcard-photo-downloader-*.jar cloudcard-photo-downloader/cloudcard-photo-downloader.jar
+cp "build/libs/cloudcard-photo-downloader-$version.jar" "cloudcard-photo-downloader/cloudcard-photo-downloader.jar"
 echo cloudcard.api.accessToken= >cloudcard-photo-downloader/application.properties
 echo "java ^ " >cloudcard-photo-downloader/run.bat
 echo "  -Dcloudcard.api.accessToken=put_a_valid_token_here ^ " >> cloudcard-photo-downloader/run.bat
 echo "  -jar cloudcard-photo-downloader.jar >> downloader.log" >> cloudcard-photo-downloader/run.bat
 echo "java -jar cloudcard-photo-downloader.jar >> downloader.log" >cloudcard-photo-downloader/run.sh
+echo "CloudCard Photo Downloader version $version" > cloudcard-photo-downloader/version.txt
 chmod +x cloudcard-photo-downloader/run.sh
 zip -r cloudcard-photo-downloader.zip cloudcard-photo-downloader
 rm -rf cloudcard-photo-downloader
