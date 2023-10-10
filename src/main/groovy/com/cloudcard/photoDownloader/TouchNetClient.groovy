@@ -6,15 +6,44 @@ import com.mashape.unirest.http.HttpResponse;
 import com.mashape.unirest.http.Unirest
 import groovy.json.JsonSlurper;
 
+import javax.annotation.PostConstruct
+
+
+import org.slf4j.Logger
+import org.slf4j.LoggerFactory
+
+import org.springframework.stereotype.Component
+import org.springframework.beans.factory.annotation.Value
+
+@Component
 class TouchNetClient {
 
+    static final Logger log = LoggerFactory.getLogger(TouchNetClient.class);
+
+    //TODO rename the config parameters to TouchNetClient
+    @Value('${TouchNetStorageService.apiUrl}')
     String apiUrl
+
+    @Value('${TouchNetStorageService.developerKey}')
     String developerKey
+
+    @Value('${TouchNetStorageService.operatorId:CloudCard}')
     String operatorId
+
+    @Value('${TouchNetStorageService.operatorPassword}')
     String operatorPassword
+
+    @Value('${TouchNetStorageService.terminalId}')
     String terminalId
+
+    @Value('${TouchNetStorageService.terminalType:ThirdParty}')
     String terminalType
+
+    @Value('${TouchNetStorageService.originId}')
     int originId
+
+    //TODO @PostConstruct to make sure the config parameters are properly specified.
+
 
     boolean apiOnline() {
         HttpResponse<String> response = Unirest.get("$apiUrl/").asString();

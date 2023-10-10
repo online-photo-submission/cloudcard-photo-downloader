@@ -7,56 +7,24 @@ import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 
 import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.beans.factory.annotation.Value
+
 
 class TouchNetStorageService implements StorageService {
 
     static final Logger log = LoggerFactory.getLogger(TouchNetStorageService.class);
 
-    @Value('${TouchNetStorageService.apiUrl}')
-    String apiUrl
-
-    @Value('${TouchNetStorageService.developerKey}')
-    String developerKey
-
-    @Value('${TouchNetStorageService.operatorId:CloudCard}')
-    String operatorId
-
-    @Value('${TouchNetStorageService.operatorPassword}')
-    String operatorPassword
-
-    @Value('${TouchNetStorageService.terminalId}')
-    String terminalId
-
-    @Value('${TouchNetStorageService.terminalType:ThirdParty}')
-    String terminalType
-
-    @Value('${TouchNetStorageService.originId}')
-    int originId
-
     @Autowired
     @SuppressWarnings("SpringJavaInjectionPointsAutowiringInspection")
-    private FileNameResolver accountIdResolver;
+    FileNameResolver accountIdResolver;
 
-    private TouchNetClient touchNetClient
+    @Autowired
+    TouchNetClient touchNetClient
 
     @PostConstruct
     void init() {
-
         throwIfTrue(accountIdResolver == null, "The File Name Resolver must be specified.");
 
         log.info("   File Name Resolver : $accountIdResolver.class.simpleName")
-
-        touchNetClient = new TouchNetClient(
-                apiUrl: apiUrl,
-                developerKey: developerKey,
-                operatorId: operatorId,
-                operatorPassword: operatorPassword,
-                terminalId: terminalId,
-                terminalType: terminalType,
-                originId: originId
-        )
-
     }
 
     List<PhotoFile> save(Collection<Photo> photos) throws Exception {
