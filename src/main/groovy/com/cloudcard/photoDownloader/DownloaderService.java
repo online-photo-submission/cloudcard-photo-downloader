@@ -8,7 +8,6 @@ import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 
 import javax.annotation.PostConstruct;
-import javax.management.timer.Timer;
 import java.util.List;
 
 import static com.cloudcard.photoDownloader.ApplicationPropertiesValidator.logVersion;
@@ -26,11 +25,9 @@ public class DownloaderService {
     TokenService tokenService;
 
     @Autowired
-    @SuppressWarnings("SpringJavaInjectionPointsAutowiringInspection")
     StorageService storageService;
 
     @Autowired
-    @SuppressWarnings("SpringJavaInjectionPointsAutowiringInspection")
     SummaryService summaryService;
 
     @Autowired
@@ -45,7 +42,7 @@ public class DownloaderService {
     @PostConstruct
     public void init() {
 
-        throwIfTrue(downloaderDelay < Timer.ONE_MINUTE, "The minimum downloader delay is 60000 milliseconds (one minute).");
+        throwIfTrue(downloaderDelay < photoService.minDownloaderDelay(), "The minimum downloader delay is " + photoService.minDownloaderDelay() + " milliseconds.");
         throwIfTrue(storageService == null, "The Storage Service must be specified.");
         throwIfTrue(summaryService == null, "The Summary Service must be specified.");
 

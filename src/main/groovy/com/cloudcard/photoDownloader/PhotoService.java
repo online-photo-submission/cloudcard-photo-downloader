@@ -6,4 +6,6 @@ public interface PhotoService {
     List<Photo> fetchReadyForDownload() throws Exception;
 
     Photo markAsDownloaded(Photo photo) throws Exception;
+
+    long minDownloaderDelay();
 }

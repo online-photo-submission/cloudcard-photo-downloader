@@ -12,6 +12,7 @@ import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.stereotype.Service;
 
 import javax.annotation.PostConstruct;
+import javax.management.timer.Timer;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -64,6 +65,10 @@ public class CloudCardPhotoService implements PhotoService {
         log.info("           PUT Status : " + putStatus);
         log.info("       Fetch Statuses : " + String.join(" , ", fetchStatuses));
         log.info("        Pre-Processor : " + preProcessor.getClass().getSimpleName());
+    }
+
+    public long minDownloaderDelay() {
+        return Timer.ONE_MINUTE * 10;
     }
 
     @Override

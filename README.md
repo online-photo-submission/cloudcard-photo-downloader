@@ -91,16 +91,12 @@ Below are descriptions of each option:
 
 #### General Settings ([Video](https://youtu.be/B4xGNDWkk00))
 
-- cloudcard.api.url
-    - default: `https://api.onlinephotosubmission.com/api`
-    - Canadian customers should use `https://api.cloudcard.ca/api`
-    - Test Instance: `https://test-api.onlinephotosubmission.com/api`
-    - Transact Customers: `https://onlinephoto-api.transactcampus.net/api`
-    - description: This option allows you to specify the URL of your CloudCard Online Photo Submission API.
-- cloudcard.api.accessToken
-    - default: none
-    - description: this setting holds the API access token for your service account and must be set before the exporter
-      to run.
+- downloader.photoService
+    - default: `SqsPhotoService`
+    - description: this determines the strategy used to retrieve the photos to be downloaded
+    - options:
+        - `SqsPhotoService` - (RECOMMENDED) retrieves the photo data from an AWS SQS queue in near-realtime
+        - `CloudCardPhotoService` - retrieves the photo data from the CloudCard API directly no more often than every 10 minutes
 - downloader.storageService
     - default: `FileStorageService`
     - description: this setting determines how the downloaded photos will be stored
@@ -115,6 +111,34 @@ Below are descriptions of each option:
     - default: `600000` (Ten Minutes)
     - description: this is the amount of time the downloader will wait between download attempts.
     - note: `downloader.repeat` must be set to `true` for this setting to have any effect.
+- downloader.minPhotoIdLength
+    - default: `0`
+    - description: This setting causes photo IDs to be left padded with zeros (0) until they have at least this many
+      digits.
+
+#### SqsPhotoService Settings
+
+- sqsPhotoService.queueUrl
+    - default: none
+- sqsPhotoService.pollingIntervalSeconds
+    - default: 0
+    - description: how long to wait between SQS requests for new messages
+- sqsPhotoService.pollingDurationSeconds
+    - default: 20
+    - description: used to configure the duration of [SQS Long Polling](https://docs.aws.amazon.com/AWSSimpleQueueService/latest/SQSDeveloperGuide/sqs-short-and-long-polling.html)
+
+#### CloudCardPhotoService Settings
+
+- cloudcard.api.url
+    - default: `https://api.onlinephotosubmission.com/api`
+    - Canadian customers should use `https://api.cloudcard.ca/api`
+    - Test Instance: `https://test-api.onlinephotosubmission.com/api`
+    - Transact Customers: `https://onlinephoto-api.transactcampus.net/api`
+    - description: This option allows you to specify the URL of your CloudCard Online Photo Submission API.
+- cloudcard.api.accessToken
+    - default: none
+    - description: this setting holds the API access token for your service account and must be set before the exporter
+      to run.
 - downloader.fetchStatuses
     - default: `READY_FOR_DOWNLOAD`
     - allowed values: `PENDING`,`APPROVED`,`DENIED`,`READY_FOR_DOWNLOAD`,`DOWNLOADED`,`DISCARDED`,`DONE`
@@ -123,10 +147,26 @@ Below are descriptions of each option:
     - default: `DOWNLOADED`
     - allowed values: `PENDING`,`APPROVED`,`DENIED`,`READY_FOR_DOWNLOAD`,`DOWNLOADED`,`DISCARDED`,`DONE`
     - description: Downloaded photos will be marked with this status in the CloudCard web application.
-- downloader.minPhotoIdLength
-    - default: `0`
-    - description: This setting causes photo IDs to be left padded with zeros (0) until they have at least this many
-      digits.
+
+#### PhotoService Settings
+
+- downloader.photoService
+    - default: `SqsPhotoService`
+    - description: Allows downloading photos in near real-time by making use of queueing with AWS SQS. Please contact support@cloudcard.us to have a queue configured for you in AWS.
+    - options: `CloudCardPhotoService` - Legacy photo service that allows scheduled polling for photos to download. This option may be helpful if managing the Downloader with the Windows Task Scheduler.
+
+#### SqsPhotoService Settings
+
+- sqsPhotoService.queueUrl
+    - default: none
+    - description: The URL of the SQS queue. This will be provided by support once configured upon request. 
+        - note: This is required if using the SqsPhotoService.
+  
+- sqsPhotoService.pollingIntervalSeconds
+    - default: 0
+  
+- sqsPhotoService.pollingDurationSeconds
+    - default: 20
 
 #### Shell/Batch Script Hook Settings ([Video](https://youtu.be/aJvwVxZtNTQ))
 
