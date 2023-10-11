@@ -2,7 +2,7 @@ package com.cloudcard.photoDownloader;
 
 import spock.lang.*
 
-class TouchNetStorageServiceTest extends Specification{
+class TouchNetStorageServiceSpec extends Specification{
 
     FileNameResolver mockFileNameResolver = Mock()
     TouchNetClient mockClient = Mock()
