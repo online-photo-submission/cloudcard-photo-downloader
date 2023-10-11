@@ -44,8 +44,6 @@ class TouchNetClient {
     @Value('${TouchNetClient.originId}')
     int originId
 
-    //TODO @PostConstruct to make sure the config parameters are properly specified.
-
     @PostConstruct
     void init() {
 
@@ -71,6 +69,27 @@ class TouchNetClient {
         return response.status == 200
     }
 
+    TouchNetResponse doApiRequest(String name, String endpoint, Map body) {
+        String serializedBody = new ObjectMapper().writeValueAsString(body)
+
+        log.trace("$name Request Body: $serializedBody")
+
+        HttpResponse<String> response = Unirest.post("$apiUrl/$endpoint")
+                .header("Content-Type", "application/json")
+                .header("DevKey", developerKey)
+                .body(serializedBody)
+                .asString()
+
+        log.trace("$name Response: $response.status $response.body")
+
+        TouchNetResponse touchNetResponse = new TouchNetResponse(response)
+        if (!touchNetResponse.success) {
+            log.error("$name Failed: $response.body")
+        }
+
+        return touchNetResponse
+    }
+
     String operatorLogin() {
         Map request = [
             OperatorId: operatorId,
@@ -80,26 +99,9 @@ class TouchNetClient {
             TerminalType: terminalType
         ]
 
-        String requestBody = new ObjectMapper().writeValueAsString(request)
+        TouchNetResponse response = doApiRequest("Operator Login", "operator/login", request)
 
-        log.trace("OperatorLogin Request Body: $requestBody")
-
-        HttpResponse<String> response = Unirest.post("$apiUrl/operator/login")
-                .header("Content-Type", "application/json")
-                .header("DevKey", developerKey)
-                .body(requestBody)
-                .asString() // todo make response json and map to an object.
-
-        log.trace("OperatorLogin Response: $response.status $response.body")
-
-        def json = new JsonSlurper().parseText(response.body)
-        boolean success = json.Status == "OK"
-        if (!success) {
-            log.error("OperatorLogin Failed: $response.body")
-            return null;
-        }
-
-        return json.Result
+        return response.success ? response.json.Result : null
     }
 
     boolean operatorLogout(String sessionId) {
@@ -108,24 +110,9 @@ class TouchNetClient {
                 OperatorId: operatorId
         ]
 
-        String jsonBody = new ObjectMapper().writeValueAsString(request)
+        TouchNetResponse response = doApiRequest("Operator Logout", "operator/logout", request)
 
-        log.trace("OperatorLogout Request Body: $jsonBody")
-
-        HttpResponse<String> response = Unirest.post("$apiUrl/operator/logout")
-                .header("Content-Type", "application/json")
-                .header("DevKey", developerKey)
-                .body(jsonBody) //todo make json
-                .asString() // todo make json and map to an object.
-
-        log.trace("OperatorLogout Response Body: $response.status $response.body")
-
-        def json = new JsonSlurper().parseText(response.body)
-        boolean success = json.Status == "OK"
-        if (!success) {
-            log.error("OperatorLogout Failed: $response.body")
-        }
-        return success
+        return response.success
     }
 
     boolean accountPhotoApprove(String sessionId, String accountId, String photoBase64) {
@@ -136,25 +123,18 @@ class TouchNetClient {
             ForcePrintedFlag: false
         ]
 
-        String jsonBody = new ObjectMapper().writeValueAsString(request)
+        TouchNetResponse response = doApiRequest("Account Photo Approve", "account/photo/approve", request)
 
-        log.trace("AccountPhotoApprove Request Body: $jsonBody")
+        return response.success
+    }
+}
 
-        HttpResponse<String> response = Unirest.post("$apiUrl/account/photo/approve")
-                //todo abstract the basics into a function that we can call that inserts thte devkey, the json content type header, converts a map to json,
-                //and throws the exception in case of failure, and returns the response content as a json parsed into a map.
-                .header("Content-Type", "application/json")
-                .header("DevKey", developerKey)
-                .body(jsonBody) //todo make json
-                .asString() // todo make json and map to an object.
+class TouchNetResponse {
+    boolean success
+    Object json
 
-        log.trace("AccountPhotoApprove Response: $response.status $response.body")
-
-        def json = new JsonSlurper().parseText(response.body)
-        boolean success = json.Status == "OK"
-        if (!success) {
-            log.error("AccountPhotoApproveRequest Failed: $response.body")
-        }
-        return success
+    TouchNetResponse(HttpResponse<String> response) {
+        json = new JsonSlurper().parseText(response.body)
+        success = json.Status == "OK"
     }
 }
