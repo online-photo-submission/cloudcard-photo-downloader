@@ -8,14 +8,17 @@ import groovy.json.JsonSlurper;
 
 import javax.annotation.PostConstruct
 
-
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 
 import org.springframework.stereotype.Component
 import org.springframework.beans.factory.annotation.Value
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
+
+import static com.cloudcard.photoDownloader.ApplicationPropertiesValidator.throwIfBlank;
 
 @Component
+@ConditionalOnProperty(value = "downloader.storageService", havingValue = "TouchNetStorageService")
 class TouchNetClient {
 
     static final Logger log = LoggerFactory.getLogger(TouchNetClient.class);
@@ -43,6 +46,23 @@ class TouchNetClient {
 
     //TODO @PostConstruct to make sure the config parameters are properly specified.
 
+    @PostConstruct
+    void init() {
+
+        throwIfBlank(apiUrl, "The TouchNet API URL must be specified.")
+        throwIfBlank(developerKey, "The TouchNet developer key must be specified.")
+        throwIfBlank(operatorId, "The TouchNet operator id must be specified")
+        throwIfBlank(operatorPassword, "The TouchNet operator password must be specified")
+        throwIfBlank(terminalId, "The TouchNet terminal id must be specified")
+        throwIfBlank("$originId", "The TouchNet origin id must be specified.")
+
+        log.info("          TouchNet API URL : $apiUrl")
+        log.info("    TouchNet Developer Key : ...${developerKey.substring(3, 6)}...")
+        log.info("      TouchNet Operator ID : $operatorId")
+        log.info("TouchNet Operator Password : ${operatorPassword.length() > 0 ? "......" : ""}")
+        log.info("      TouchNet Terminal ID : $terminalId")
+        log.info("        TouchNet Origin ID : $originId")
+    }
 
     boolean apiOnline() {
         HttpResponse<String> response = Unirest.get("$apiUrl/").asString();

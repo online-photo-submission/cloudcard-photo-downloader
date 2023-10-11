@@ -7,8 +7,10 @@ import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 
 import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
-import org.springframework.stereotype.Service;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty
+import org.springframework.stereotype.Service
+
+import static com.cloudcard.photoDownloader.ApplicationPropertiesValidator.throwIfTrue
 
 @Service
 @ConditionalOnProperty(value = "downloader.storageService", havingValue = "TouchNetStorageService")
@@ -18,16 +20,16 @@ class TouchNetStorageService implements StorageService {
 
     @Autowired
     @SuppressWarnings("SpringJavaInjectionPointsAutowiringInspection")
-    FileNameResolver accountIdResolver;
+    FileNameResolver fileNameResolver;
 
     @Autowired
     TouchNetClient touchNetClient
 
     @PostConstruct
     void init() {
-        throwIfTrue(accountIdResolver == null, "The File Name Resolver must be specified.");
+        throwIfTrue(fileNameResolver == null, "The File Name Resolver must be specified.");
 
-        log.info("   File Name Resolver : $accountIdResolver.class.simpleName")
+        log.info("   File Name Resolver : $fileNameResolver.class.simpleName")
     }
 
     List<PhotoFile> save(Collection<Photo> photos) throws Exception {
@@ -48,7 +50,7 @@ class TouchNetStorageService implements StorageService {
 
             log.info("Uploading to TouchNet: $photo.id for person: $photo.person.email")
 
-            String accountId = accountIdResolver.getBaseName(photo);
+            String accountId = fileNameResolver.getBaseName(photo);
 
             if (!accountId) {
                 log.error(
