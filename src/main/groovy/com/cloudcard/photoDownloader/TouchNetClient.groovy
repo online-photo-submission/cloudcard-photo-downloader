@@ -20,14 +20,13 @@ class TouchNetClient {
 
     static final Logger log = LoggerFactory.getLogger(TouchNetClient.class);
 
-    //TODO rename the config parameters to TouchNetClient
     @Value('${TouchNetClient.apiUrl}')
     String apiUrl
 
     @Value('${TouchNetClient.developerKey}')
     String developerKey
 
-    @Value('${TouchNetClient.operatorId:CloudCard}')
+    @Value('${TouchNetClient.operatorId}')
     String operatorId
 
     @Value('${TouchNetClient.operatorPassword}')
@@ -36,7 +35,7 @@ class TouchNetClient {
     @Value('${TouchNetClient.terminalId}')
     String terminalId
 
-    @Value('${TouchNetClient.terminalType:ThirdParty}')
+    @Value('${TouchNetClient.terminalType}')
     String terminalType
 
     @Value('${TouchNetClient.originId}')

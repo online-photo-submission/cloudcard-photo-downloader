@@ -238,6 +238,19 @@ Below are descriptions of each option:
         - MS SQLServer: `org.hibernate.dialect.SQLServer2012Dialect`
         - MySQL: `org.hibernate.dialect.MySQL5InnoDBDialect`
 
+#### TouchNet Storage Service Settings
+
+*Note: `downloader.storageService` must be set to `TouchNetStorageService` for these to have any effect.*
+
+- TouchNetClient.apiUrl
+- TouchNetClient.developerKey
+- TouchNetClient.operatorId
+- TouchNetClient.operatorPassword
+- TouchNetClient.terminalId
+- TouchNetClient.terminalType
+    - default: `ThirdParty`
+- TouchNetClient.originId
+
 ### File Name Resolver Settings
 
 - downloader.fileNameResolver
