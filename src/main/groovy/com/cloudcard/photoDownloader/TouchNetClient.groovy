@@ -126,7 +126,6 @@ class TouchNetClient {
             SessionID: sessionId,
             AccountID: accountId,
             PhotoBase64: photoBase64,
-            // TODO WHAT IS THIS?>>??>>??>>~ I'm assuming we don't need to care about it, btu what is it?
             ForcePrintedFlag: false
         ]
 
