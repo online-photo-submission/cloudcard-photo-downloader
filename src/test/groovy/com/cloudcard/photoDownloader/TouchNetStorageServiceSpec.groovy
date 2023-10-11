@@ -26,8 +26,7 @@ class TouchNetStorageServiceSpec extends Specification{
         then:
         photoFiles.size() == 0;
 
-        1 * service.touchNetClient.operatorLogin() >> sessionId
-        1 * service.touchNetClient.operatorLogout(sessionId) >> true
+        0 * service.touchNetClient._
     }
 
     void "test save with one good photo"() {

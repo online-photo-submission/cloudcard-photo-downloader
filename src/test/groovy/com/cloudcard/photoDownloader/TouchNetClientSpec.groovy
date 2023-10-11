@@ -6,7 +6,7 @@ import spock.lang.*
  * This test actually calls out to the TouchNet API.
  * It is really an integration test, should only be turned on when integration with this api needs to be tested directly.
  */
-//@Ignore
+@Ignore
 class TouchNetClientSpec extends Specification {
 
     TouchNetClient client

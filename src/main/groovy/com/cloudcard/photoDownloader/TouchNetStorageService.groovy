@@ -33,6 +33,11 @@ class TouchNetStorageService implements StorageService {
     }
 
     List<PhotoFile> save(Collection<Photo> photos) throws Exception {
+        if (!photos) {
+            log.info("No Photos to Upload")
+            return []
+        }
+
         log.info("Uploading Photos to TouchNet")
 
         String sessionId = touchNetClient.operatorLogin()
