@@ -50,7 +50,7 @@ class TouchNetStorageService implements StorageService {
         List<PhotoFile> photoFiles = photos.collect { save(it, sessionId) }
 
         if (!touchNetClient.operatorLogout(sessionId)) {
-            log.error("Failed to logout of the TouchNet API")
+            log.warn("Failed to logout of the TouchNet API")
         }
 
         return photoFiles
@@ -64,23 +64,12 @@ class TouchNetStorageService implements StorageService {
 
         log.info("Uploading to TouchNet: $photo.id for person: $photo.person.email")
 
-        String accountId = fileNameResolver.getBaseName(photo);
+        String accountId = resolveAccountId(photo)
+        String photoBase64 = getBytesBase64(photo)
 
-        if (!accountId) {
-            log.error(
-                    "We could not resolve the accountId for '$photo.person.email'" +
-                            " with ID number '$photo.person.identifier'," +
-                            " so photo $photo.id cannot be uploaded to TouchNet."
-            )
+        if (!accountId || !photoBase64) {
             return null
         }
-
-        if (!photo.bytes) {
-            log.error("Photo $photo.id for $photo.person.email is missing binary data, so it cannot be uploaded to TouchNet.")
-            return null
-        }
-
-        String photoBase64 = Base64.getEncoder().encodeToString(photo.bytes)
 
         if (!touchNetClient.accountPhotoApprove(sessionId, accountId, photoBase64)) {
             log.error("Photo $photo.id for $photo.person.email failed to upload into TouchNet.")
@@ -88,6 +77,26 @@ class TouchNetStorageService implements StorageService {
         }
 
         return new PhotoFile(accountId, null, photo.id)
+    }
+
+    String resolveAccountId(Photo photo) {
+        String accountId = fileNameResolver.getBaseName(photo);
+
+        if (!accountId) {
+            log.error("We could not resolve the accountId for '$photo.person.email' with ID number '$photo.person.identifier', so photo $photo.id cannot be uploaded to TouchNet.")
+            return null
+        }
+
+        return accountId
+    }
+
+    String getBytesBase64(Photo photo) {
+        if (!photo.bytes) {
+            log.error("Photo $photo.id for $photo.person.email is missing binary data, so it cannot be uploaded to TouchNet.")
+            return null
+        }
+
+        return Base64.getEncoder().encodeToString(photo.bytes)
     }
 
 }
