@@ -14,9 +14,7 @@ class TouchNetStorageServiceSpec extends Specification{
         service.fileNameResolver = Mock(FileNameResolver)
     }
 
-    //todo spockify these jawnies
-
-    void "test save with no good photos"() {
+    void "test save with no photos"() {
         given:
         List<Photo> photos = [];
 
@@ -76,7 +74,6 @@ class TouchNetStorageServiceSpec extends Specification{
             assert it.baseName == identifiers[index]
         }
 
-        //TODO this is obnoxious = is there a way to make it more concise?
         1 * service.touchNetClient.operatorLogin() >> sessionId
         1 * service.fileNameResolver.getBaseName(photos[0]) >> identifiers[0]
         1 * service.fileNameResolver.getBaseName(photos[1]) >> identifiers[1]
@@ -113,7 +110,6 @@ class TouchNetStorageServiceSpec extends Specification{
             }
         }
 
-        //TODO this is obnoxious = is there a way to make it more concise?
         1 * service.touchNetClient.operatorLogin() >> sessionId
         1 * service.fileNameResolver.getBaseName(photos[0]) >> identifiers[0]
         1 * service.fileNameResolver.getBaseName(photos[1]) >> identifiers[1]
@@ -153,6 +149,7 @@ class TouchNetStorageServiceSpec extends Specification{
         )
         List<Photo> photos = [ photo ]
 
+
         when:
         List<PhotoFile> photoFiles = service.save(photos)
 
@@ -168,26 +165,22 @@ class TouchNetStorageServiceSpec extends Specification{
         1 * service.touchNetClient.operatorLogout(sessionId) >> false
     }
 
-    void "test save with photo missing accountId"() {
+    void "test save when accountId not resolvable"() {
         given:
         Photo photo = new Photo(
                 id: 1,
                 person: new Person(identifier: null, email: "null@bacon.edu"),
                 bytes: Base64.decoder.decode(base64Photo)
         )
-        List<Photo> photos = [ photo ]
 
         when:
-        List<PhotoFile> photoFiles = service.save(photos)
+        PhotoFile photoFile = service.save(photo, sessionId)
 
         then:
-        photoFiles.size() == 1
-        assert !photoFiles[0]
+        photoFile == null
 
-        1 * service.touchNetClient.operatorLogin() >> sessionId
         1 * service.fileNameResolver.getBaseName(photo) >> null
         0 * service.touchNetClient.accountPhotoApprove(_,_,_)
-        1 * service.touchNetClient.operatorLogout(sessionId) >> true
     }
 
     void "test save with photo missing bytes"() {
@@ -198,43 +191,33 @@ class TouchNetStorageServiceSpec extends Specification{
                 person: new Person(identifier: identifier, email: "$identifier@bacon.edu"),
                 bytes: null
         )
-        List<Photo> photos = [ photo ]
 
         when:
-        List<PhotoFile> photoFiles = service.save(photos)
+        PhotoFile photoFile = service.save(photo, sessionId)
 
         then:
-        photoFiles.size() == 1
-        assert !photoFiles[0]
+        photoFile == null
 
-        1 * service.touchNetClient.operatorLogin() >> sessionId
         1 * service.fileNameResolver.getBaseName(photo) >> identifier
         0 * service.touchNetClient.accountPhotoApprove(_,_,_)
-        1 * service.touchNetClient.operatorLogout(sessionId) >> true
     }
-
 
     void "test save with photo missing person"() {
         given:
-        String identifier = "100012345"
         Photo photo = new Photo(
                 id: 1,
                 person: null,
                 bytes: null
         )
-        List<Photo> photos = [ photo ]
 
         when:
-        List<PhotoFile> photoFiles = service.save(photos)
+        PhotoFile photoFile = service.save(photo, sessionId)
 
         then:
-        photoFiles.size() == 1
-        assert !photoFiles[0]
+        photoFile == null
 
-        1 * service.touchNetClient.operatorLogin() >> sessionId
-        0 * service.fileNameResolver.getBaseName(_)
+        0 * service.fileNameResolver.getBaseName(photo)
         0 * service.touchNetClient.accountPhotoApprove(_,_,_)
-        1 * service.touchNetClient.operatorLogout(sessionId) >> true
     }
 
 }

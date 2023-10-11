@@ -32,7 +32,7 @@ class TouchNetStorageService implements StorageService {
         log.info("   File Name Resolver : $fileNameResolver.class.simpleName")
     }
 
-    List<PhotoFile> save(Collection<Photo> photos) throws Exception {
+    List<PhotoFile> save(Collection<Photo> photos) {
         if (!photos) {
             log.info("No Photos to Upload")
             return []
@@ -47,39 +47,7 @@ class TouchNetStorageService implements StorageService {
             return []
         }
 
-        List<PhotoFile> photoFiles = photos.collect { Photo photo ->
-            if (!photo.person) {
-                log.error("Person does not exist for photo $photo.id and it cannot be uploaded to TouchNet.")
-                return null
-            }
-
-            log.info("Uploading to TouchNet: $photo.id for person: $photo.person.email")
-
-            String accountId = fileNameResolver.getBaseName(photo);
-
-            if (!accountId) {
-                log.error(
-                        "We could not resolve the accountId for '$photo.person.email'" +
-                        " with ID number '$photo.person.identifier'," +
-                        " so photo $photo.id cannot be uploaded to TouchNet."
-                )
-                return null
-            }
-
-            if (!photo.bytes) {
-                log.error("Photo $photo.id for $photo.person.email is missing binary data, so it cannot be uploaded to TouchNet.")
-                return null
-            }
-
-            String photoBase64 = Base64.getEncoder().encodeToString(photo.bytes)
-
-            if (!touchNetClient.accountPhotoApprove(sessionId, accountId, photoBase64)) {
-                log.error("Photo $photo.id for $photo.person.email failed to upload into TouchNet.")
-                return null
-            }
-
-            return new PhotoFile(accountId, null, photo.id)
-        }
+        List<PhotoFile> photoFiles = photos.collect { save(it, sessionId) }
 
         if (!touchNetClient.operatorLogout(sessionId)) {
             log.error("Failed to logout of the TouchNet API")
@@ -87,4 +55,39 @@ class TouchNetStorageService implements StorageService {
 
         return photoFiles
     }
+
+    PhotoFile save(Photo photo, String sessionId) {
+        if (!photo.person) {
+            log.error("Person does not exist for photo $photo.id and it cannot be uploaded to TouchNet.")
+            return null
+        }
+
+        log.info("Uploading to TouchNet: $photo.id for person: $photo.person.email")
+
+        String accountId = fileNameResolver.getBaseName(photo);
+
+        if (!accountId) {
+            log.error(
+                    "We could not resolve the accountId for '$photo.person.email'" +
+                            " with ID number '$photo.person.identifier'," +
+                            " so photo $photo.id cannot be uploaded to TouchNet."
+            )
+            return null
+        }
+
+        if (!photo.bytes) {
+            log.error("Photo $photo.id for $photo.person.email is missing binary data, so it cannot be uploaded to TouchNet.")
+            return null
+        }
+
+        String photoBase64 = Base64.getEncoder().encodeToString(photo.bytes)
+
+        if (!touchNetClient.accountPhotoApprove(sessionId, accountId, photoBase64)) {
+            log.error("Photo $photo.id for $photo.person.email failed to upload into TouchNet.")
+            return null
+        }
+
+        return new PhotoFile(accountId, null, photo.id)
+    }
+
 }
