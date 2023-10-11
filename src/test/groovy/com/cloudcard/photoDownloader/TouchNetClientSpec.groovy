@@ -20,13 +20,13 @@ class TouchNetClientSpec extends Specification {
         appProps.load(new FileInputStream("application-test.properties"))
 
         client = new TouchNetClient([
-                apiUrl: appProps.getProperty("TouchNetStorageService.apiUrl"),
-                developerKey: appProps.getProperty("TouchNetStorageService.developerKey"),
-                operatorId: appProps.getProperty("TouchNetStorageService.operatorId"),
-                operatorPassword: appProps.getProperty("TouchNetStorageService.operatorPassword"),
-                terminalId: appProps.getProperty("TouchNetStorageService.terminalId"),
-                terminalType: appProps.getProperty("TouchNetStorageService.terminalType"),
-                originId: Integer.parseInt(appProps.getProperty("TouchNetStorageService.originId"))
+                apiUrl: appProps.getProperty("TouchNetClient.apiUrl"),
+                developerKey: appProps.getProperty("TouchNetClient.developerKey"),
+                operatorId: appProps.getProperty("TouchNetClient.operatorId"),
+                operatorPassword: appProps.getProperty("TouchNetClient.operatorPassword"),
+                terminalId: appProps.getProperty("TouchNetClient.terminalId"),
+                terminalType: appProps.getProperty("TouchNetClient.terminalType"),
+                originId: Integer.parseInt(appProps.getProperty("TouchNetClient.originId"))
         ])
     }
 

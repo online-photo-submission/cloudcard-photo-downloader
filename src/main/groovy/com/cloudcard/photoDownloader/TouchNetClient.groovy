@@ -21,25 +21,25 @@ class TouchNetClient {
     static final Logger log = LoggerFactory.getLogger(TouchNetClient.class);
 
     //TODO rename the config parameters to TouchNetClient
-    @Value('${TouchNetStorageService.apiUrl}')
+    @Value('${TouchNetClient.apiUrl}')
     String apiUrl
 
-    @Value('${TouchNetStorageService.developerKey}')
+    @Value('${TouchNetClient.developerKey}')
     String developerKey
 
-    @Value('${TouchNetStorageService.operatorId:CloudCard}')
+    @Value('${TouchNetClient.operatorId:CloudCard}')
     String operatorId
 
-    @Value('${TouchNetStorageService.operatorPassword}')
+    @Value('${TouchNetClient.operatorPassword}')
     String operatorPassword
 
-    @Value('${TouchNetStorageService.terminalId}')
+    @Value('${TouchNetClient.terminalId}')
     String terminalId
 
-    @Value('${TouchNetStorageService.terminalType:ThirdParty}')
+    @Value('${TouchNetClient.terminalType:ThirdParty}')
     String terminalType
 
-    @Value('${TouchNetStorageService.originId}')
+    @Value('${TouchNetClient.originId}')
     int originId
 
     //TODO @PostConstruct to make sure the config parameters are properly specified.
