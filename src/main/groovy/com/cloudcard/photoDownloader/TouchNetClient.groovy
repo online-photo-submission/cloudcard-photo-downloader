@@ -106,8 +106,8 @@ class TouchNetClient {
 
     boolean operatorLogout(String sessionId) {
         Map request = [
-                SessionID: sessionId,
-                OperatorId: operatorId
+            SessionID: sessionId,
+            OperatorId: operatorId
         ]
 
         TouchNetResponse response = doApiRequest("Operator Logout", "operator/logout", request)
