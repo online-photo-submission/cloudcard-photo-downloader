@@ -30,5 +30,8 @@ error/
 outlook/
 wildcard/
 application.properties*
+application-test.properties*
 downloaded-photos
 summary
+
+lib/

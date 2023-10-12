@@ -14,13 +14,12 @@ This project automatically downloads photos from [CloudCard Online Photo Submiss
 
 ## Requirements
 
-- JDK 1.8 - Choose one of the following:
-    - Amazon Corretto 8 (recommended)
-        - [Download](https://docs.aws.amazon.com/corretto/latest/corretto-8-ug/downloads-list.html)
-        - [Windows Installation Instructions](https://docs.aws.amazon.com/corretto/latest/corretto-8-ug/windows-7-install.html)
-        - [Linux Installation Instructions](https://docs.aws.amazon.com/corretto/latest/corretto-8-ug/generic-linux-install.html)
-    - [Red Hat OpenJDK 8](https://developers.redhat.com/products/openjdk/download)
-    - Oracle JDK (requires an Oracle support license)
+- Java 17 
+    - Amazon Corretto 17 (recommended)
+        - [Download](https://docs.aws.amazon.com/corretto/latest/corretto-17-ug/downloads-list.html)
+        - [Windows Installation Instructions](https://docs.aws.amazon.com/corretto/latest/corretto-17-ug/windows-7-install.html)
+        - [Linux Installation Instructions](https://docs.aws.amazon.com/corretto/latest/corretto-17-ug/generic-linux-install.html)
+    - Any other full-featured Java should work, but we only test the downloader on Corretto.
 - 512MB RAM
 - Storage: 1GB
 - OS: Any
@@ -238,6 +237,19 @@ Below are descriptions of each option:
         - Oracle: `org.hibernate.dialect.Oracle10gDialect`
         - MS SQLServer: `org.hibernate.dialect.SQLServer2012Dialect`
         - MySQL: `org.hibernate.dialect.MySQL5InnoDBDialect`
+
+#### TouchNet Storage Service Settings
+
+*Note: `downloader.storageService` must be set to `TouchNetStorageService` for these to have any effect.*
+
+- TouchNetClient.apiUrl
+- TouchNetClient.developerKey
+- TouchNetClient.operatorId
+- TouchNetClient.operatorPassword
+- TouchNetClient.terminalId
+- TouchNetClient.terminalType
+    - default: `ThirdParty`
+- TouchNetClient.originId
 
 ### File Name Resolver Settings
 

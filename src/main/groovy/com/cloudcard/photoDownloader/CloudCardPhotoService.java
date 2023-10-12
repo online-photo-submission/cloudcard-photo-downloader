@@ -67,6 +67,7 @@ public class CloudCardPhotoService implements PhotoService {
         log.info("        Pre-Processor : " + preProcessor.getClass().getSimpleName());
     }
 
+    @Override
     public long minDownloaderDelay() {
         return Timer.ONE_MINUTE * 10;
     }
