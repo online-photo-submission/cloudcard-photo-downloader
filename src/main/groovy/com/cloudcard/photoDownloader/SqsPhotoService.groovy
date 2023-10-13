@@ -53,7 +53,6 @@ class SqsPhotoService implements PhotoService {
 
         sqsClient = SqsClient.builder()
                 .region(Region.CA_CENTRAL_1)
-                .credentialsProvider(ProfileCredentialsProvider.create())
                 .build()
     }
 
