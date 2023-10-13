@@ -57,7 +57,7 @@ class Photo {
 
     Photo() {}
 
-    Photo(int id) {
+    Photo(Integer id) {
         this.id = id
     }
 
