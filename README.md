@@ -243,14 +243,20 @@ Below are descriptions of each option:
 
 *Note: `downloader.storageService` must be set to `TouchNetStorageService` for these to have any effect.*
 
-- TouchNetClient.apiUrl
-- TouchNetClient.developerKey
-- TouchNetClient.operatorId
-- TouchNetClient.operatorPassword
-- TouchNetClient.terminalId
-- TouchNetClient.terminalType
+- `TouchNetClient.apiUrl`
+    - Internet accessible URL where the target OneCard API is located. 
+- `TouchNetClient.operatorId`
+    - username of an Operator level account that the Downloader can use when uploading photos into TouchNet.
+- `TouchNetClient.operatorPassword`
+    - password of the account identified by `TouchNetClient.operatorId`
+- `TouchNetClient.terminalId`
+    - Terminal ID that should be assigned to this CloudCard downloader.
+- `TouchNetClient.terminalType`
     - default: `ThirdParty`
-- TouchNetClient.originId
+- `TouchNetClient.developerKey`
+    - provided by CloudCard
+- `TouchNetClient.originId`
+    - provided by CloudCard
 
 ### File Name Resolver Settings
 
