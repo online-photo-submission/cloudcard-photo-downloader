@@ -95,8 +95,8 @@ Below are descriptions of each option:
     - default: `SqsPhotoService`
     - description: this determines the strategy used to retrieve the photos to be downloaded
     - options:
-        - `SqsPhotoService` - (RECOMMENDED) retrieves the photo data from an AWS SQS queue in near-realtime
-        - `CloudCardPhotoService` - retrieves the photo data from the CloudCard API directly no more often than every 10 minutes
+        - `SqsPhotoService` - (RECOMMENDED) retrieves the photo data from an AWS SQS queue in near-realtime. Please contact support@cloudcard.us to have a queue configured in AWS.
+        - `CloudCardPhotoService` - Legacy option that retrieves the photo data from the CloudCard API directly no more often than every 10 minutes. This option may be helpful if managing the Downloader with the Windows Task Scheduler.
 - downloader.storageService
     - default: `FileStorageService`
     - description: this setting determines how the downloaded photos will be stored
@@ -149,13 +149,6 @@ Below are descriptions of each option:
     - default: `DOWNLOADED`
     - allowed values: `PENDING`,`APPROVED`,`DENIED`,`READY_FOR_DOWNLOAD`,`DOWNLOADED`,`DISCARDED`,`DONE`
     - description: Downloaded photos will be marked with this status in the CloudCard web application.
-
-#### PhotoService Settings
-
-- downloader.photoService
-    - default: `SqsPhotoService`
-    - description: Allows downloading photos in near real-time by making use of queueing with AWS SQS. Please contact support@cloudcard.us to have a queue configured for you in AWS.
-    - options: `CloudCardPhotoService` - Legacy photo service that allows scheduled polling for photos to download. This option may be helpful if managing the Downloader with the Windows Task Scheduler.
 
 #### Shell/Batch Script Hook Settings ([Video](https://youtu.be/aJvwVxZtNTQ))
 
