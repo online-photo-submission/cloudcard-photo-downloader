@@ -239,7 +239,7 @@ Below are descriptions of each option:
         - MS SQLServer: `org.hibernate.dialect.SQLServer2012Dialect`
         - MySQL: `org.hibernate.dialect.MySQL5InnoDBDialect`
 
-#### TouchNet Storage Service Settings
+#### TouchNet Client Settings
 
 *Note: `downloader.storageService` must be set to `TouchNetStorageService` for these to have any effect.*
 
@@ -251,6 +251,24 @@ Below are descriptions of each option:
 - TouchNetClient.terminalType
     - default: `ThirdParty`
 - TouchNetClient.originId
+
+#### CCure Client Settings
+
+*Note: `downloader.storageService` must be set to `CCureStorageService` for these to have any effect.*
+
+- `CCureClient.apiUrl`
+  - API URL of the CCure 9000 server that should receive photos
+- `CCureClient.operatorId`
+  - Username of an operator level account in CCure 9000 that can upload primary portraits.
+- `CCureClient.operatorPassword`
+  - Password of the operator account defined by `CCureClient.operatorId`
+- `CCureClient.clientName`
+  - Identifies the integration to CCure. This most likely needs to be the default. 
+  - Default: `CloudCard`
+- `CCureClient.clientId`
+  - The client ID of the cloudcard integration with CCure - this is necessary for CCure to validate the licensing of the cloudcard integration and is usually provided by CloudCard.
+- `CCureClient.compatibleCCureVersion`
+  - The version of CCure that this integration can use - this is usually going to be provided by CloudCard.
 
 ### File Name Resolver Settings
 
