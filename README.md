@@ -121,6 +121,7 @@ Below are descriptions of each option:
 
 - sqsPhotoService.queueUrl
     - default: none
+    - note: This will be provided by support once configured upon request. 
 - sqsPhotoService.pollingIntervalSeconds
     - default: 0
     - description: how long to wait between SQS requests for new messages
@@ -155,19 +156,6 @@ Below are descriptions of each option:
     - default: `SqsPhotoService`
     - description: Allows downloading photos in near real-time by making use of queueing with AWS SQS. Please contact support@cloudcard.us to have a queue configured for you in AWS.
     - options: `CloudCardPhotoService` - Legacy photo service that allows scheduled polling for photos to download. This option may be helpful if managing the Downloader with the Windows Task Scheduler.
-
-#### SqsPhotoService Settings
-
-- sqsPhotoService.queueUrl
-    - default: none
-    - description: The URL of the SQS queue. This will be provided by support once configured upon request. 
-        - note: This is required if using the SqsPhotoService.
-  
-- sqsPhotoService.pollingIntervalSeconds
-    - default: 0
-  
-- sqsPhotoService.pollingDurationSeconds
-    - default: 20
 
 #### Shell/Batch Script Hook Settings ([Video](https://youtu.be/aJvwVxZtNTQ))
 
