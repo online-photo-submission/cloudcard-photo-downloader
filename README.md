@@ -370,6 +370,21 @@ marked as downloaded in CloudCard
     - description: this is the full or relative file path to the directory into which the summary file will be saved
     - note: if this directory does not exist, it will be created
 
+### Remote Logging Settings
+
+If you would like to send logs to CloudCard for remote support, you can specify the following config properties. This behavior is optional and off by default.
+
+- `logging.appender.papertrail.level`
+    - default: `OFF`
+    - options: `TRACE`, `DEBUG`, `ERROR`, `WARN`, `INFO`, `OFF`
+- `cloudcard.logging.identity`
+    - CloudCard Support will provide you with a value for this configuration
+- `cloudcard.logging.host`
+    - CloudCard Support will provide you with a value for this configuration
+- `cloudcard.logging.port`
+    - CloudCard Support will provide you with a value for this configuration
+      
+
 ### Encrypting application properties ([Video](https://video.drift.com/v/abZMpJLIB5O/))
 
 -This method uses AES-256 to encrypt the run.sh file and any application properties that it contains
