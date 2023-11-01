@@ -1,0 +1,31 @@
+<configuration>
+
+    <appender name="STDOUT" class="ch.qos.logback.core.ConsoleAppender">
+        <withJansi>true</withJansi>
+        <!-- encoders are assigned the type ch.qos.logback.classic.encoder.PatternLayoutEncoder by default -->
+        <encoder>
+            <pattern>%cyan(%d{HH:mm:ss.SSS}) %highlight(%-5level) %magenta(%logger{36}) - %msg%n</pattern>
+        </encoder>
+    </appender>
+
+    <appender name="PAPERTRAIL" class="com.papertrailapp.logback.Syslog4jAppender">
+        <filter class="ch.qos.logback.classic.filter.ThresholdFilter">
+            <level>${logging.appender.papertrail.level:-OFF}</level>
+        </filter>
+        
+        <layout class="ch.qos.logback.classic.PatternLayout">
+            <pattern>%-5level %logger{35}: %m%n%xEx</pattern>
+        </layout>
+        <syslogConfig class="org.productivity.java.syslog4j.impl.net.tcp.ssl.SSLTCPNetSyslogConfig">
+            <host>${cloudcard.logging.host}</host>
+            <port>${cloudcard.logging.port}</port>
+            <ident>${cloudcard.logging.identity}</ident>
+            <maxMessageLength>128000</maxMessageLength>
+        </syslogConfig>
+    </appender>
+
+    <root level="INFO">
+        <appender-ref ref="PAPERTRAIL"/>
+        <appender-ref ref="STDOUT"/>
+    </root>
+</configuration>
