@@ -8,6 +8,12 @@
         </encoder>
     </appender>
 
+
+    <springProperty name="cloudcard.logging.identity" source="cloudcard.logging.identity" />
+    <springProperty name="cloudcard.logging.host" source="cloudcard.logging.host" />
+    <springProperty name="cloudcard.logging.port" source="cloudcard.logging.port" />
+    <springProperty name="logging.appender.papertrail.level" source="logging.appender.papertrail.level" />
+
     <appender name="PAPERTRAIL" class="com.papertrailapp.logback.Syslog4jAppender">
         <filter class="ch.qos.logback.classic.filter.ThresholdFilter">
             <level>${logging.appender.papertrail.level:-OFF}</level>
