@@ -39,9 +39,11 @@ This project automatically downloads photos from [CloudCard Online Photo Submiss
 
 To test your system, run `java -version`. The output should look like the following. The exact version isn't important
 as long as it starts with `17`.
-> openjdk version "17.0.6" 2023-01-17 LTS
-> OpenJDK Runtime Environment Corretto-17.0.6.10.1 (build 17.0.6+10-LTS)
-> OpenJDK 64-Bit Server VM Corretto-17.0.6.10.1 (build 17.0.6+10-LTS, mixed mode, sharing)
+```
+openjdk version "17.0.6" 2023-01-17 LTS
+OpenJDK Runtime Environment Corretto-17.0.6.10.1 (build 17.0.6+10-LTS)
+OpenJDK 64-Bit Server VM Corretto-17.0.6.10.1 (build 17.0.6+10-LTS, mixed mode, sharing)
+```
 
 ## Network Diagram
 
