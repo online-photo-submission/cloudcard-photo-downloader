@@ -38,10 +38,10 @@ This project automatically downloads photos from [CloudCard Online Photo Submiss
     - s3.amazonaws.com:443 (if using CloudCard's test instance)
 
 To test your system, run `java -version`. The output should look like the following. The exact version isn't important
-as long as it starts with `1.8`.
-> openjdk version "1.8.0_232" <br/>
-> OpenJDK Runtime Environment Corretto-8.232.09.2 (build 1.8.0_232-b09) <br/>
-> OpenJDK 64-Bit Server VM Corretto-8.232.09.2 (build 25.232-b09, mixed mode)
+as long as it starts with `17`.
+> openjdk version "17.0.6" 2023-01-17 LTS
+> OpenJDK Runtime Environment Corretto-17.0.6.10.1 (build 17.0.6+10-LTS)
+> OpenJDK 64-Bit Server VM Corretto-17.0.6.10.1 (build 17.0.6+10-LTS, mixed mode, sharing)
 
 ## Network Diagram
 
