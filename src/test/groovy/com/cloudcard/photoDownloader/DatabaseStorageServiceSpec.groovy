@@ -53,14 +53,17 @@ class DatabaseStorageServiceSpec extends Specification {
         when:
         List<PhotoFile> photoFiles = service.save(photos);
 
-        then:
+        then: "no photos are saved"
         photoFiles.size() == 0;
 
-        0 * service.namedParameterJdbcTemplate._
+        and: "the filename resolver was not called"
         0 * service.fileNameResolver._
+        
+        and: "the database is empty"
+        jdbcTemplate.queryForList("SELECT * FROM photos").size() == 0
     }
 
-    void "test save with one good photo needing insert"() {
+    void "test save with one good photo needing insert, then update it."() {
         given: "one photo with valid properties"
         String identifier = "B100012345"
         Photo photo = new Photo(
