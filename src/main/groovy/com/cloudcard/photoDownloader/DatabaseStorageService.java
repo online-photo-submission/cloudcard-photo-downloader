@@ -5,7 +5,6 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
-import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.core.namedparam.MapSqlParameterSource;
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate;
 import org.springframework.jdbc.core.support.SqlLobValue;
@@ -41,14 +40,12 @@ public class DatabaseStorageService implements StorageService {
     private FileNameResolver fileNameResolver;
 
     @Autowired
-    JdbcTemplate jdbcTemplate;
-
-    @Autowired
     NamedParameterJdbcTemplate namedParameterJdbcTemplate;
 
     @PostConstruct
     void init() {
         log.info("   File Name Resolver : " + fileNameResolver.getClass().getSimpleName());
+        log.info("           Count  SQL : " + countSql());
         log.info("           Insert SQL : " + insertSql());
         log.info("           Update SQL : " + updateSql());
     }
@@ -83,9 +80,8 @@ public class DatabaseStorageService implements StorageService {
                 return null;
             }
 
-            MapSqlParameterSource insertParams = createInsertParams(photo, dbIdentifier);
-            namedParameterJdbcTemplate.update(preparePhotoQuery(photo.getPerson().getIdentifier(), dbIdentifier), insertParams);
-
+            persistPhoto(photo, dbIdentifier);
+        
             return new PhotoFile(photo.getPerson().getIdentifier(), null, photo.getId());
         } catch (Exception e) {
             log.error("Failed to push photo" + photo.getId() + " to DB.");
@@ -96,27 +92,39 @@ public class DatabaseStorageService implements StorageService {
 
     /* *** PRIVATE HELPERS *** */
 
-    private MapSqlParameterSource createInsertParams(Photo photo, String fileName) {
+    private int persistPhoto(Photo photo, String dbIdentifier) {
+        boolean isInsert = isInsert(dbIdentifier);
+    
+        log.info("Performing " + (isInsert ? "insert" : "update") + " for : " + photo.getPerson().getIdentifier());
 
-        MapSqlParameterSource in = new MapSqlParameterSource();
-        in.addValue("id", fileName);
-        in.addValue("photo", new SqlLobValue(new ByteArrayInputStream(photo.getBytes()),
-            photo.getBytes().length, new DefaultLobHandler()), Types.BLOB);
-        return in;
+        String query = isInsert ? insertSql() : updateSql();
+                
+        return namedParameterJdbcTemplate.update(query, buildParams(photo, dbIdentifier));
     }
 
-    private String preparePhotoQuery(String personIdentifier, String dbIdentifier) {
-        String preparedPhotoQuery;
-        String photoCountQuery = "SELECT COUNT(" + studentIdColumnName + ") FROM " + tableName + "  where " + studentIdColumnName + " = " + dbIdentifier;
-        int rowCount = jdbcTemplate.queryForObject(photoCountQuery, Integer.class);
-        if (rowCount == 0) {
-            log.info("Preparing insert for : " + personIdentifier);
-            preparedPhotoQuery = insertSql();
-        } else {
-            log.info("Preparing update for : " + personIdentifier);
-            preparedPhotoQuery = updateSql();
-        }
-        return preparedPhotoQuery;
+
+    private MapSqlParameterSource buildParams(Photo photo, String fileName) {
+        MapSqlParameterSource params = new MapSqlParameterSource();
+        params.addValue("id", fileName);
+        params.addValue("photo", new SqlLobValue(new ByteArrayInputStream(photo.getBytes()),
+            photo.getBytes().length, new DefaultLobHandler()), Types.BLOB);
+        return params;
+    }
+
+    /**
+     * Determine if we need to insert a new record or update an existing record by checking if a record already exists for the given identifier 
+     */
+    private boolean isInsert(String dbIdentifier) {
+        MapSqlParameterSource in = new MapSqlParameterSource();
+        in.addValue("id", dbIdentifier);
+
+        int rowCount = namedParameterJdbcTemplate.queryForObject(countSql(), in, Integer.class);
+
+        return rowCount == 0;
+    }
+
+    private String countSql() {
+        return "SELECT COUNT(" + studentIdColumnName + ") FROM " + tableName + "  where " + studentIdColumnName + " = :id";
     }
 
     private String updateSql() {

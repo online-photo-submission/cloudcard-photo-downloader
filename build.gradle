@@ -7,7 +7,7 @@ plugins {
 }
 
 group = 'com.onlinephotosubmission'
-version = '23.11.01.1732'
+version = '23.12.12.1715'
 
 java {
     sourceCompatibility = '17'
@@ -37,6 +37,8 @@ dependencies {
     testImplementation "com.blogspot.toomuchcoding:spock-subjects-collaborators-extension:2.0.0"
     testImplementation 'org.mockito:mockito-core:5.5.0'
     testImplementation 'org.mockito:mockito-junit-jupiter:5.5.0'
+
+    testImplementation 'com.h2database:h2:1.4.200'
 
     //jdbc drivers
     implementation 'mysql:mysql-connector-java:8.0.33'

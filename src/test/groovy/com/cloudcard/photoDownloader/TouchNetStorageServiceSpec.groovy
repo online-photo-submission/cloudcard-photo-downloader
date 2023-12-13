@@ -1,4 +1,4 @@
-package com.cloudcard.photoDownloader;
+package com.cloudcard.photoDownloader
 
 import spock.lang.*
 
