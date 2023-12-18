@@ -6,7 +6,7 @@
 
 ### Summary
 
-This is a batch script that can be called by the cloudcard photo downloader to retrieve user info from the cloudcard API for downloaded photos. 
+This is a batch script that can be called by the CloudCard photo downloader to retrieve user info from the CloudCard API for downloaded photos. 
 
 ### Requirements
 
@@ -20,20 +20,20 @@ This is a batch script that can be called by the cloudcard photo downloader to r
 This script is designed to be configurable with 4 variables:
 
 - curlUrl
-  - description: This is pre-configured to pull from the production api endpoint. Most users will not need to change this setting.
+  - description: This is pre-configured to pull from the production API endpoint. Most users will not need to change this setting.
 
 - authToken 
-  - description: An authentication token from a cloudcard service account is necessary to retrieve info from the api via a curl command. This can be the same token used for running the downloader itself. 
+  - description: An authentication token from a CloudCard service account is necessary to retrieve info from the API. This can be the same token used for running the downloader itself. 
 
 - outputDir
-  - description: The desired output path (absolute directory) for where the csv file should be saved to.
+  - description: The desired output path (absolute directory) where the CSV file should be saved.
 
 - photoDir
-  - description: The absolute directory for where the cloudcard photo downloader is saving photos. 
-  - note: we recommend using a temporary directory, rather than the primary folder that the downloader is saving photos to. The downloader can save photos to multiple directories using the downloader.photoDirectories property and specifying multiple destination folders (separated by commas). This way, this script clears out the temporary directory each time it runs (so it is only retrieving info for the photos that were just downloaded). 
+  - description: The absolute directory for where the CloudCard photo downloader is saving photos. 
+  - note: we recommend using an additional temporary directory rather than the primary folder into which the downloader saves photos because this script deletes all photos from the temporary directory each time it runs, so it only retrieves info for the photos that were just downloaded. The downloader can easily save photos to multiple directories using the `downloader.photoDirectories` property and specifying multiple destination folders (separated by commas). 
 
 
-Once these variables are configured, the cloudcard photo downloader needs to be set up to run this script once photos have been sucessfully downloaded (see the Shell/Batch Script Hook Settings in the downloader readme).
+Once these variables are configured, the CloudCard photo downloader must be set up to run this script once photos have been successfully downloaded (see the Shell/Batch Script Hook Settings in the downloader readme).
 
 ---
 
@@ -41,12 +41,12 @@ Once these variables are configured, the cloudcard photo downloader needs to be 
 
 ### Summary
 
-The sftp-script sends downloaded photos over SFTP to a remote location. This script should be stored in the main Cloudcard-Photo-Downloader folder if being used.
+The sftp-script sends downloaded photos over SFTP to a remote location. This script should be stored in the main CloudCard-Photo-Downloader folder if it is being used.
 
 ### Requirements
 
 - OS: Mac OSX or Linux
-- OS/Security Roles: Access to remote storage destination, and a public/private key pair for sending files over SFTP
+- OS/Security Roles: Access to remote storage destination and a public/private key pair for sending files over SFTP
 
 
 #### Configuration ([Video](https://video.drift.com/v/abYGbYsT875/))
@@ -57,7 +57,7 @@ This script has 4 variables that you must set:
   - description: The user of the remote machine that photos are being sent to
   
 - HOST
-  - description: The host name of the remote machine that photos are being sent to
+  - description: The hostname of the remote machine that photos are being sent to
 
 - DESTINATION_DIRECTORY
   - description: The desired output path on your remote machine where you want photos stored
@@ -66,7 +66,7 @@ This script has 4 variables that you must set:
   - description: The location of your pem file that contains the private key
 
 
-Once these variables are configured, the cloudcard photo downloader needs to be set up to run this script once photos have been sucessfully downloaded. The recommended configuration is: `ShellCommandService.postDownloadCommand=./sftp-script.sh`
+Once these variables are configured, the CloudCard photo downloader must be set up to run this script once photos have been successfully downloaded. The recommended configuration is: `ShellCommandService.postDownloadCommand=./sftp-script.sh`
 
 ---
 
