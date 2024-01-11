@@ -31,6 +31,8 @@ public class DatabaseStorageService implements StorageService {
     String photoColumnName;
     @Value("${db.mapping.table}")
     String tableName;
+    @Value("${db.photoUpdates.enabled:true}")
+    Boolean updateExistingPhoto;
 
     @Autowired
     DataSource dataSource;
@@ -41,6 +43,10 @@ public class DatabaseStorageService implements StorageService {
 
     @Autowired
     NamedParameterJdbcTemplate namedParameterJdbcTemplate;
+
+    @Autowired
+    @SuppressWarnings("SpringJavaInjectionPointsAutowiringInspection")
+    private PostProcessor postProcessor;
 
     @PostConstruct
     void init() {
@@ -81,7 +87,10 @@ public class DatabaseStorageService implements StorageService {
             }
 
             persistPhoto(photo, dbIdentifier);
-        
+
+//          passing in null photoDirectory and fileName because they don't exist when storing photos in a DB
+            postProcessor.process(photo, null, new PhotoFile(dbIdentifier, null, photo.getId()));
+
             return new PhotoFile(photo.getPerson().getIdentifier(), null, photo.getId());
         } catch (Exception e) {
             log.error("Failed to push photo" + photo.getId() + " to DB.");
@@ -115,6 +124,8 @@ public class DatabaseStorageService implements StorageService {
      * Determine if we need to insert a new record or update an existing record by checking if a record already exists for the given identifier 
      */
     private boolean isInsert(String dbIdentifier) {
+        if (!updateExistingPhoto) return true;
+
         MapSqlParameterSource in = new MapSqlParameterSource();
         in.addValue("id", dbIdentifier);
 
