@@ -196,6 +196,10 @@ Below are descriptions of each option:
 - db.mapping.column.photoId
     - default: `PHOTO`
     - description: This is the name of the `BLOB` column into which the cardholder's jpeg encoded image will be stored.
+- db.photoUpdates.enabled
+    - default: `true`
+    - description: This boolean determines if downloaded photos will update existing cardholder photos in the database. If a cardholder doesn't yet exist in the database, this will default to an `INSERT` statement and write a new row to the database.
+    - note: If this is set to `false`, downloaded photos will **always** be written to a new row.
 
 ### Database Connection Settings ([Video](https://youtu.be/JeykYIykI6k))
 
@@ -330,6 +334,7 @@ marked as downloaded in CloudCard
         - `email` - the cardholder's `email` field within CloudCard
         - `fileName` - the full file name, including file path, of the downloaded photo
         - `timestamp` - the current timestamp
+        - `dateCreatedTimestamp` - the timestamp of when the photo was submitted
         - the exact name of any custom field within CloudCard
         - other options: `aspectRatio`, `publicKey`, `externalURL`, `status`, etc.
     - example: `timestamp,Notes,identifier`
