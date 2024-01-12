@@ -38,12 +38,14 @@ class DatabaseStorageServiceSpec extends Specification {
         fileNameResolver = Mock(FileNameResolver)
 
         service = new DatabaseStorageService()
+        service.postProcessor = new DoNothingPostProcessor()
         service.namedParameterJdbcTemplate = namedParameterJdbcTemplate
         service.fileNameResolver = fileNameResolver
 
         service.studentIdColumnName = "student_id"
         service.photoColumnName = "photo_data"
         service.tableName = "photos"
+        service.updateExistingPhoto = true
     }
 
     void "test save with no photos"() {
