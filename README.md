@@ -49,7 +49,7 @@ OpenJDK 64-Bit Server VM Corretto-17.0.6.10.1 (build 17.0.6+10-LTS, mixed mode, 
 
 [![Network Diaram](https://online-photo-submission.github.io/cloudcard-photo-downloader/downloader-diagram.png)](https://online-photo-submission.github.io/cloudcard-photo-downloader/downloader-diagram.png)
 
-## Installation and Configuration ([Video](https://youtu.be/a9P57lKKo2Q))
+## Installation and Configuration
 
 1. Create a separate [service account](https://sharptop.atlassian.net/wiki/spaces/CCD/pages/1226440705/User+Roles) for
    CloudCard Photo Downloader to use. ([Instructions](https://youtu.be/_J9WKAMZOdY))
