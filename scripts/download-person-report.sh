@@ -1,6 +1,6 @@
 #!/bin/bash
 
-curlUrl=""
+curlUrl="https://api.onlinephotosubmission.com"
 persistentAccessToken=""
 outputDir=""
 photoDir=""
