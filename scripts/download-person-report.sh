@@ -1,9 +1,9 @@
 #!/bin/bash
 
 curlUrl=""
-persistentAccessToken="9AGNEN9pe4fso0D1VTetk6g5sRKJrie697FAE8lPSvI9pIt4p4LB2B2Ssdo6duEs"
-outputDir="."
-photoDir="downloaded-photos"
+persistentAccessToken=""
+outputDir=""
+photoDir=""
 
 response=$(curl -X POST ${curlUrl}authentication-token --header 'Content-Type: application/json' --data '{"persistentAccessToken": "'$persistentAccessToken'"}')
 
