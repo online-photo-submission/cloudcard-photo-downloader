@@ -2,16 +2,15 @@
 
 ---
 
-## download-person-report.bat
+## download-person-report
 
 ### Summary
 
-This is a batch script that can be called by the CloudCard photo downloader to retrieve user info from the CloudCard API for downloaded photos. 
+This script can be called by the CloudCard photo downloader to retrieve user info from the CloudCard API for downloaded photos. 
 
 ### Requirements
 
-- OS: Windows with curl installed (now comes packaged with Windows 10)
-  - [Download](https://curl.se/windows/)
+- OS: Linux, Mac, or Windows with curl installed (standard on Mac OS and most Linux builds, as well as newer versions of Windows)
 - OS/Security Roles: Access to photo storage destination 
 - [Service account with office level access](https://sharptop.atlassian.net/wiki/spaces/CCD/pages/1226440705/User+Roles) to CloudCard Online Photo Submission
 
@@ -20,10 +19,13 @@ This is a batch script that can be called by the CloudCard photo downloader to r
 This script is designed to be configurable with 4 variables:
 
 - curlUrl
-  - description: This is pre-configured to pull from the production API endpoint. Most users will not need to change this setting.
+  - description: The CloudCard API URL.
+  - default: https://api.onlinephotosubmission.com
+  - Canada Instance: https://api.cloudcard.ca
+  - Test Instance: https://test-api.onlinephotosubmission.com
 
-- authToken 
-  - description: An authentication token from a CloudCard service account is necessary to retrieve info from the API. This can be the same token used for running the downloader itself. 
+- persistentAccessToken 
+  - description: A token from a CloudCard service account is necessary to retrieve info from the API. This can be the same token used for running the downloader itself. 
 
 - outputDir
   - description: The desired output path (absolute directory) where the CSV file should be saved.
