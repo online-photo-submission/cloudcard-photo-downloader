@@ -1,5 +1,7 @@
 package com.cloudcard.photoDownloader;
 
+import com.mashape.unirest.http.Unirest;
+import org.apache.http.HttpHost;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -39,6 +41,12 @@ public class DownloaderService {
     @Value("${downloader.repeat:true}")
     private boolean repeat;
 
+    @Value("${downloader.proxy.host:#{null}}")
+    private String proxyHost;
+
+    @Value("${downloader.proxy.port:0}")
+    private int proxyPort;
+
     @PostConstruct
     public void init() {
 
@@ -51,12 +59,18 @@ public class DownloaderService {
         log.info("     Downloader Delay : " + downloaderDelay / 60000 + " min(s)");
         log.info("      Storage Service : " + storageService.getClass().getSimpleName());
         log.info("      Summary Service : " + summaryService.getClass().getSimpleName());
+
+        if (proxyHost != null && proxyPort > 0) {
+            log.info("          Using Proxy : " + proxyHost + ":" + proxyPort);
+            Unirest.setProxy(new HttpHost(proxyHost, proxyPort));
+        }
     }
 
     @Scheduled(fixedDelayString = "${downloader.delay.milliseconds}")
     public void downloadPhotos() throws Exception {
 
         int exitStatus = 0;
+
         try {
 
             log.info("  ==========  Downloading photos  ==========  ");
