@@ -41,10 +41,10 @@ public class DownloaderService {
     @Value("${downloader.repeat:true}")
     private boolean repeat;
 
-    @Value("${downloader.proxy.host}")
+    @Value("${downloader.proxy.host:#{null}}")
     private String proxyHost;
 
-    @Value("${downloader.proxy.port}")
+    @Value("${downloader.proxy.port:0}")
     private int proxyPort;
 
     @PostConstruct
@@ -61,6 +61,7 @@ public class DownloaderService {
         log.info("      Summary Service : " + summaryService.getClass().getSimpleName());
 
         if (proxyHost != null && proxyPort > 0) {
+            log.info("          Using Proxy : " + proxyHost + ":" + proxyPort);
             Unirest.setProxy(new HttpHost(proxyHost, proxyPort));
         }
     }
