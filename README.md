@@ -28,15 +28,17 @@ This project automatically downloads photos from [CloudCard Online Photo Submiss
 - OS/Security Roles: Access to photo storage destination
 - [Service account with office level access](https://sharptop.atlassian.net/wiki/spaces/CCD/pages/1226440705/User+Roles)
   to CloudCard Online Photo Submission
-- Outbound network access to the following servers/ports if your organization requires all outbound traffic to be
+- Outbound network access to the following domains/ports if your organization requires all outbound traffic to be
   whitelisted
     - api.onlinephotosubmission.com:443
-    - api.cloudcard.ca:443 (only necessary if using CloudCard's Canada specific instance)
-    - onlinephoto-api.transactcampus.net:443 (only necessary if using Online Photo Submission through Transact)
-    - s3-ca-central-1.amazonaws.com:443
-    - test-api.onlinephotosubmission.com:443 (only necessary if using CloudCard's test instance)
-    - s3.amazonaws.com:443 (if using CloudCard's test instance)
-
+    - s3-us-east-2.amazonaws.com:443
+         #### Alternate Domains
+        
+        - api.cloudcard.ca:443 (CloudCard's Canada instance)
+        - s3-ca-central-1.amazonaws.com:443 (CloudCard's Canada instance)
+        - test-api.onlinephotosubmission.com:443 (CloudCard's test instance)
+        - onlinephoto-api.transactcampus.net:443 (Online Photo Submission through Transact)
+    
 To test your system, run `java -version`. The output should look like the following. The exact version isn't important
 as long as it starts with `17`.
 ```
@@ -155,9 +157,9 @@ Below are descriptions of each option:
 #### Proxy Settings
 The downloader supports going through a proxy when using the CloudCardPhotoService to download photos to the file system.
 - proxy.host
-    - default: null
+    - default: `null`
 - proxy.port
-    - default: 0  
+    - default: `0`  
 
 #### Shell/Batch Script Hook Settings ([Video](https://youtu.be/aJvwVxZtNTQ))
 
