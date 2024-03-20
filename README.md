@@ -151,6 +151,13 @@ Below are descriptions of each option:
     - default: `DOWNLOADED`
     - allowed values: `PENDING`,`APPROVED`,`DENIED`,`READY_FOR_DOWNLOAD`,`DOWNLOADED`,`DISCARDED`,`DONE`
     - description: Downloaded photos will be marked with this status in the CloudCard web application.
+ 
+#### Proxy Settings
+The downloader supports going through a proxy when using the CloudCardPhotoService to download photos to the file system.
+- proxy.host
+    - default: null
+- proxy.port
+    - default: 0  
 
 #### Shell/Batch Script Hook Settings ([Video](https://youtu.be/aJvwVxZtNTQ))
 
