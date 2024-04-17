@@ -5,7 +5,7 @@ persistentAccessToken=""
 outputDir=""
 photoDir=""
 
-response=$(curl -X POST ${curlUrl}authentication-token --header 'Content-Type: application/json' --data '{"persistentAccessToken": "'$persistentAccessToken'"}')
+response=$(curl -X POST ${curlUrl}/authentication-token --header 'Content-Type: application/json' --data '{"persistentAccessToken": "'$persistentAccessToken'"}')
 
 authToken=$(echo $response | grep -o '"tokenValue":"[^"]*' | sed 's/"tokenValue":"//')
 DateTime=$(date '+%Y-%m-%d_%H-%M-%S')
