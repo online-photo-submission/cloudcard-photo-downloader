@@ -51,12 +51,16 @@ class CSVManifestFileService implements ManifestFileService {
     @PostConstruct
     void init() {
 
+        log.info("CSV Manifest File Service fileName          : $fileName")
+        log.info("CSV Manifest File Service fileNameDateFormat: $fileNameDateFormat")
+        log.info("CSV Manifest File Service directory         : $directory")
         log.info("CSV Manifest File Service delimiter         : $delimiter")
         log.info("CSV Manifest File Service doubleQuoteValues : $doubleQuoteValues")
         log.info("CSV Manifest File Service quoteMode         : $quoteMode")
         log.info("CSV Manifest File Service quoteCharacter    : $quoteCharacter")
         log.info("CSV Manifest File Service escapeCharacter   : $escapeCharacter")
-        log.info("CSV Manifest File Service headerNames       : $headerAndColumnMap")
+        log.info("CSV Manifest File Service dateFormat        : $dateFormat")
+        log.info("CSV Manifest File Service headerAndColumnMap: $headerAndColumnMap")
 
     }
 
@@ -65,9 +69,7 @@ class CSVManifestFileService implements ManifestFileService {
 
         String filePath = "${directory}/${resolveFileName()}"
 
-        File file = new File(filePath)
-
-        FileWriter fileWriter = new FileWriter(file)
+        FileWriter fileWriter = new FileWriter(new File(filePath))
 
         CSVFormat csvFormat = CSVFormat.DEFAULT
                                        .withDelimiter(delimiter)
