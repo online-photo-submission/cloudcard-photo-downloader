@@ -30,6 +30,9 @@ public class DownloaderService {
     StorageService storageService;
 
     @Autowired
+    ManifestFileService manifestFileService;
+
+    @Autowired
     SummaryService summaryService;
 
     @Autowired
@@ -59,6 +62,7 @@ public class DownloaderService {
         log.info("     Downloader Delay : " + downloaderDelay / 60000 + " min(s)");
         log.info("      Storage Service : " + storageService.getClass().getSimpleName());
         log.info("      Summary Service : " + summaryService.getClass().getSimpleName());
+        log.info("Manifest File Service : " + manifestFileService.getClass().getSimpleName());
 
         if (proxyHost != null && proxyPort > 0) {
             log.info("          Using Proxy : " + proxyHost + ":" + proxyPort);
@@ -83,7 +87,7 @@ public class DownloaderService {
                 Photo downloadedPhoto = new Photo(photoFile.getPhotoId());
                 photoService.markAsDownloaded(downloadedPhoto);
             }
-
+            manifestFileService.createManifestFile(photosToDownload, downloadedPhotoFiles);
             summaryService.createSummary(photosToDownload, downloadedPhotoFiles);
             shellCommandService.postDownload(downloadedPhotoFiles);
             shellCommandService.postExecute();
