@@ -18,25 +18,25 @@ class CSVManifestFileService implements ManifestFileService {
 
     private static final Logger log = LoggerFactory.getLogger(CSVManifestFileService.class)
 
-    @Value('${CSVManifestFileService.fileName:manifest}')
+    @Value('${CSVManifestFileService.fileName:}')
     String fileName
 
     @Value('${CSVManifestFileService.fileNameDateFormat:}')
     String fileNameDateFormat
 
-    @Value('${CSVManifestFileService.directory:downloaded-photos}')
+    @Value('${CSVManifestFileService.directory:}')
     String directory
 
-    @Value('${CSVManifestFileService.delimiter:,}')
+    @Value('${CSVManifestFileService.delimiter:}')
     Character delimiter
 
-    @Value('${CSVManifestFileService.doubleQuoteValues:true}')
+    @Value('${CSVManifestFileService.doubleQuoteValues:}')
     Boolean doubleQuoteValues
 
-    @Value('${CSVManifestFileService.quoteMode:ALL_NON_NULL}')
+    @Value('${CSVManifestFileService.quoteMode:}')
     String quoteMode
 
-    @Value('${CSVManifestFileService.quoteCharacter:"}')
+    @Value('${CSVManifestFileService.quoteCharacter:}')
     Character quoteCharacter
 
     @Value('${CSVManifestFileService.escapeCharacter:}')
@@ -77,7 +77,7 @@ class CSVManifestFileService implements ManifestFileService {
                                        .withQuote(quoteCharacter).withQuoteMode(QuoteMode.valueOf(quoteMode))
                                        .withHeader(headerAndColumnMap.keySet() as String[])
 
-        def csvPrinter = new CSVPrinter(fileWriter, csvFormat)
+        CSVPrinter csvPrinter = new CSVPrinter(fileWriter, csvFormat)
 
         photosToDownload.each { photo ->
             if (photoFiles.collect { it.photoId }.contains(photo.id)) {
@@ -115,7 +115,7 @@ class CSVManifestFileService implements ManifestFileService {
         currentObject
     }
 
-    def formatDate(Date dateString) {
+    String formatDate(Date dateString) {
         new SimpleDateFormat(dateFormat).format(dateString)
     }
 
