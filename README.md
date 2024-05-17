@@ -403,7 +403,7 @@ If you would like to send logs to CloudCard for remote support, you can specify 
 ### ManifestFileService
 The ManifestFileService allows you to generate a file with information about each photo that has been downloaded. This service runs each time the downloader successfully downloads photos.
 
-- 'ManifestFileService'
+- `ManifestFileService`
     - default: `DoNothingManifestFileService`
     - description: Does nothing
     - Other options:
