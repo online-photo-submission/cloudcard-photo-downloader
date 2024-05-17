@@ -30,9 +30,6 @@ class CSVManifestFileService implements ManifestFileService {
     @Value('${CSVManifestFileService.delimiter:}')
     Character delimiter
 
-    @Value('${CSVManifestFileService.doubleQuoteValues:}')
-    Boolean doubleQuoteValues
-
     @Value('${CSVManifestFileService.quoteMode:}')
     String quoteMode
 
@@ -55,7 +52,6 @@ class CSVManifestFileService implements ManifestFileService {
         log.info("CSV Manifest File Service fileNameDateFormat: $fileNameDateFormat")
         log.info("CSV Manifest File Service directory         : $directory")
         log.info("CSV Manifest File Service delimiter         : $delimiter")
-        log.info("CSV Manifest File Service doubleQuoteValues : $doubleQuoteValues")
         log.info("CSV Manifest File Service quoteMode         : $quoteMode")
         log.info("CSV Manifest File Service quoteCharacter    : $quoteCharacter")
         log.info("CSV Manifest File Service escapeCharacter   : $escapeCharacter")

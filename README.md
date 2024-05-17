@@ -399,7 +399,50 @@ If you would like to send logs to CloudCard for remote support, you can specify 
     - CloudCard Support will provide you with a value for this configuration
 - `cloudcard.logging.port`
     - CloudCard Support will provide you with a value for this configuration
-      
+
+### ManifestFileService
+The ManifestFileService allows you to generate a file with information about each photo that has been downloaded. This service runs each time the downloader successfully downloads photos.
+
+- 'ManifestFileService'
+    - default: `DoNothingManifestFileService`
+    - description: Does nothing
+    - Other options:
+        - `ManifestFileService=CSVManifestFileService`
+        - description: Generates a CSV file.
+
+### CSVManifestFileService Settings
+
+The `CSVManifestFileService` is responsible for generating a CSV file containing information about each photo that has been downloaded. This service runs each time the downloader successfully downloads photos. Below are the settings you can configure for `CSVManifestFileService`:
+
+- `fileName`
+    - Description: Specifies the base name for the generated CSV manifest file. If not set, a default name will be used.
+    - Default Value: `manifest`
+- `fileNameDateFormat`
+    - Description: If specified, this defines the date format to append to the `fileName` for timestamping. Uses Java's [SimpleDateFormat](https://docs.oracle.com/javase/8/docs/api/java/text/SimpleDateFormat.html).
+    - Default Value: `null`
+- `directory`
+    - Description: The directory where the CSV manifest file will be saved.
+    - Default Value: `downloaded-photos`
+- `delimiter`
+    - Description: The delimiter character used to separate values in the CSV file.
+    - Default Value: `,`
+- `quoteMode`
+    - Description: The quoting mode used when generating the CSV file. Corresponds to [Apache Commons CSV QuoteMode enum](https://commons.apache.org/proper/commons-csv/apidocs/org/apache/commons/csv/QuoteMode.html).
+    - Default Value: `ALL_NON_NULL`
+- `quoteCharacter`
+    - Description: The character used for quoting in the CSV file. Only effective if `doubleQuoteValues` is `true`.
+    - Default Value: `"`
+- `escapeCharacter`
+    - Description: The escape character used in the CSV file.
+    - Default Value: `null`
+- `dateFormat`
+    - Description: The format used for date values in the CSV file. Uses Java's [SimpleDateFormat](https://docs.oracle.com/javase/8/docs/api/java/text/SimpleDateFormat.html).
+    - Default Value: `null`
+- `headerAndColumnMap`
+    - Description: A map defining the CSV file headers and the corresponding object properties to use for their values. Values available are derived from the [Photo class](https://github.com/online-photo-submission/cloudcard-photo-downloader/blob/master/src/main/groovy/com/cloudcard/photoDownloader/Photo.groovy)
+    - Default Value: `{'Cardholder_ID':'person.identifier','Photo_Status': 'status','Photo_Date_Submitted':'dateCreated'}`
+        - Optional: You can also specify a static field in this map by prefixing the value with `static_`.
+        - Example: `'Source':'static_CloudCard'` 
 
 ### Encrypting application properties ([Video](https://video.drift.com/v/abZMpJLIB5O/))
 

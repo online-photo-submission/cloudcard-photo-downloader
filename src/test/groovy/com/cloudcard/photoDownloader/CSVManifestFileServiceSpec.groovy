@@ -17,7 +17,6 @@ class CSVManifestFileServiceSpec extends Specification {
         csvManifestFileService.fileName = "test-manifest-"
         csvManifestFileService.fileNameDateFormat = "yyyyMMdd-HHmm"
         csvManifestFileService.delimiter = ','
-        csvManifestFileService.doubleQuoteValues = true
         csvManifestFileService.quoteMode = "ALL_NON_NULL"
         csvManifestFileService.quoteCharacter = '"'
         csvManifestFileService.escapeCharacter = '\\'
