@@ -61,6 +61,9 @@ class CSVManifestFileService implements ManifestFileService {
     }
 
     void createManifestFile(List<Photo> photosToDownload, List<PhotoFile> photoFiles) {
+
+        if (!photosToDownload) { return }
+
         log.info("==========  Generating Manifest File  ==========")
 
         String filePath = "${directory}/${resolveFileName()}"
