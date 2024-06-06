@@ -63,17 +63,19 @@ class CSVManifestFileServiceSpec extends Specification {
         csvManifestFileService.dateFormat = "yyyy-MM-dd"
 
         when:
-        def result = csvManifestFileService.resolveValue(column, photo)
+        def result = csvManifestFileService.resolveValue(column, photo, photoFile)
 
         then:
         result == expectedResult
         where:
-        description             | column                          | photo                                                                                                                                                   | expectedResult
-        "static column"         | "static_CloudCard"              | null                                                                                                                                                    | "CloudCard"
-        "nested property"       | "person.email"                  | new Photo(id: 1, person: new Person(identifier: "123", email: "test@example.com"), bytes: null)                                                         | "test@example.com"
-        "non-existent property" | "person.nonExistentProperty"    | new Photo(id: 1, person: new Person(identifier: "123", email: "test@example.com"), bytes: null)                                                         | null
-        "date property"         | "dateCreated"                   | new Photo(id: 1, person: new Person(identifier: "123", email: "test@example.com"), bytes: null, dateCreated: parseDate("Fri Feb 16 11:41:44 EST 2024")) | "2024-02-16"
-        "custom Field property" | "person.customFields.Full Name" | new Photo(id: 1, person: new Person(identifier: "123", email: "test@example.com", customFields: ["Full Name": "James"]), bytes: null)                   | "James"
+        description             | column                          | photo                                                                                                                                                   | photoFile                                                                | expectedResult
+        "static column"         | "static_CloudCard"              | null                                                                                                                                                    | null                                                                     | "CloudCard"
+        "nested property"       | "person.email"                  | new Photo(id: 1, person: new Person(identifier: "123", email: "test@example.com"), bytes: null)                                                         | null                                                                     | "test@example.com"
+        "non-existent property" | "person.nonExistentProperty"    | new Photo(id: 1, person: new Person(identifier: "123", email: "test@example.com"), bytes: null)                                                         | null                                                                     | null
+        "date property"         | "dateCreated"                   | new Photo(id: 1, person: new Person(identifier: "123", email: "test@example.com"), bytes: null, dateCreated: parseDate("Fri Feb 16 11:41:44 EST 2024")) | null                                                                     | "2024-02-16"
+        "custom Field property" | "person.customFields.Full Name" | new Photo(id: 1, person: new Person(identifier: "123", email: "test@example.com", customFields: ["Full Name": "James"]), bytes: null)                   | null                                                                     | "James"
+        "photo full file path"  | "photo_fullFilePath"            | new Photo(id: 1, person: new Person(identifier: "123", email: "test@example.com"), bytes: null)                                                         | new PhotoFile("photo1", "/Users/Calvin/downloaded-photos/photo1.jpg", 1) | "/Users/Calvin/downloaded-photos/photo1.jpg"
+        "photo file name"       | "photo_fileName"                | new Photo(id: 1, person: new Person(identifier: "123", email: "test@example.com"), bytes: null)                                                         | new PhotoFile("photo2", "photo2.jpg", 1)                                 | "photo2.jpg"
     }
 
     def "test resolveFileName generates correct file name"() {
