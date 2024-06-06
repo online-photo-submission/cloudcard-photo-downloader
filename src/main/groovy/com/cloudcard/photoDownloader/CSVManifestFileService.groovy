@@ -81,7 +81,9 @@ class CSVManifestFileService implements ManifestFileService {
         photosToDownload.each { photo ->
             if (photoFiles.collect { it.photoId }.contains(photo.id)) {
 
-                List record = headerAndColumnMap.values().collect { column -> resolveValue(column, photo) }
+                PhotoFile file = photoFiles.find {it.photoId == photo.id}
+
+                List record = headerAndColumnMap.values().collect { column -> resolveValue(column, photo, file) }
 
                 csvPrinter.printRecord(record)
             }
@@ -96,8 +98,12 @@ class CSVManifestFileService implements ManifestFileService {
         log.info("==========  Manifest File Generated  ==========")
     }
 
-    def resolveValue(String column, Photo photo) {
+    def resolveValue(String column, Photo photo, PhotoFile file) {
         if (column.startsWith('static_')) { return column.split('_', 2)[1] }
+
+        if (column == 'photo_fullFilePath') { return file.fileName }
+
+        if (column == 'photo_fileName') { return "${file.baseName}.jpg" }
 
         def currentObject = photo
 
