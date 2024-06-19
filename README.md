@@ -447,6 +447,7 @@ The `CSVManifestFileService` is responsible for generating a CSV file containing
         - Example: `'Source':'static_CloudCard'` 
         - Optional: You can specify the photo file name with the value `photo_fileName` OR the full photo file path with `photo_fullFilePath`.
         - Examples: `'Photo':'photo_fileName`, `'Photo Path':'photo_fullFilePath'`
+        - NOTE: If downloading photos to multiple directories , the fullFilePath will always reference the first directory listed in `downloader.photoDirectories`.
 
 ### Encrypting application properties ([Video](https://video.drift.com/v/abZMpJLIB5O/))
 

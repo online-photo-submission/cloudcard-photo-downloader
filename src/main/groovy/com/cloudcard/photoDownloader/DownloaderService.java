@@ -12,8 +12,7 @@ import org.springframework.stereotype.Service;
 import javax.annotation.PostConstruct;
 import java.util.List;
 
-import static com.cloudcard.photoDownloader.ApplicationPropertiesValidator.logVersion;
-import static com.cloudcard.photoDownloader.ApplicationPropertiesValidator.throwIfTrue;
+import static com.cloudcard.photoDownloader.ApplicationPropertiesValidator.*;
 
 @Service
 public class DownloaderService {
@@ -41,6 +40,12 @@ public class DownloaderService {
     @Value("${downloader.delay.milliseconds}")
     private Integer downloaderDelay;
 
+    @Value("${downloader.scheduling.type}")
+    private String schedulingType;
+
+    @Value("${downloader.cron.schedule}")
+    private String cronSchedule;
+
     @Value("${downloader.repeat:true}")
     private boolean repeat;
 
@@ -58,8 +63,7 @@ public class DownloaderService {
         throwIfTrue(summaryService == null, "The Summary Service must be specified.");
 
         logVersion();
-        log.info("          Repeat Mode : " + (repeat ? "Run Continually" : "Run Once & Stop"));
-        log.info("     Downloader Delay : " + downloaderDelay / 60000 + " min(s)");
+        logScheduleSettings(schedulingType, repeat, downloaderDelay, cronSchedule);
         log.info("      Storage Service : " + storageService.getClass().getSimpleName());
         log.info("      Summary Service : " + summaryService.getClass().getSimpleName());
         log.info("Manifest File Service : " + manifestFileService.getClass().getSimpleName());
@@ -70,7 +74,20 @@ public class DownloaderService {
         }
     }
 
-    @Scheduled(fixedDelayString = "${downloader.delay.milliseconds}")
+    @Scheduled(fixedDelayString = "${downloader.delay.milliseconds}", initialDelayString = "5000")
+    public void downloadPhotosFixedDelay() throws Exception {
+        if (schedulingType.equals("fixedDelay")) {
+            downloadPhotos();
+        }
+    }
+
+    @Scheduled(cron = "${downloader.cron.schedule}" )
+    public void downloadPhotosCron() throws Exception {
+        if (schedulingType.equals("cron")) {
+            downloadPhotos();
+        }
+    }
+
     public void downloadPhotos() throws Exception {
 
         int exitStatus = 0;
