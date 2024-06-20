@@ -14,6 +14,16 @@ public class ApplicationPropertiesValidator {
         log.info("  Application Version : " + version);
     }
 
+    public static void logScheduleSettings(String scheduleType, boolean repeat, int downloaderDelay, String cronSchedule) {
+        if (scheduleType.equals("fixedDelay")) {
+            log.info("          Repeat Mode : " + (repeat ? "Repeat on Fixed Delay" : "Run Once & Stop"));
+            log.info("     Downloader Delay : " + downloaderDelay / 60000 + " min(s)");
+        } else if (scheduleType.equals("cron")){
+            log.info("  Repeat Mode : " + (repeat ? "Cron Schedule" : "Run Once & Stop"));
+            log.info("Cron Schedule : " + cronSchedule);
+        }
+    }
+
     public static void throwIfBlank(String string, String message) {
 
         throwIfTrue(string == null || string.isEmpty(), message);

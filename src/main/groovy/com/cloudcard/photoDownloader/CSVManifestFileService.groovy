@@ -45,6 +45,9 @@ class CSVManifestFileService implements ManifestFileService {
     @Value('#{${CSVManifestFileService.headerAndColumnMap:}}')
     Map<String,String> headerAndColumnMap
 
+    @Value('${downloader.photoDirectories}')
+    String[] photoDirectories
+
     @PostConstruct
     void init() {
 
@@ -81,7 +84,8 @@ class CSVManifestFileService implements ManifestFileService {
         photosToDownload.each { photo ->
             if (photoFiles.collect { it.photoId }.contains(photo.id)) {
 
-                PhotoFile file = photoFiles.find {it.photoId == photo.id}
+//              As referenced in the README, this specifically gets the photoFiles in the first photoDirectory (only relevant if outputting fullFilePath AND multiple directories are specified)
+                PhotoFile file = photoFiles.find {it.photoId == photo.id && it.fileName.contains(photoDirectories[0])}
 
                 List record = headerAndColumnMap.values().collect { column -> resolveValue(column, photo, file) }
 

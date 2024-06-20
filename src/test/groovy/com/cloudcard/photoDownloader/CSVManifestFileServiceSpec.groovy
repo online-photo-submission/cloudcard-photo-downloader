@@ -35,10 +35,11 @@ class CSVManifestFileServiceSpec extends Specification {
             new Photo(id: 1, person: new Person(identifier: "123", email: "test1@example.com"), bytes: null),
             new Photo(id: 2, person: new Person(identifier: "456", email: "test2@example.com"), bytes: null)
         ]
+        csvManifestFileService.photoDirectories = ['/Users/Calvin/downloaded-photos']
 
         List<PhotoFile> photoFiles = [
-            new PhotoFile("photo1", "photo1.jpg", 1),
-            new PhotoFile("photo2", "photo2.jpg", 2)
+            new PhotoFile("photo1", "/downloaded-photos/photo1.jpg", 1),
+            new PhotoFile("photo2", "/downloaded-photos/photo2.jpg", 2)
         ]
         String expectedFilePath = csvManifestFileService.directory + "/" + csvManifestFileService.resolveFileName()
         File expectedFile = new File(expectedFilePath)
@@ -76,6 +77,31 @@ class CSVManifestFileServiceSpec extends Specification {
         "custom Field property" | "person.customFields.Full Name" | new Photo(id: 1, person: new Person(identifier: "123", email: "test@example.com", customFields: ["Full Name": "James"]), bytes: null)                   | null                                                                     | "James"
         "photo full file path"  | "photo_fullFilePath"            | new Photo(id: 1, person: new Person(identifier: "123", email: "test@example.com"), bytes: null)                                                         | new PhotoFile("photo1", "/Users/Calvin/downloaded-photos/photo1.jpg", 1) | "/Users/Calvin/downloaded-photos/photo1.jpg"
         "photo file name"       | "photo_fileName"                | new Photo(id: 1, person: new Person(identifier: "123", email: "test@example.com"), bytes: null)                                                         | new PhotoFile("photo2", "photo2.jpg", 1)                                 | "photo2.jpg"
+    }
+
+    def "test file path when multiple photoDirectories are specified"() {
+        given:
+        csvManifestFileService.headerAndColumnMap = ['FilePath':'photo_fullFilePath']
+        csvManifestFileService.photoDirectories = ['/Users/Heimburg/more-photos','/Users/Calvin/downloaded-photos']
+        String expectedFilePath = csvManifestFileService.directory + "/" + csvManifestFileService.resolveFileName()
+        File expectedFile = new File(expectedFilePath)
+
+        List<Photo> photos = [new Photo(id: 1, person: new Person(identifier: "123", email: "test@example.com"), bytes: null)]
+        List<PhotoFile> photoFiles = [
+            new PhotoFile("photo1", "/Users/Calvin/downloaded-photos/photo1.jpg", 1),
+            new PhotoFile("photo1", "/Users/Heimburg/more-photos/photo1.jpg", 1)
+        ]
+
+        when:
+        def result = csvManifestFileService.createManifestFile(photos,photoFiles)
+        println(result)
+
+        then:
+        List<String> lines = expectedFile.readLines()
+        lines[1] == '"/Users/Heimburg/more-photos/photo1.jpg"'
+
+        cleanup:
+        expectedFile.delete()
     }
 
     def "test resolveFileName generates correct file name"() {
