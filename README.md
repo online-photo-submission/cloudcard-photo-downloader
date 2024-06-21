@@ -112,10 +112,20 @@ Below are descriptions of each option:
     - default: `true`
     - description: This setting determines if the downloader will run once and exit, `downloader.repeat=false`, or if
       will run continually, `downloader.repeat=true`
+- downloader.scheduling.type
+    - default: `fixedDelay` 
+        - the downloader runs intermittently by default on a fixed delay, which can be modified with `downloader.delay.milliseconds`
+    - other options:
+        - `cron` allows precise scheduling using cron expressions
+        -  note: If scheduling type is `cron`, you must also specify a cron expression with `downloader.cron.schedule` 
 - downloader.delay.milliseconds
     - default: `600000` (Ten Minutes)
     - description: this is the amount of time the downloader will wait between download attempts.
-    - note: `downloader.repeat` must be set to `true` for this setting to have any effect.
+    - note: `downloader.repeat` must be set to `true` and scheduling type to `fixedDelay` for this setting to have any effect.
+- downloader.cron.schedule
+    - description: specifies the cron expression that the downloader will run on if `downloader.scheduling.type` is set to `cron`. 
+    - example: `downloader.cron.schedule=0 0 12 * * *` (This configuration runs the downloader once a day at 12:00pm)
+
 - downloader.minPhotoIdLength
     - default: `0`
     - description: This setting causes photo IDs to be left padded with zeros (0) until they have at least this many
