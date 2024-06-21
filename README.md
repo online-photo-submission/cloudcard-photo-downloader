@@ -125,7 +125,6 @@ Below are descriptions of each option:
 - downloader.cron.schedule
     - description: specifies the cron expression that the downloader will run on if `downloader.scheduling.type` is set to `cron`. 
     - example: `downloader.cron.schedule=0 0 12 * * *` (This configuration runs the downloader once a day at 12:00pm)
-
 - downloader.minPhotoIdLength
     - default: `0`
     - description: This setting causes photo IDs to be left padded with zeros (0) until they have at least this many
