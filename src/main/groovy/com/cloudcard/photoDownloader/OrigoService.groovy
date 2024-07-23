@@ -1,5 +1,13 @@
 package com.cloudcard.photoDownloader
 
-class OrigoService {
-    // Handles responses from Origo API via endpoints in the OrigoController
+import org.springframework.beans.factory.annotation.Value
+
+abstract class OrigoService {
+    // Handles business logic / processing for incoming events and requests from API
+
+    @Value('${Origo.filterSet}')
+    private filterSet
+    def compareExistingFilters() {
+        // compares existing filters with those specified in Application.properties
+    }
 }
