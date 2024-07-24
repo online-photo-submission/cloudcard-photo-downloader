@@ -52,6 +52,9 @@ class OrigoClient {
     @Value('${Origo.applicationId}')
     private String applicationId
 
+    @Value('${Origo.filterSet}')
+    String filterSet
+
     // String callbackUrl --> May not need property
 
     Map requestHeaders
@@ -90,9 +93,9 @@ class OrigoClient {
         ]
     }
 
-    authenticate() {
-        // Authenticates session by validating secret token. **May not be necessary
-    }
+//    authenticate() {
+//        // Authenticates session by validating secret token. **May not be necessary
+//    }
 
     HttpActionResult listEvents() {
 

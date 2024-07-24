@@ -6,6 +6,7 @@ import groovy.json.JsonSlurper
 class ThirdPartyResponse {
     boolean success
     Object json
+    String jsonString
 
     ThirdPartyResponse() {}
 

@@ -18,16 +18,24 @@ class OrigoService {
     @Autowired
     OrigoClient client
 
+    @Value('false')
     private boolean isAuthenticated
 
     @PostConstruct
     init() {
         // authenticate()
+//        if (isAuthenticated) {
+//            // do something
+//        } else {
+//            log.error('********** Origo services cannot be authenticated **********')
+//        }
+//        handleExistingSubscriptions()
+    }
 
-        if (isAuthenticated) {
-            // do something
-        } else {
-            log.error('Origo services cannot be authenticated.')
-        }
+    def handleExistingSubscriptions() {
+        def ( result ) = client.listCallbackSubscriptions()
+
+        log.info("Callback subscriptions: $result.json")
+
     }
 }
