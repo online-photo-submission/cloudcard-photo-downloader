@@ -129,12 +129,5 @@ class TouchNetClient {
     }
 }
 
-class TouchNetResponse {
-    boolean success
-    Object json
-
-    TouchNetResponse(HttpResponse<String> response) {
-        json = new JsonSlurper().parseText(response.body)
-        success = json.Status == "OK"
-    }
+class TouchNetResponse extends ThirdPartyResponse {
 }

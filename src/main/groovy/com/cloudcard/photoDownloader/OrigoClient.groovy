@@ -3,6 +3,7 @@ package com.cloudcard.photoDownloader
 import com.mashape.unirest.http.HttpResponse
 
 import com.mashape.unirest.http.Unirest
+import groovy.json.JsonSlurper
 import jakarta.annotation.PostConstruct
 import org.apache.http.HttpException
 import org.slf4j.Logger
@@ -155,5 +156,8 @@ class OrigoClient extends OrigoService {
     storePersonData() {
         // stores 'customFields' information in Origo employee record
     }
+}
+
+class OrigoResponse extends ThirdPartyResponse {
 
 }
