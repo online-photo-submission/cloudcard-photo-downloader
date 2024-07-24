@@ -1,13 +1,16 @@
 package com.cloudcard.photoDownloader
 
-import org.springframework.beans.factory.annotation.Value
+import jakarta.annotation.PostConstruct
+import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.stereotype.Service
 
-abstract class OrigoService {
+@Service
+class OrigoService {
     // Handles business logic / processing for incoming events and requests from API
 
-    @Value('${Origo.filterSet}')
-    private filterSet
-    def compareExistingFilters() {
-        // compares existing filters with those specified in Application.properties
-    }
+    @Autowired
+    OrigoClient client
+
+    @PostConstruct
+    init() {}
 }

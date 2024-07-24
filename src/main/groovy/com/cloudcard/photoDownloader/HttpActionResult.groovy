@@ -11,8 +11,8 @@ class HttpActionResult {
 
     HttpActionResult() {}
 
-    HttpActionResult(ThirdPartyResponse resp) {
-        result = resp
+    HttpActionResult(ThirdPartyResponse response) {
+        result = response
     }
 
     HttpActionResult(UnirestException exception) {

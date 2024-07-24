@@ -18,7 +18,7 @@ import static com.cloudcard.photoDownloader.ApplicationPropertiesValidator.throw
 
 @Component
 @ConditionalOnProperty(name = 'Origo.useOrigo', havingValue = 'true')
-class OrigoClient extends OrigoService {
+class OrigoClient {
     // Makes requests to Origo API
     private static final Logger log = LoggerFactory.getLogger(OrigoClient.class);
 
@@ -128,8 +128,7 @@ class OrigoClient extends OrigoService {
         // posts photo to User's Origo profile: https://doc.origo.hidglobal.com/api/mobile-identities/#/Photo%20ID/post-customer-organization_id-users-user_id-photo
     }
 
-    HttpActionResult checkExistingCallbackSubs() {
-        // checks for existing call back subscriptions.
+    HttpActionResult listCallbackSubscriptions() {
 
         Map requestHeaders = [
                 'Authorization'      : authorization,
@@ -159,8 +158,33 @@ class OrigoClient extends OrigoService {
 
     }
 
-    OrigoResponse checkExistingFilters() {
+    HttpActionResult getFilterById() {
         // checks for current filters. Conditionally calls create filter
+
+        Map requestHeaders = [
+                'Authorization'      : authorization,
+                'Content-Type'       : contentType,
+                'Application-ID'     : applicationId
+        ]
+
+        HttpResponse<String> response
+        HttpActionResult httpActionResult = new HttpActionResult()
+
+        try {
+            response = Unirest.get(eventManagementApi + "/organization/$organizationId/events/filter/$filterId")
+                    .headers(requestHeaders)
+                    .asString()
+
+            log.info("Response: $response")
+            OrigoResponse origoResponse = new OrigoResponse(response)
+            httpActionResult.result = origoResponse
+
+        } catch (UnirestException e) {
+            log.error(e.message)
+            httpActionResult.result = e
+        }
+
+        return httpActionResult
     }
 
     HttpActionResult createFilter() {
@@ -199,7 +223,7 @@ class OrigoClient extends OrigoService {
         return httpActionResult
     }
 
-    OrigoResponse storePersonData() {
+    storePersonData() {
         // stores 'customFields' information in Origo employee record
     }
 }
