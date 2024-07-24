@@ -52,6 +52,9 @@ class OrigoClient extends OrigoService {
     @Value('${Origo.applicationId}')
     private String applicationId
 
+    @Value('${Origo.filterSet')
+    String filterSet
+
     String filterId
 
     String callbackUrl
@@ -68,6 +71,7 @@ class OrigoClient extends OrigoService {
         throwIfBlank(contentType, "The Origo content-type header must be specified.")
         throwIfBlank(applicationVersion, "The Origo application version must be specified.")
         throwIfBlank(applicationId, "Your organization's Origo Application ID must be specified.")
+        throwIfBlank(filterSet, "A list of Origo event filters must be specified.")
 
         log.info('=================== Accessing HID Origo Services ===================')
         log.info("          Origo Event Management API URL : $eventManagementApi")
@@ -79,6 +83,7 @@ class OrigoClient extends OrigoService {
         log.info("               Origo content type header : $contentType")
         log.info("               Origo application version : $applicationVersion")
         log.info("                    Origo application ID : $applicationId")
+        log.info("                     Origo event filters : $filterSet")
     }
 
     HttpActionResult createCallbackSubscription() {
@@ -158,12 +163,40 @@ class OrigoClient extends OrigoService {
         // checks for current filters. Conditionally calls create filter
     }
 
-    OrigoResponse createFilter() {
+    HttpActionResult createFilter() {
         // Filters what kinds of events this instance of the application will be subscribed to. See documentation for options: https://doc.origo.hidglobal.com/api/events-callbacks/#/Events/post_organization__organization_id__events_filter
-    }
 
-    OrigoResponse storePhoto() {
-        // Stores photo in Origo system
+        Map requestHeaders = [
+                'Authorization'      : authorization,
+                'Content-Type'       : contentType,
+                'Application-ID'     : applicationId
+        ]
+
+        List<String> filterList = filterSet.split(", ")
+
+        String serializedBody = new ObjectMapper().writeValueAsString([
+                filterSet : filterList
+        ])
+
+        HttpResponse<String> response
+        HttpActionResult httpActionResult = new HttpActionResult()
+
+        try {
+            response = Unirest.post(eventManagementApi + "/organization/$organizationId/events/filter")
+                    .headers(requestHeaders)
+                    .body(serializedBody)
+                    .asString()
+
+            log.info("Response: $response")
+            OrigoResponse origoResponse = new OrigoResponse(response)
+            httpActionResult.result = origoResponse
+
+        } catch (HttpException e) { // ?
+            log.error(e.message)
+            httpActionResult.result = e
+        }
+
+        return httpActionResult
     }
 
     OrigoResponse storePersonData() {
