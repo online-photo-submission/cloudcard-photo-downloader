@@ -124,8 +124,37 @@ class OrigoClient {
         return httpActionResult
     }
 
-    OrigoResponse uploadUserPhoto() {
+    HttpActionResult uploadUserPhoto(String userId, Photo photo) {
         // posts photo to User's Origo profile: https://doc.origo.hidglobal.com/api/mobile-identities/#/Photo%20ID/post-customer-organization_id-users-user_id-photo
+
+        Map requestHeaders = [
+                'Authorization'      : authorization,
+                'Content-Type'       : contentType,
+                'Application-Version': applicationVersion,
+                'Application-ID'     : applicationId
+        ]
+
+        String serializedBody = new ObjectMapper().writeValueAsString(photo.bytes)
+
+        HttpResponse<String> response
+        HttpActionResult httpActionResult = new HttpActionResult()
+
+        try {
+            response = Unirest.post(mobileIdentitiesApi + "/customer/$organizationId/users/$userId/photo")
+                    .headers(requestHeaders)
+                    .body(serializedBody)
+                    .asString()
+
+            log.info("Response: $response")
+            OrigoResponse origoResponse = new OrigoResponse(response)
+            httpActionResult.result = origoResponse
+
+        } catch (HttpException e) { // ?
+            log.error(e.message)
+            httpActionResult.result = e
+        }
+
+        return httpActionResult
     }
 
     HttpActionResult listCallbackSubscriptions() {
@@ -162,9 +191,9 @@ class OrigoClient {
         // checks for current filters. Conditionally calls create filter
 
         Map requestHeaders = [
-                'Authorization'      : authorization,
-                'Content-Type'       : contentType,
-                'Application-ID'     : applicationId
+                'Authorization' : authorization,
+                'Content-Type'  : contentType,
+                'Application-ID': applicationId
         ]
 
         HttpResponse<String> response
@@ -191,15 +220,15 @@ class OrigoClient {
         // Filters what kinds of events this instance of the application will be subscribed to. See documentation for options: https://doc.origo.hidglobal.com/api/events-callbacks/#/Events/post_organization__organization_id__events_filter
 
         Map requestHeaders = [
-                'Authorization'      : authorization,
-                'Content-Type'       : contentType,
-                'Application-ID'     : applicationId
+                'Authorization' : authorization,
+                'Content-Type'  : contentType,
+                'Application-ID': applicationId
         ]
 
         List<String> filterList = filterSet.split(", ")
 
         String serializedBody = new ObjectMapper().writeValueAsString([
-                filterSet : filterList
+                filterSet: filterList
         ])
 
         HttpResponse<String> response
@@ -221,6 +250,10 @@ class OrigoClient {
         }
 
         return httpActionResult
+    }
+
+    approvePhoto() {
+        // approves photo in origo after upload
     }
 
     storePersonData() {
