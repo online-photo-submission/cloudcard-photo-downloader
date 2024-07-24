@@ -81,8 +81,8 @@ class OrigoClient extends OrigoService {
         log.info("                    Origo application ID : $applicationId")
     }
 
-    OrigoResponse createCallbackSubscription() {
-        // Initial action of OrigoIntegration application - Requests all users for given organization.
+    HttpActionResult createCallbackSubscription() {
+        // subscribes application to Origo organization-specific events
 
         Map requestHeaders = [
                 'Authorization'      : authorization,
@@ -92,13 +92,14 @@ class OrigoClient extends OrigoService {
         ]
 
         String serializedBody = new ObjectMapper().writeValueAsString([
-                url       : "$callbackUrl", // SQS ???
+                url       : "$callbackUrl",
                 filterId  : "$filterId",
                 httpHeader: "Authorization",
                 secret    : "$authorization"
         ])
 
         HttpResponse<String> response
+        HttpActionResult httpActionResult = new HttpActionResult()
 
         try {
             response = Unirest.post(eventManagementApi + "/organization/$organizationId/callback")
@@ -107,12 +108,15 @@ class OrigoClient extends OrigoService {
                     .asString()
 
             log.info("Response: $response")
+            OrigoResponse origoResponse = new OrigoResponse(response)
+            httpActionResult.result = origoResponse
 
         } catch (HttpException e) { // ?
             log.error(e.message)
+            httpActionResult.result = e
         }
 
-        return new OrigoResponse(response)
+        return httpActionResult
     }
 
     OrigoResponse uploadUserPhoto() {
@@ -130,7 +134,7 @@ class OrigoClient extends OrigoService {
         ]
 
         HttpResponse<String> response
-        HttpActionResult result
+        HttpActionResult httpActionResult = new HttpActionResult()
 
         try {
             response = Unirest.get(eventManagementApi + "/organization/$organizationId/callback")
@@ -139,14 +143,14 @@ class OrigoClient extends OrigoService {
 
             log.info("Response: $response")
             OrigoResponse origoResponse = new OrigoResponse(response)
-            result = new HttpActionResult(origoResponse)
+            httpActionResult.result = origoResponse
 
         } catch (UnirestException e) {
             log.error(e.message)
-            result = new HttpActionResult(e)
+            httpActionResult.result = e
         }
 
-        return result
+        return httpActionResult
 
     }
 
