@@ -1,9 +1,9 @@
 package com.cloudcard.photoDownloader
 
 import com.mashape.unirest.http.HttpResponse
+import com.mashape.unirest.http.exceptions.UnirestException
 
 import com.mashape.unirest.http.Unirest
-import groovy.json.JsonSlurper
 import jakarta.annotation.PostConstruct
 import org.apache.http.HttpException
 import org.slf4j.Logger
@@ -81,7 +81,7 @@ class OrigoClient extends OrigoService {
         log.info("                    Origo application ID : $applicationId")
     }
 
-    createCallbackSubscription() {
+    OrigoResponse createCallbackSubscription() {
         // Initial action of OrigoIntegration application - Requests all users for given organization.
 
         Map requestHeaders = [
@@ -111,13 +111,15 @@ class OrigoClient extends OrigoService {
         } catch (HttpException e) { // ?
             log.error(e.message)
         }
+
+        return new OrigoResponse(response)
     }
 
-    uploadUserPhoto() {
+    OrigoResponse uploadUserPhoto() {
         // posts photo to User's Origo profile: https://doc.origo.hidglobal.com/api/mobile-identities/#/Photo%20ID/post-customer-organization_id-users-user_id-photo
     }
 
-    checkExistingCallbackSubs() {
+    HttpActionResult checkExistingCallbackSubs() {
         // checks for existing call back subscriptions.
 
         Map requestHeaders = [
@@ -128,6 +130,7 @@ class OrigoClient extends OrigoService {
         ]
 
         HttpResponse<String> response
+        HttpActionResult result
 
         try {
             response = Unirest.get(eventManagementApi + "/organization/$organizationId/callback")
@@ -135,29 +138,38 @@ class OrigoClient extends OrigoService {
                     .asString()
 
             log.info("Response: $response")
+            OrigoResponse origoResponse = new OrigoResponse(response)
+            result = new HttpActionResult(origoResponse)
 
-        } catch (HttpException e) { // ?
+        } catch (UnirestException e) {
             log.error(e.message)
+            result = new HttpActionResult(e)
         }
+
+        return result
+
     }
 
-    checkExistingFilters() {
+    OrigoResponse checkExistingFilters() {
         // checks for current filters. Conditionally calls create filter
     }
 
-    createFilter() {
+    OrigoResponse createFilter() {
         // Filters what kinds of events this instance of the application will be subscribed to. See documentation for options: https://doc.origo.hidglobal.com/api/events-callbacks/#/Events/post_organization__organization_id__events_filter
     }
 
-    storePhoto() {
+    OrigoResponse storePhoto() {
         // Stores photo in Origo system
     }
 
-    storePersonData() {
+    OrigoResponse storePersonData() {
         // stores 'customFields' information in Origo employee record
     }
 }
 
 class OrigoResponse extends ThirdPartyResponse {
 
+    OrigoResponse(HttpResponse<String> response) {
+        super(response)
+    }
 }

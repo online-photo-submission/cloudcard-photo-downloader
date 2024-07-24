@@ -4,7 +4,6 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 
 import com.mashape.unirest.http.HttpResponse;
 import com.mashape.unirest.http.Unirest
-import groovy.json.JsonSlurper;
 
 import javax.annotation.PostConstruct
 
