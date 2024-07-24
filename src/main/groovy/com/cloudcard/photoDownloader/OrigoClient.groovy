@@ -59,6 +59,8 @@ class OrigoClient {
 
     String callbackUrl
 
+    Map requestHeaders
+
     @PostConstruct
     init() {
         throwIfBlank(eventManagementApi, "The Origo Event Management API URL must be specified.")
@@ -84,17 +86,17 @@ class OrigoClient {
         log.info("               Origo application version : $applicationVersion")
         log.info("                    Origo application ID : $applicationId")
         log.info("                     Origo event filters : $filterSet")
-    }
 
-    HttpActionResult createCallbackSubscription() {
-        // subscribes application to Origo organization-specific events
-
-        Map requestHeaders = [
+        requestHeaders = [
                 'Authorization'      : authorization,
                 'Content-Type'       : contentType,
                 'Application-Version': applicationVersion,
                 'Application-ID'     : applicationId
         ]
+    }
+
+    HttpActionResult createCallbackSubscription() {
+        // subscribes application to Origo organization-specific events
 
         String serializedBody = new ObjectMapper().writeValueAsString([
                 url       : "$callbackUrl",
@@ -127,13 +129,6 @@ class OrigoClient {
     HttpActionResult uploadUserPhoto(String userId, Photo photo) {
         // posts photo to User's Origo profile: https://doc.origo.hidglobal.com/api/mobile-identities/#/Photo%20ID/post-customer-organization_id-users-user_id-photo
 
-        Map requestHeaders = [
-                'Authorization'      : authorization,
-                'Content-Type'       : contentType,
-                'Application-Version': applicationVersion,
-                'Application-ID'     : applicationId
-        ]
-
         String serializedBody = new ObjectMapper().writeValueAsString(photo.bytes)
 
         HttpResponse<String> response
@@ -159,13 +154,6 @@ class OrigoClient {
 
     HttpActionResult listCallbackSubscriptions() {
 
-        Map requestHeaders = [
-                'Authorization'      : authorization,
-                'Content-Type'       : contentType,
-                'Application-Version': applicationVersion,
-                'Application-ID'     : applicationId
-        ]
-
         HttpResponse<String> response
         HttpActionResult httpActionResult = new HttpActionResult()
 
@@ -190,12 +178,6 @@ class OrigoClient {
     HttpActionResult getFilterById() {
         // checks for current filters. Conditionally calls create filter
 
-        Map requestHeaders = [
-                'Authorization' : authorization,
-                'Content-Type'  : contentType,
-                'Application-ID': applicationId
-        ]
-
         HttpResponse<String> response
         HttpActionResult httpActionResult = new HttpActionResult()
 
@@ -218,12 +200,6 @@ class OrigoClient {
 
     HttpActionResult createFilter() {
         // Filters what kinds of events this instance of the application will be subscribed to. See documentation for options: https://doc.origo.hidglobal.com/api/events-callbacks/#/Events/post_organization__organization_id__events_filter
-
-        Map requestHeaders = [
-                'Authorization' : authorization,
-                'Content-Type'  : contentType,
-                'Application-ID': applicationId
-        ]
 
         List<String> filterList = filterSet.split(", ")
 
@@ -252,8 +228,32 @@ class OrigoClient {
         return httpActionResult
     }
 
-    approvePhoto() {
-        // approves photo in origo after upload
+    HttpActionResult approvePhoto(String userId, String photoId) {
+        // approves photo in origo after upload. REQUIRED for photo credential to be used.
+
+        String serializedBody = new ObjectMapper().writeValueAsString([
+                status: 'APPROVE'
+        ])
+
+        HttpResponse<String> response
+        HttpActionResult httpActionResult = new HttpActionResult()
+
+        try {
+            response = Unirest.put(mobileIdentitiesApi + "/customer/$organizationId/users/$userId/photo/$photoId/status")
+                    .headers(requestHeaders)
+                    .body(serializedBody)
+                    .asString()
+
+            log.info("Response: $response")
+            OrigoResponse origoResponse = new OrigoResponse(response)
+            httpActionResult.result = origoResponse
+
+        } catch (HttpException e) { // ?
+            log.error(e.message)
+            httpActionResult.result = e
+        }
+
+        return httpActionResult
     }
 
     storePersonData() {
