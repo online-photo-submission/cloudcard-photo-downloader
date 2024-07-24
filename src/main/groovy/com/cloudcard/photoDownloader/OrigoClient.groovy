@@ -52,12 +52,7 @@ class OrigoClient {
     @Value('${Origo.applicationId}')
     private String applicationId
 
-    @Value('${Origo.filterSet')
-    String filterSet
-
-    String filterId
-
-    String callbackUrl
+    // String callbackUrl --> May not need property
 
     Map requestHeaders
 
@@ -75,13 +70,13 @@ class OrigoClient {
         throwIfBlank(applicationId, "Your organization's Origo Application ID must be specified.")
         throwIfBlank(filterSet, "A list of Origo event filters must be specified.")
 
-        log.info('=================== Accessing HID Origo Services ===================')
+        log.info('=================== Initializing Origo Client ===================')
         log.info("          Origo Event Management API URL : $eventManagementApi")
         log.info("     Origo Callback Registration API URL : $callbackRegistrationApi")
         log.info("         Origo Mobile Identities API URL : $mobileIdentitiesApi")
         log.info("                       Origo customer ID : $customerId")
         log.info("                   Origo organization ID : $organizationId")
-//        log.info("              Origo authorization string : $authorization")
+        log.info("              Origo authorization string : ${!authorization ? 'Missing' : 'Provided'}")
         log.info("               Origo content type header : $contentType")
         log.info("               Origo application version : $applicationVersion")
         log.info("                    Origo application ID : $applicationId")
@@ -95,7 +90,34 @@ class OrigoClient {
         ]
     }
 
-    HttpActionResult createCallbackSubscription() {
+    authenticate() {
+        // Authenticates session by validating secret token. **May not be necessary
+    }
+
+    HttpActionResult listEvents() {
+
+        HttpResponse<String> response
+        HttpActionResult httpActionResult = new HttpActionResult()
+
+        try {
+            response = Unirest.get(eventManagementApi + "/organization/$organizationId/events")
+                    .headers(requestHeaders)
+                    .asString()
+
+            log.info("Response: $response")
+            OrigoResponse origoResponse = new OrigoResponse(response)
+            httpActionResult.result = origoResponse
+
+        } catch (UnirestException e) {
+            log.error(e.message)
+            httpActionResult.result = e
+        }
+
+        return httpActionResult
+
+    }
+
+    HttpActionResult createCallbackSubscription(String filterId, String callbackUrl) {
         // subscribes application to Origo organization-specific events
 
         String serializedBody = new ObjectMapper().writeValueAsString([
@@ -198,13 +220,11 @@ class OrigoClient {
         return httpActionResult
     }
 
-    HttpActionResult createFilter() {
+    HttpActionResult createFilter(List<String> filters) {
         // Filters what kinds of events this instance of the application will be subscribed to. See documentation for options: https://doc.origo.hidglobal.com/api/events-callbacks/#/Events/post_organization__organization_id__events_filter
 
-        List<String> filterList = filterSet.split(", ")
-
         String serializedBody = new ObjectMapper().writeValueAsString([
-                filterSet: filterList
+                filterSet: filters
         ])
 
         HttpResponse<String> response
@@ -228,11 +248,11 @@ class OrigoClient {
         return httpActionResult
     }
 
-    HttpActionResult approvePhoto(String userId, String photoId) {
+    HttpActionResult updatePhotoApprovalStatus(String userId, String photoId, boolean status) {
         // approves photo in origo after upload. REQUIRED for photo credential to be used.
 
         String serializedBody = new ObjectMapper().writeValueAsString([
-                status: 'APPROVE'
+                status: status ? 'APPROVE' : 'REJECT'
         ])
 
         HttpResponse<String> response
@@ -256,9 +276,9 @@ class OrigoClient {
         return httpActionResult
     }
 
-    storePersonData() {
-        // stores 'customFields' information in Origo employee record
-    }
+//    storePersonData() {
+//        // stores 'customFields' information in Origo employee record
+//    }
 }
 
 class OrigoResponse extends ThirdPartyResponse {
