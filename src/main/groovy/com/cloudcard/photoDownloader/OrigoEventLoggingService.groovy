@@ -1,12 +1,12 @@
 package com.cloudcard.photoDownloader
 
-import jakarta.annotation.PostConstruct
+import com.fasterxml.jackson.databind.ObjectMapper
+import groovy.json.JsonOutput
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty
 import org.springframework.stereotype.Component
 
-import java.nio.file.Files
 
 @Component
 @ConditionalOnProperty(name = 'Origo.useOrigo', havingValue = 'true')
@@ -14,6 +14,8 @@ class OrigoEventLoggingService {
     // configures temporary local storage for Origo event ids and timestamps
 
     private static final Logger log = LoggerFactory.getLogger(OrigoEventLoggingService.class);
+
+    static File _eventLog
 
     static configureLocalLogging() {
         // creates directory and log file if they don't exist
@@ -27,20 +29,39 @@ class OrigoEventLoggingService {
             eventLogDirectory.mkdir()
         }
 
-        boolean created = createLog(eventLogDirectory.toString())
+        boolean created = createJsonLog(eventLogDirectory.toString())
 
         log.info("${created ? "Origo log.json file created." : "Origo log.json file already exists."}")
 
     }
 
-    static boolean createLog(String path) {
+    static boolean createJsonLog(String path) {
         File eventLog = new File(path + "/log.json")
-        return eventLog.createNewFile()
+
+        boolean result = eventLog.createNewFile()
+
+        _eventLog = eventLog
+
+        return result
     }
 
     def getLastEvent() {}
 
-    def writeNewEvent() {
+    static writeEventToJson(String id, String timestamp) {
+        if (_eventLog.exists()) {
+
+            def event = [:]
+
+            event[id] = timestamp
+
+            String json = JsonOutput.toJson(event)
+
+            _eventLog.withWriterAppend {
+                writer -> writer.writeLine json
+            }
+
+        }
+
 
     }
 

@@ -33,7 +33,9 @@ class OrigoService {
         //Check Storage for last timestamped event.
         eventLoggingService.configureLocalLogging()
 
-        handleFilters()
+//        handleFilters()
+
+        eventLoggingService.writeEventToJson('1234', '2020-04-05')
     }
 
     def handleFilters() {
@@ -48,7 +50,6 @@ class OrigoService {
 //        }
 
         // eventControlFlow()
-
     }
 
     def eventControlFlow() {
