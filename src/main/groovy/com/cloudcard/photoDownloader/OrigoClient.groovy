@@ -202,6 +202,27 @@ class OrigoClient {
 
     }
 
+    HttpActionResult listFilters() {
+        HttpResponse<String> response
+        HttpActionResult httpActionResult = new HttpActionResult()
+
+        try {
+            response = Unirest.get(eventManagementApi + "/organization/$organizationId/events/filter")
+                    .headers(requestHeaders)
+                    .asString()
+
+            OrigoResponse origoResponse = new OrigoResponse(response)
+            httpActionResult.result = origoResponse
+
+        } catch (UnirestException e) {
+            log.error(e.message)
+            httpActionResult.result = e
+        }
+
+        return httpActionResult
+
+    }
+
     HttpActionResult getFilterById() {
         // checks for current filters. Conditionally calls create filter
 
