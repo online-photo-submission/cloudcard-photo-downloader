@@ -15,26 +15,36 @@ class OrigoEventLoggingService {
 
     private static final Logger log = LoggerFactory.getLogger(OrigoEventLoggingService.class);
 
-    static def doesLocalLogDirectoryExist() {
-        File eventLogDirectory = new File(System.getProperty("user.dir").toString() + "/origo-event-log")
+    static configureLocalLogging() {
+        // creates directory and log file if they don't exist
 
+        File eventLogDirectory = new File(System.getProperty("user.dir").toString() + "/origo-event-log")
 
         if (eventLogDirectory.exists() && eventLogDirectory.isDirectory()) {
             log.info('origo-event-log DIRECTORY EXISTS')
-            createLog(eventLogDirectory.toString())
-
         } else {
             log.info('origo-event-log DIRECTORY DOESN\'T EXIST: Creating directory with log.json')
             eventLogDirectory.mkdir()
-            createLog(eventLogDirectory.toString())
         }
+
+        boolean created = createLog(eventLogDirectory.toString())
+
+        log.info("${created ? "Origo log.json file created." : "Origo log.json file already exists."}")
+
     }
 
-    static def createLog(String path) {
+    static boolean createLog(String path) {
         File eventLog = new File(path + "/log.json")
-        eventLog.createNewFile()
+        return eventLog.createNewFile()
+    }
+
+    def getLastEvent() {}
+
+    def writeNewEvent() {
 
     }
+
+    def getEventById() {}
 
 
 }

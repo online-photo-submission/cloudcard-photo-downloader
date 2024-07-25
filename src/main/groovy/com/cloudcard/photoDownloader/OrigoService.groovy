@@ -31,7 +31,9 @@ class OrigoService {
     @PostConstruct
     init() {
         //Check Storage for last timestamped event.
+        eventLoggingService.configureLocalLogging()
 
+        handleFilters()
     }
 
     def handleFilters() {
@@ -40,20 +42,27 @@ class OrigoService {
 
         def (result) = origoClient.listFilters()
 
-        //  do something
+//        if (/*result filters don't equal filterSet*/) {
+            // delete old filter
+            // create new filter
+//        }
+
+        // eventControlFlow()
 
     }
 
-
-    def getEvents(String dateFrom, String dateTo, String filterId = "", String callbackStatus = "") {
-        DateTimeFormatter isoFormatter = DateTimeFormatter.ISO_DATE
-
-        String dateFromISO = isoFormatter(dateFrom)
-        String dateToISO = isoFormatter(dateTo)
-
-        def (result) = origoClient.listEvents(dateFromISO, dateToISO, filterId, callbackStatus)
+    def eventControlFlow() {
+        // access logs for most recent event id and timestamp --> eventLoggingService
+        // def events = getEvents(...)
     }
 
-
+//    def getEvents(String dateFrom, String dateTo, String filterId = "", String callbackStatus = "") {
+//        DateTimeFormatter isoFormatter = DateTimeFormatter.ISO_DATE
+//
+//        String dateFromISO = isoFormatter(dateFrom)
+//        String dateToISO = isoFormatter(dateTo)
+//
+//        def (result) = origoClient.listEvents(dateFromISO, dateToISO, filterId, callbackStatus)
+//    }
 
 }
