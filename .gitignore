@@ -35,5 +35,4 @@ application-test.properties*
 downloaded-photos
 summary
 
-lib/
-/src/main/resources/application-dev.properties
+

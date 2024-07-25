@@ -97,13 +97,15 @@ class OrigoClient {
 //        // Authenticates session by validating secret token. **May not be necessary
 //    }
 
-    HttpActionResult listEvents() {
+    HttpActionResult listEvents(String dateFrom, String dateTo, String filterId = "", String callbackStatus = "") {
 
         HttpResponse<String> response
         HttpActionResult httpActionResult = new HttpActionResult()
 
+        String url = "$eventManagementApi/organization/$organizationId/events?dateFrom=$dateFrom&dateTo=$dateTo${!filterId ?: "&filterId=$filterId"}${!callbackStatus ?: "callbackStatus=$callbackStatus"}"
+
         try {
-            response = Unirest.get(eventManagementApi + "/organization/$organizationId/events")
+            response = Unirest.get(url)
                     .headers(requestHeaders)
                     .asString()
 
