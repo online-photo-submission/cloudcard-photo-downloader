@@ -22,17 +22,16 @@ class OrigoService {
     @Autowired
     OrigoClient origoClient
 
+    @Autowired
+    OrigoEventLoggingService eventLoggingService
+
     @Value('false')
     private boolean isAuthenticated
 
     @PostConstruct
     init() {
-        // authenticate()
-//        if (isAuthenticated) {
-//            // do something
-//        } else {
-//            log.error('********** Origo services cannot be authenticated **********')
-//        }
+        //Check Storage for last timestamped event.
+
     }
 
     def handleFilters() {
@@ -41,15 +40,20 @@ class OrigoService {
 
         def (result) = origoClient.listFilters()
 
-//        log.info(result)
+        //  do something
 
     }
 
 
-    def getEvents() {
+    def getEvents(String dateFrom, String dateTo, String filterId = "", String callbackStatus = "") {
         DateTimeFormatter isoFormatter = DateTimeFormatter.ISO_DATE
 
-        def (result) = origoClient.listEvents()
+        String dateFromISO = isoFormatter(dateFrom)
+        String dateToISO = isoFormatter(dateTo)
+
+        def (result) = origoClient.listEvents(dateFromISO, dateToISO, filterId, callbackStatus)
     }
+
+
 
 }
