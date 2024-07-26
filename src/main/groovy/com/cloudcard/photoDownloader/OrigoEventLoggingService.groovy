@@ -7,6 +7,9 @@ import org.slf4j.LoggerFactory
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty
 import org.springframework.stereotype.Component
 
+import javax.swing.text.DateFormatter
+import java.text.SimpleDateFormat
+
 
 @Component
 @ConditionalOnProperty(name = 'Origo.useOrigo', havingValue = 'true')
@@ -14,6 +17,8 @@ class OrigoEventLoggingService {
     // configures temporary local storage for Origo event ids and timestamps
 
     private static final Logger log = LoggerFactory.getLogger(OrigoEventLoggingService.class);
+
+    static File _eventLogDirectory
 
     static File _eventLog
 
@@ -29,14 +34,11 @@ class OrigoEventLoggingService {
             eventLogDirectory.mkdir()
         }
 
-        boolean created = createJsonLog(eventLogDirectory.toString())
-
-        log.info("${created ? "Origo log.json file created." : "Origo log.json file already exists."}")
-
+        _eventLogDirectory = eventLogDirectory
     }
 
-    static boolean createJsonLog(String path) {
-        File eventLog = new File(path + "/log.json")
+    static boolean createJsonLog(String path, String fileName) {
+        File eventLog = new File("${path}/${fileName}.json")
 
         boolean result = eventLog.createNewFile()
 
@@ -47,25 +49,33 @@ class OrigoEventLoggingService {
 
     def getLastEvent() {}
 
-    static writeEventToJson(String id, String timestamp) {
-        if (_eventLog.exists()) {
+    static writeEventsToJson(List<Map> events) {
 
-            def event = [:]
-
-            event[id] = timestamp
-
-            String json = JsonOutput.toJson(event)
-
-            _eventLog.withWriterAppend {
-                writer -> writer.writeLine json
-            }
-
+        def sortedEvents = events.sort {
+            it.date
         }
 
+        def isoDateFormat = new SimpleDateFormat('yyyy-MM-dd\'T\'HH:mm:ss')
+        isoDateFormat.setTimeZone(TimeZone.getTimeZone('UTC'))
+
+        def fileName = isoDateFormat.parse(sortedEvents[0].date.toString()).time
+
+        log.info("$fileName")
+
+        String json = JsonOutput.toJson(sortedEvents)
+
+        boolean created = createJsonLog("${_eventLogDirectory.getPath().toString()}", "${fileName}")
+
+        if (created) {
+            _eventLog.withWriter {
+                writer -> writer.writeLine json
+            }
+        } else {
+            log.error("Origo Error while creating log file")
+        }
 
     }
 
     def getEventById() {}
-
 
 }
