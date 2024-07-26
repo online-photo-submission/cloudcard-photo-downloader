@@ -1,12 +1,17 @@
 package com.cloudcard.photoDownloader
 
 import groovy.json.JsonOutput
+import groovy.json.JsonSlurper
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty
 import org.springframework.stereotype.Component
 
 import java.text.SimpleDateFormat
+import java.time.Instant
+import java.time.ZoneId
+import java.time.ZonedDateTime
+import java.time.format.DateTimeFormatter
 
 
 @Component
@@ -18,9 +23,10 @@ class OrigoEventLoggingService {
 
     static File _eventLogDirectory
 
-    static List<File> _eventLogs
+    static List<File> _eventLogs // [0] is older than [1]
 
     static removeOldLogs() {
+        // NEEDS REFACTORING
         // deletes 3rd oldest log file. keeps locally stored log files always at 2 or less.
         // currently only works with .json files OR 4-letter file extensions
         File[] files = _eventLogDirectory.listFiles()
@@ -61,7 +67,6 @@ class OrigoEventLoggingService {
             }
 
             _eventLogs = filesToKeep
-            _eventLogs.each {log.info("EVENT LOGS ARRAY: " + it.name)}
 
         }
 
@@ -92,6 +97,41 @@ class OrigoEventLoggingService {
 
     def getLastEvent() {}
 
+    static processEvents(List<Map> events) {
+        // uses event IDs to filter out old/processed events
+
+        if (_eventLogs == null) {
+            log.info("Reference to existing logs was null. Checking for Origo event log files... ...")
+            _eventLogs = new File(_eventLogDirectory.toString()).listFiles()
+        }
+
+        if (_eventLogs.size() == 0) {
+            return events
+        } else {
+            def jsonSlurper = new JsonSlurper()
+            log.info("Processing incoming events ... ...")
+            List<Map> newEvents = []
+            File mostRecentLog = _eventLogs[1] ?: _eventLogs[0]
+            String json = mostRecentLog.text
+            def lastEvents = (List<Object>) jsonSlurper.parseText(json)
+            def comparison = [:]
+
+            lastEvents.each {
+                event -> comparison[event.id] = true
+            }
+
+            for (Map event in events) {
+                log.info(event.id.toString())
+                if (!comparison[event.id]) {
+                    newEvents.add(event)
+                }
+            }
+
+            return newEvents
+        }
+
+    }
+
     static generateLog(List<Map> events) {
         // takes in list of event date:id objects, creates json file and writes log.
         // json file takes of the name of the oldest event in the log in milliseconds
@@ -100,14 +140,15 @@ class OrigoEventLoggingService {
             it.date
         }
 
-        def oldestEventDate = sortedEvents[0].date.toString()
+        String nowIso = nowAsIsoFormat() // Will need to be refactored to time of API call, not time of generating log
 
-        String fileName = isoToMilliseconds(oldestEventDate)
+        String fileName = isoToMilliseconds(nowIso)
 
         String json = JsonOutput.toJson(sortedEvents)
 
         File eventLog = createLogFile("${_eventLogDirectory.getPath().toString()}", "${fileName}")
 
+        log.info("Generating Origo event log.")
         if (eventLog.exists()) {
             eventLog.withWriter {
                 writer -> writer.writeLine json
@@ -116,6 +157,14 @@ class OrigoEventLoggingService {
             log.error("Origo Error while creating log file")
         }
 
+    }
+
+    private static String nowAsIsoFormat() {
+        Instant now = Instant.now()
+        ZonedDateTime utc = now.atZone(ZoneId.of("UTC"))
+        DateTimeFormatter formatter = DateTimeFormatter.ISO_INSTANT
+        String nowIso = formatter.format(utc)
+        return nowIso
     }
 
     private static String isoToMilliseconds(String date) {
