@@ -31,9 +31,6 @@ class OrigoClient {
     @Value('${Origo.mobileIdentitiesApi}')
     private String mobileIdentitiesApi
 
-    @Value('${Origo.customerId}')
-    private String customerId
-
     @Value('${Origo.organizationId}')
     private String organizationId
 
@@ -64,7 +61,6 @@ class OrigoClient {
         throwIfBlank(eventManagementApi, "The Origo Event Management API URL must be specified.")
         throwIfBlank(callbackRegistrationApi, "The Origo Callback Registration API URL must be specified.")
         throwIfBlank(mobileIdentitiesApi, "The Origo Mobile Identities API URL must be specified.")
-        throwIfBlank(customerId, "The Origo customer ID must be specified.")
         throwIfBlank(organizationId, "The Origo organization ID must be specified.")
         throwIfBlank(authorization, "The Origo authorization string must be specified.")
         throwIfBlank(accessToken, "An Origo access token must be provided.")
@@ -77,7 +73,6 @@ class OrigoClient {
         log.info("          Origo Event Management API URL : $eventManagementApi")
         log.info("     Origo Callback Registration API URL : $callbackRegistrationApi")
         log.info("         Origo Mobile Identities API URL : $mobileIdentitiesApi")
-        log.info("                       Origo customer ID : $customerId")
         log.info("                   Origo organization ID : $organizationId")
         log.info("              Origo authorization string : ${!authorization ? 'Missing' : 'Provided'}")
         log.info("               Origo content type header : $contentType")
@@ -92,10 +87,6 @@ class OrigoClient {
                 'Application-ID'     : applicationId
         ]
     }
-
-//    authenticate() {
-//        // Authenticates session by validating secret token. **May not be necessary
-//    }
 
     HttpActionResult listEvents(String dateFrom, String dateTo, String filterId = "", String callbackStatus = "") {
 

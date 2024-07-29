@@ -4,6 +4,7 @@ import groovy.json.JsonOutput
 import groovy.json.JsonSlurper
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
+import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty
 import org.springframework.stereotype.Component
 
@@ -12,7 +13,6 @@ import java.time.Instant
 import java.time.ZoneId
 import java.time.ZonedDateTime
 import java.time.format.DateTimeFormatter
-
 
 @Component
 @ConditionalOnProperty(name = 'Origo.useOrigo', havingValue = 'true')
@@ -25,63 +25,42 @@ class OrigoEventLoggingService {
 
     static List<File> _eventLogs // [0] is older than [1]
 
-    static removeOldLogs() {
-        // NEEDS REFACTORING
-        // deletes 3rd oldest log file. keeps locally stored log files always at 2 or less.
-        // currently only works with .json files OR 4-letter file extensions
+    static removeOldLogs(File newLog) {
+        // Removes all but the recently created log file
         File[] files = _eventLogDirectory.listFiles()
-        def fileNames
 
-        if (files.size() >= 3) {
-            fileNames = new ArrayList<long>()
+        if (files.size() >= 1) {
 
             files.each {
-                long parsed = it.name.substring(0, it.name.length() - 5) as long
-                fileNames.add(parsed)
+                if (it.name != newLog.name) {
+                    it.delete()
+                }
             }
-
-            fileNames.sort {
-                a, b -> b <=> a
-            }
-
-            fileNames = fileNames[0..1]
-
-            ArrayList<File> filesToKeep = new ArrayList<File>()
-
-            files.each {
-                file ->
-                    {
-                        if (file.name != fileNames[0] + ".json" && file.name != fileNames[1] + ".json") {
-                            log.info("**************************************")
-                            log.info("DELETING OLD ORIGO EVENT LOGS: ${file.name}")
-                            log.info("**************************************")
-                            file.delete()
-                        } else {
-                            if (_eventLogs?.size() == 0 || _eventLogs == null) {
-                                _eventLogs = new ArrayList<File>()
-                            }
-
-                            filesToKeep.add(file)
-                        }
-                    }
-            }
-
-            _eventLogs = filesToKeep
-
         }
+
+        _eventLogs = [newLog]
 
     }
 
+    private static long parseLongFromFilename(File file) {
+        long parsed = file.name.substring(0, file.name.length() - 5) as long
+        parsed
+    }
+
     static createLogDirectory() {
-        // creates directory and log file if they don't exist
+        // creates directory if it doesn't exist
 
         File eventLogDirectory = new File("${System.getProperty("user.dir").toString()}/origo-event-logs")
 
-        if (eventLogDirectory.exists() && eventLogDirectory.isDirectory()) {
-            log.info('origo-event-logs DIRECTORY EXISTS.')
-        } else {
-            log.info('origo-event-logs DIRECTORY DOESN\'T EXIST: Creating directory.')
-            eventLogDirectory.mkdir()
+        try {
+            if (eventLogDirectory.exists() && eventLogDirectory.isDirectory()) {
+                log.info('origo-event-logs DIRECTORY EXISTS.')
+            } else {
+                log.info('origo-event-logs DIRECTORY DOESN\'T EXIST: Creating directory.')
+                eventLogDirectory.mkdir()
+            }
+        } catch (Exception ex) {
+            log.error(ex.message)
         }
 
         _eventLogDirectory = eventLogDirectory
@@ -95,41 +74,64 @@ class OrigoEventLoggingService {
         return eventLog
     }
 
-    def getLastEvent() {}
-
-    static processEvents(List<Map> events) {
-        // uses event IDs to filter out old/processed events
+    static configure(List<Map> events) {
+        // Helper method makes conditional decisions based on state of existing logs or lack thereof
+        createLogDirectory()
 
         if (_eventLogs == null) {
-            log.info("Reference to existing logs was null. Checking for Origo event log files... ...")
+            // No reference to local logs in memory. Create reference.
+            log.info("ORIGO: Reference to existing logs was null. Checking for Origo event log files.")
             _eventLogs = new File(_eventLogDirectory.toString()).listFiles()
         }
 
         if (_eventLogs.size() == 0) {
-            return events
+            // Check for remote event logs
+            log.info("ORIGO: No existing Origo event logs. Checking for remotely stored events.")
+            // def remoteEvents = makeRequest() -> No remote records? Initiate cold start.
+            // --> facts and logic
+            // getNewEventsOnly(events, remoteEvents)
         } else {
-            def jsonSlurper = new JsonSlurper()
-            log.info("Processing incoming events ... ...")
-            List<Map> newEvents = []
-            File mostRecentLog = _eventLogs[1] ?: _eventLogs[0]
-            String json = mostRecentLog.text
-            def lastEvents = (List<Object>) jsonSlurper.parseText(json)
-            def comparison = [:]
+            // There are existing local logs
+            log.info("ORIGO: There are existing local logs. Checking logs for processing new events.")
+            def newEvents = getNewEventsOnly(events)
 
-            lastEvents.each {
-                event -> comparison[event.id] = true
-            }
+            generateLog newEvents
+        }
+    }
 
-            for (Map event in events) {
-                log.info(event.id.toString())
-                if (!comparison[event.id]) {
-                    newEvents.add(event)
-                }
-            }
+    static List<Map> getNewEventsOnly(List<Map> incomingEvents, def comparisonEvents = null) {
+        // uses event IDs, other properties to filter out old/processed events
+        // FUTURE - might events take on properties depending on what has been done to them, different processing statuses?
 
-            return newEvents
+        log.info("Checking if events are new ... ...")
+
+        def jsonSlurper = new JsonSlurper()
+        List<Map> newEvents = new ArrayList<Map>()
+        def comparison
+        List<Map> lastEvents = []
+
+        if (comparisonEvents) {
+            // Parse into Map
+            //comparisonEvents.each {lastEvents.add(it.something)}
+        } else {
+            comparison = [:]
+            File existingLog = _eventLogs[0]
+            String json = existingLog.text
+            lastEvents =  jsonSlurper.parseText(json) as List<Map>
         }
 
+        lastEvents.each {
+            event -> comparison[event.id as String] = true
+        }
+
+        for (Map event in incomingEvents) {
+            log.info(event.id.toString())
+            if (!comparison[event.id as String]) {
+                newEvents.add(event)
+            }
+        }
+
+        return (lastEvents + newEvents) as List<Map>
     }
 
     static generateLog(List<Map> events) {
@@ -148,18 +150,23 @@ class OrigoEventLoggingService {
 
         File eventLog = createLogFile("${_eventLogDirectory.getPath().toString()}", "${fileName}")
 
-        log.info("Generating Origo event log.")
-        if (eventLog.exists()) {
-            eventLog.withWriter {
-                writer -> writer.writeLine json
+        try {
+            if (eventLog.exists()) {
+                log.info("Generating Origo event log.")
+                eventLog.withWriter {
+                    writer -> writer.writeLine json
+                }
+            } else {
+                log.error("Origo Error while creating log file")
             }
-        } else {
-            log.error("Origo Error while creating log file")
+        } catch (Exception ex) {
+            log.error(ex.message)
         }
 
+        removeOldLogs(eventLog)
     }
 
-    private static String nowAsIsoFormat() {
+    static String nowAsIsoFormat() {
         Instant now = Instant.now()
         ZonedDateTime utc = now.atZone(ZoneId.of("UTC"))
         DateTimeFormatter formatter = DateTimeFormatter.ISO_INSTANT
@@ -167,7 +174,7 @@ class OrigoEventLoggingService {
         return nowIso
     }
 
-    private static String isoToMilliseconds(String date) {
+    static String isoToMilliseconds(String date) {
         def isoDateFormat = new SimpleDateFormat('yyyy-MM-dd\'T\'HH:mm:ss')
         isoDateFormat.setTimeZone(TimeZone.getTimeZone('UTC'))
 
@@ -175,7 +182,7 @@ class OrigoEventLoggingService {
         return fileName
     }
 
-    private static String millisecondsToIso(long milliseconds) {
+    static String millisecondsToIso(long milliseconds) {
         def isoDateFormat = new SimpleDateFormat('yyyy-MM-dd\'T\'HH:mm:ss')
         isoDateFormat.setTimeZone(TimeZone.getTimeZone('UTC'))
 
@@ -183,7 +190,5 @@ class OrigoEventLoggingService {
         def isoDate = isoDateFormat.format(date)
         return isoDate
     }
-
-    def getEventById() {}
 
 }
