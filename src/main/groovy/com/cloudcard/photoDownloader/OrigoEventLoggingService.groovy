@@ -4,7 +4,6 @@ import groovy.json.JsonOutput
 import groovy.json.JsonSlurper
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
-import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty
 import org.springframework.stereotype.Component
 
@@ -74,7 +73,7 @@ class OrigoEventLoggingService {
         return eventLog
     }
 
-    static configure(List<Map> events) {
+    static configure(List<Object> events) {
         // Helper method makes conditional decisions based on state of existing logs or lack thereof
         createLogDirectory()
 
@@ -84,12 +83,13 @@ class OrigoEventLoggingService {
             _eventLogs = new File(_eventLogDirectory.toString()).listFiles()
         }
 
-        if (_eventLogs.size() == 0) {
+        if (/*_eventLogs.size() == 0*/false) {
             // Check for remote event logs
             log.info("ORIGO: No existing Origo event logs. Checking for remotely stored events.")
             // def remoteEvents = makeRequest() -> No remote records? Initiate cold start.
             // --> facts and logic
             // getNewEventsOnly(events, remoteEvents)
+
         } else {
             // There are existing local logs
             log.info("ORIGO: There are existing local logs. Checking logs for processing new events.")
@@ -99,47 +99,47 @@ class OrigoEventLoggingService {
         }
     }
 
-    static List<Map> getNewEventsOnly(List<Map> incomingEvents, def comparisonEvents = null) {
+    static List<Object> getNewEventsOnly(List<Object> incomingEvents, def comparisonEvents = null) {
         // uses event IDs, other properties to filter out old/processed events
         // FUTURE - might events take on properties depending on what has been done to them, different processing statuses?
 
         log.info("Checking if events are new ... ...")
-
+        if (!_eventLogs[0]) createTestLog()
         def jsonSlurper = new JsonSlurper()
-        List<Map> newEvents = new ArrayList<Map>()
+        List<Object> newEvents = new ArrayList<Object>()
         def comparison
-        List<Map> lastEvents = []
+        List<Object> lastEvents = []
 
-        if (comparisonEvents) {
-            // Parse into Map
+        if (/*comparisonEvents*/false) {
+            // Parse into Object
             //comparisonEvents.each {lastEvents.add(it.something)}
         } else {
             comparison = [:]
             File existingLog = _eventLogs[0]
             String json = existingLog.text
-            lastEvents =  jsonSlurper.parseText(json) as List<Map>
+            lastEvents =  jsonSlurper.parseText(json) as List<Object>
         }
 
         lastEvents.each {
             event -> comparison[event.id as String] = true
         }
 
-        for (Map event in incomingEvents) {
+        for (Object event in incomingEvents) {
             log.info(event.id.toString())
             if (!comparison[event.id as String]) {
                 newEvents.add(event)
             }
         }
 
-        return (lastEvents + newEvents) as List<Map>
+        return (lastEvents + newEvents) as List<Object>
     }
 
-    static generateLog(List<Map> events) {
+    static generateLog(List<Object> events) {
         // takes in list of event date:id objects, creates json file and writes log.
         // json file takes of the name of the oldest event in the log in milliseconds
 
         def sortedEvents = events.sort {
-            it.date
+            it.time
         }
 
         String nowIso = nowAsIsoFormat() // Will need to be refactored to time of API call, not time of generating log
@@ -189,6 +189,83 @@ class OrigoEventLoggingService {
         def date = new Date(milliseconds)
         def isoDate = isoDateFormat.format(date)
         return isoDate
+    }
+
+    static def createTestLog() {
+
+        String resultJson2 = """ 
+[
+                  {
+                    "type": "com.origo.mi.user",
+                    "specversion": "1.0",
+                    "source": "https://dev.portal.origo.hidcloud.com/credential-management/customer/1003233/user/6789",
+                    "id": "k1l2m3n4-5678-9012-ab34-cd56ef789012",
+                    "time": "2024-03-12T14:45:30.123Z",
+                    "datacontenttype": "application/vnd.hidglobal.origo.events.user-2.0+json",
+                    "data": {
+                      "organization_id": "1003233",
+                      "userId": "6789",
+                      "firstName": "Olivia",
+                      "lastName": "Martinez",
+                      "status": "USER_CREATED",
+                      "email": "olivia.martinez@example.com"
+                    }
+                  },
+                  {
+                    "type": "com.origo.mi.user",
+                    "specversion": "1.0",
+                    "source": "https://dev.portal.origo.hidcloud.com/credential-management/customer/1003233/user/2346",
+                    "id": "l2m3n4o5-6789-0123-ab45-cd67ef890123",
+                    "time": "2022-10-20T16:11:45.789Z",
+                    "datacontenttype": "application/vnd.hidglobal.origo.events.user-2.0+json",
+                    "data": {
+                      "organization_id": "1003233",
+                      "userId": "2346",
+                      "firstName": "Liam",
+                      "lastName": "Nguyen",
+                      "status": "USER_CREATED",
+                      "email": "liam.nguyen@example.com"
+                    }
+                  },
+                  {
+                    "type": "com.origo.mi.user",
+                    "specversion": "1.0",
+                    "source": "https://dev.portal.origo.hidcloud.com/credential-management/customer/1003233/user/7891",
+                    "id": "m3n4o5p6-7890-1234-ab56-cd78ef901234",
+                    "time": "2021-05-18T09:22:33.456Z",
+                    "datacontenttype": "application/vnd.hidglobal.origo.events.user-2.0+json",
+                    "data": {
+                      "organization_id": "1003233",
+                      "userId": "7891",
+                      "firstName": "Ethan",
+                      "lastName": "Williams",
+                      "status": "USER_CREATED",
+                      "email": "ethan.williams@example.com"
+                    }
+                  },
+                  {
+                    "type": "com.origo.mi.user",
+                    "specversion": "1.0",
+                    "source": "https://dev.portal.origo.hidcloud.com/credential-management/customer/1003233/user/7890",
+                    "id": "b2c3d4e5-f678-9012-ab34-cd56ef789012",
+                    "time": "2024-02-28T08:12:34.567Z",
+                    "datacontenttype": "application/vnd.hidglobal.origo.events.user-2.0+json",
+                    "data": {
+                        "organization_id": "1003233",
+                        "userId": "7890",
+                        "firstName": "Jane",
+                        "lastName": "Smith",
+                        "status": "USER_CREATED",
+                        "email": "jane.smith@example.com"
+                    }
+                }
+]
+
+"""
+        JsonSlurper jsonSlurper = new JsonSlurper()
+        def result = jsonSlurper.parseText(resultJson2) as List<Object>
+
+        generateLog(result)
     }
 
 }

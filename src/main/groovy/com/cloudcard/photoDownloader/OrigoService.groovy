@@ -1,5 +1,6 @@
 package com.cloudcard.photoDownloader
 
+import groovy.json.JsonSlurper
 import jakarta.annotation.PostConstruct
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
@@ -31,7 +32,7 @@ class OrigoService {
     @PostConstruct
     init() {
 
-        List<Map> events = getEvents("", "") as List<Map>
+        def events = getEvents("", "")
 
         eventLoggingService.configure(events)
 
@@ -74,41 +75,89 @@ class OrigoService {
 //
 //        def (result) = origoClient.listEvents(dateFromISO, dateToISO, filterId, callbackStatus)
 
-        List<Map> result = [
-                [date: '2020-04-05T00:00:00', id: '1234'],
-                [date: '2020-05-26T00:00:00', id: '7914'],
-                [date: '2020-07-22T00:00:00', id: '3579'],
-                [date: '2020-09-01T00:00:00', id: '6804'],
-                [date: '2020-12-25T00:00:00', id: '8024'],
-//                [date: '2021-03-25T00:00:00', id: '4682'],
-//                [date: '2021-04-02T00:00:00', id: '7265'],
-//                [date: '2021-06-11T00:00:00', id: '6803'],
-//                [date: '2021-07-30T00:00:00', id: '1359'],
-//                [date: '2021-08-18T00:00:00', id: '9135'],
-//                [date: '2021-09-05T00:00:00', id: '3570'],
-//                [date: '2021-10-14T00:00:00', id: '4680'],
-//                [date: '2021-11-30T00:00:00', id: '2468'],
-//                [date: '2022-01-10T00:00:00', id: '0246'],
-//                [date: '2022-02-28T00:00:00', id: '5791'],
-//                [date: '2022-03-13T00:00:00', id: '4681'],
-//                [date: '2022-06-23T00:00:00', id: '7915'],
-//                [date: '2022-08-07T00:00:00', id: '8675'],
-//                [date: '2022-09-12T00:00:00', id: '1357'],
-//                [date: '2022-10-16T00:00:00', id: '8025'],
-//                [date: '2022-12-12T00:00:00', id: '2460'],
-//                [date: '2023-01-15T00:00:00', id: '3456'],
-//                [date: '2023-02-19T00:00:00', id: '9136'],
-//                [date: '2023-03-17T00:00:00', id: '6802'],
-//                [date: '2023-05-20T00:00:00', id: '7890'],
-//                [date: '2023-07-21T00:00:00', id: '1358'],
-//                [date: '2023-08-09T00:00:00', id: '3571'],
-//                [date: '2023-11-29T00:00:00', id: '5792'],
-//                [date: '2024-01-23T00:00:00', id: '0247'],
-//                [date: '2024-04-07T00:00:00', id: '2469'],
-//                [date: '2024-05-14T00:00:00', id: '5793'],
-//                [date: '2024-06-09T00:00:00', id: '7913'],
-//                [date: '2024-08-03T00:00:00', id: '6845']
+        String resultJson = """
+[
+                {
+                    "type": "com.origo.mi.user",
+                    "specversion": "1.0",
+                    "source": "https://dev.portal.origo.hidcloud.com/credential-management/customer/1003233/user/3456",
+                    "id": "a1b2c3d4-ef56-7890-ab12-cd34ef567890",
+                    "time": "2023-06-15T14:23:45.123Z",
+                    "datacontenttype": "application/vnd.hidglobal.origo.events.user-2.0+json",
+                    "data": {
+                        "organization_id": "1003233",
+                        "userId": "3456",
+                        "firstName": "John",
+                        "lastName": "Doe",
+                        "status": "USER_CREATED",
+                        "email": "john.doe@example.com"
+                    }
+                },{
+                    "type": "com.origo.mi.user",
+                    "specversion": "1.0",
+                    "source": "https://dev.portal.origo.hidcloud.com/credential-management/customer/1003233/user/3456",
+                    "id": "a1b2c3d4-ef56-7890-ab12-cd34ef567890",
+                    "time": "2023-06-15T14:23:45.123Z",
+                    "datacontenttype": "application/vnd.hidglobal.origo.events.user-2.0+json",
+                    "data": {
+                        "organization_id": "1003233",
+                        "userId": "3456",
+                        "firstName": "John",
+                        "lastName": "Doe",
+                        "status": "USER_CREATED",
+                        "email": "john.doe@example.com"
+                    }
+                },{
+                    "type": "com.origo.mi.user",
+                    "specversion": "1.0",
+                    "source": "https://dev.portal.origo.hidcloud.com/credential-management/customer/1003233/user/3456",
+                    "id": "a1b2c3d4-ef56-7890-ab12-cd34ef567890",
+                    "time": "2023-06-15T14:23:45.123Z",
+                    "datacontenttype": "application/vnd.hidglobal.origo.events.user-2.0+json",
+                    "data": {
+                        "organization_id": "1003233",
+                        "userId": "3456",
+                        "firstName": "John",
+                        "lastName": "Doe",
+                        "status": "USER_CREATED",
+                        "email": "john.doe@example.com"
+                    }
+                },{
+                    "type": "com.origo.mi.user",
+                    "specversion": "1.0",
+                    "source": "https://dev.portal.origo.hidcloud.com/credential-management/customer/1003233/user/3456",
+                    "id": "a1b2c3d4-ef56-7890-ab12-cd34ef567890",
+                    "time": "2023-06-15T14:23:45.123Z",
+                    "datacontenttype": "application/vnd.hidglobal.origo.events.user-2.0+json",
+                    "data": {
+                        "organization_id": "1003233",
+                        "userId": "3456",
+                        "firstName": "John",
+                        "lastName": "Doe",
+                        "status": "USER_CREATED",
+                        "email": "john.doe@example.com"
+                    }
+                },
+                {
+                    "type": "com.origo.mi.user",
+                    "specversion": "1.0",
+                    "source": "https://dev.portal.origo.hidcloud.com/credential-management/customer/1003233/user/7890",
+                    "id": "b2c3d4e5-f678-9012-ab34-cd56ef789012",
+                    "time": "2024-02-28T08:12:34.567Z",
+                    "datacontenttype": "application/vnd.hidglobal.origo.events.user-2.0+json",
+                    "data": {
+                        "organization_id": "1003233",
+                        "userId": "7890",
+                        "firstName": "Jane",
+                        "lastName": "Smith",
+                        "status": "USER_CREATED",
+                        "email": "jane.smith@example.com"
+                    }
+                }
         ]
+        """
+        JsonSlurper jsonSlurper = new JsonSlurper()
+        def result = jsonSlurper.parseText(resultJson) as List<Object>
         return result
     }
 
