@@ -27,20 +27,20 @@ class OrigoService {
     OrigoClient origoClient
 
     @Autowired
-    OrigoEventLoggingService eventLoggingService
+    OrigoEventStorageServiceLocal eventStorageServiceLocal
 
     @PostConstruct
     init() {
 
         def events = getEvents("", "")
 
-        eventLoggingService.configure(events)
+        eventStorageServiceLocal.configure(events)
 
-//        def processedEvents = eventLoggingService.processEvents(events)
+//        def processedEvents = eventStorageServiceLocal.processEvents(events)
 //
-//        eventLoggingService.generateLog(processedEvents)
+//        eventStorageServiceLocal.store(processedEvents)
 //
-//        eventLoggingService.removeOldLogs()
+//        eventStorageServiceLocal.removeOldLogs()
     }
 
 //    def handleFilters() {
@@ -58,7 +58,7 @@ class OrigoService {
 //    }
 
     //def eventControlFlow() {
-    // access logs for most recent event id and timestamp --> eventLoggingService
+    // access logs for most recent event id and timestamp --> eventStorageServiceLocal
     // def events = getEvents(...)
     //}
 
@@ -68,7 +68,7 @@ class OrigoService {
 //        String dateFromISO = isoFormatter(dateFrom)
 //        String dateToISO
 //        if (!dateTo) {
-//            dateToISO = eventLoggingService.nowAsIsoFormat()
+//            dateToISO = eventStorageServiceLocal.nowAsIsoFormat()
 //        } else {
 //            dateToISO = isoFormatter(dateTo)
 //        }

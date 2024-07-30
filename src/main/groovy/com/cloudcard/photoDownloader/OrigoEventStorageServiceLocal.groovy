@@ -15,14 +15,16 @@ import java.time.format.DateTimeFormatter
 
 @Component
 @ConditionalOnProperty(name = 'Origo.useOrigo', havingValue = 'true')
-class OrigoEventLoggingService {
+class OrigoEventStorageServiceLocal implements IOrigoStorageService {
     // configures temporary local storage for Origo event ids and timestamps
 
-    private static final Logger log = LoggerFactory.getLogger(OrigoEventLoggingService.class);
+    private static final Logger log = LoggerFactory.getLogger(OrigoEventStorageServiceLocal.class)
 
     static File _eventLogDirectory
 
     static List<File> _eventLogs // [0] is older than [1]
+
+    static Map processedEvents
 
     static removeOldLogs(File newLog) {
         // Removes all but the recently created log file
@@ -73,9 +75,11 @@ class OrigoEventLoggingService {
         return eventLog
     }
 
-    static configure(List<Object> events) {
+    def configure(List<Object> events) {
         // Helper method makes conditional decisions based on state of existing logs or lack thereof
         createLogDirectory()
+
+        def parsed = parse(events)
 
         if (_eventLogs == null) {
             // No reference to local logs in memory. Create reference.
@@ -83,7 +87,7 @@ class OrigoEventLoggingService {
             _eventLogs = new File(_eventLogDirectory.toString()).listFiles()
         }
 
-        if (/*_eventLogs.size() == 0*/false) {
+        if (/*_eventLogs.size() == 0*/ false) {
             // Check for remote event logs
             log.info("ORIGO: No existing Origo event logs. Checking for remotely stored events.")
             // def remoteEvents = makeRequest() -> No remote records? Initiate cold start.
@@ -93,31 +97,40 @@ class OrigoEventLoggingService {
         } else {
             // There are existing local logs
             log.info("ORIGO: There are existing local logs. Checking logs for processing new events.")
-            def newEvents = getNewEventsOnly(events)
 
-            generateLog newEvents
+            def newEvents = getNewEventsOnly(parsed)
+
+            store newEvents
         }
     }
 
-    static List<Object> getNewEventsOnly(List<Object> incomingEvents, def comparisonEvents = null) {
+    List<Object> parse(List<Object> events) {
+        List<Object> parsed = []
+
+        events.each {
+            parsed.add([id: it.id, time: it.time])
+        }
+
+        return parsed
+    }
+
+    List<Object> getNewEventsOnly(List<Object> incomingEvents, def eventsFromRemote = null) {
         // uses event IDs, other properties to filter out old/processed events
         // FUTURE - might events take on properties depending on what has been done to them, different processing statuses?
 
         log.info("Checking if events are new ... ...")
         if (!_eventLogs[0]) createTestLog()
         def jsonSlurper = new JsonSlurper()
-        List<Object> newEvents = new ArrayList<Object>()
-        def comparison
+        List<Object> newEvents = []
+        def comparison = processedEvents ?: [:]
         List<Object> lastEvents = []
 
-        if (/*comparisonEvents*/false) {
-            // Parse into Object
-            //comparisonEvents.each {lastEvents.add(it.something)}
+        if (eventsFromRemote) {
+            eventsFromRemote.each {lastEvents.add(it.something)}
         } else {
-            comparison = [:]
             File existingLog = _eventLogs[0]
             String json = existingLog.text
-            lastEvents =  jsonSlurper.parseText(json) as List<Object>
+            lastEvents = jsonSlurper.parseText(json) as List<Object>
         }
 
         lastEvents.each {
@@ -134,7 +147,7 @@ class OrigoEventLoggingService {
         return (lastEvents + newEvents) as List<Object>
     }
 
-    static generateLog(List<Object> events) {
+    def store(List<Object> events) {
         // takes in list of event date:id objects, creates json file and writes log.
         // json file takes of the name of the oldest event in the log in milliseconds
 
@@ -191,7 +204,7 @@ class OrigoEventLoggingService {
         return isoDate
     }
 
-    static def createTestLog() {
+    def createTestLog() {
 
         String resultJson2 = """ 
 [
@@ -264,8 +277,8 @@ class OrigoEventLoggingService {
 """
         JsonSlurper jsonSlurper = new JsonSlurper()
         def result = jsonSlurper.parseText(resultJson2) as List<Object>
-
-        generateLog(result)
+        def parsed = parse(result)
+        store(parsed)
     }
 
 }
