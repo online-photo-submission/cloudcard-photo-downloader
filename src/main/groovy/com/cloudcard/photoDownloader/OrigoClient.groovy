@@ -4,6 +4,7 @@ import com.mashape.unirest.http.HttpResponse
 import com.mashape.unirest.http.exceptions.UnirestException
 
 import com.mashape.unirest.http.Unirest
+import groovy.json.JsonSlurper
 import jakarta.annotation.PostConstruct
 import org.apache.http.HttpException
 import org.slf4j.Logger
@@ -31,11 +32,13 @@ class OrigoClient {
     @Value('${Origo.mobileIdentitiesApi}')
     private String mobileIdentitiesApi
 
+    @Value('${Origo.certIdpApi}')
+    private  String certIdpApi
+
     @Value('${Origo.organizationId}')
     private String organizationId
 
-    @Value('${Origo.accessToken}')
-    private accessToken
+    private String accessToken = "EcjMWAAAAZEI+juopWWDMSdZctoGlqZHphNrRofn"
 
     @Value('${Origo.tokenType} ${Origo.accessToken}')
     private String authorization
@@ -48,6 +51,12 @@ class OrigoClient {
 
     @Value('${Origo.applicationId}')
     private String applicationId
+
+    @Value('${Origo.clientId}')
+    private String clientId
+
+    @Value('${Origo.clientSecret}')
+    private String clientSecret
 
     @Value('${Origo.filterSet}')
     String filterSet
@@ -88,12 +97,39 @@ class OrigoClient {
         ]
     }
 
-    HttpActionResult listEvents(String dateFrom, String dateTo, String filterId = "", String callbackStatus = "") {
+    void setAccessToken(String token) {
+        accessToken = token
+    }
+
+    OrigoResponse authenticate() {
+        String body = "client_id=${clientId}&client_secret=${clientSecret}&grant_type=client_credentials"
+
+        OrigoResponse origoResponse
+
+        try {
+            HttpResponse<String> response = Unirest.post(certIdpApi + "/authentication/customer/$organizationId/token")
+                    .header("Content-Type", "application/x-www-form-urlencoded")
+                    .body(body)
+                    .asString()
+
+            log.info("ORIGOCLIENT: Authenticate request ==> $response.status")
+
+            origoResponse = new OrigoResponse(response)
+
+        } catch (UnirestException e) { // ?
+            log.error(e.message)
+            origoResponse = new OrigoResponse(e)
+        }
+
+        return origoResponse
+    }
+
+    OrigoResponse listEvents(String dateFrom, String dateTo, String filterId = "", String callbackStatus = "") {
 
         HttpResponse<String> response
-        HttpActionResult httpActionResult = new HttpActionResult()
+        OrigoResponse origoResponse
 
-        String url = "$eventManagementApi/organization/$organizationId/events?dateFrom=$dateFrom&dateTo=$dateTo${!filterId ?: "&filterId=$filterId"}${!callbackStatus ?: "callbackStatus=$callbackStatus"}"
+        String url = "$eventManagementApi/organization/$organizationId/events?dateFrom=$dateFrom&dateTo=$dateTo${!filterId ?: "&filterId=$filterId"}${!callbackStatus ?: "&callbackStatus=$callbackStatus"}"
 
         try {
             response = Unirest.get(url)
@@ -101,19 +137,18 @@ class OrigoClient {
                     .asString()
 
             log.info("Response: $response")
-            OrigoResponse origoResponse = new OrigoResponse(response)
-            httpActionResult.result = origoResponse
+            origoResponse = new OrigoResponse(response)
 
-        } catch (UnirestException e) {
+        } catch (UnirestException e) { // ?
             log.error(e.message)
-            httpActionResult.result = e
+            origoResponse = new OrigoResponse(e)
         }
 
-        return httpActionResult
+        return origoResponse
 
     }
 
-    HttpActionResult createCallbackSubscription(String filterId, String callbackUrl) {
+    OrigoResponse createCallbackSubscription(String filterId, String callbackUrl) {
         // subscribes application to Origo organization-specific events
 
         String serializedBody = new ObjectMapper().writeValueAsString([
@@ -124,7 +159,7 @@ class OrigoClient {
         ])
 
         HttpResponse<String> response
-        HttpActionResult httpActionResult = new HttpActionResult()
+        OrigoResponse origoResponse
 
         try {
             response = Unirest.post(eventManagementApi + "/organization/$organizationId/callback")
@@ -133,24 +168,23 @@ class OrigoClient {
                     .asString()
 
             log.info("Response: $response")
-            OrigoResponse origoResponse = new OrigoResponse(response)
-            httpActionResult.result = origoResponse
+            origoResponse = new OrigoResponse(response)
 
-        } catch (HttpException e) { // ?
+        } catch (UnirestException e) { // ?
             log.error(e.message)
-            httpActionResult.result = e
+            origoResponse = new OrigoResponse(e)
         }
 
-        return httpActionResult
+        return origoResponse
     }
 
-    HttpActionResult uploadUserPhoto(String userId, Photo photo) {
+    OrigoResponse uploadUserPhoto(String userId, Photo photo) {
         // posts photo to User's Origo profile: https://doc.origo.hidglobal.com/api/mobile-identities/#/Photo%20ID/post-customer-organization_id-users-user_id-photo
 
         String serializedBody = new ObjectMapper().writeValueAsString(photo.bytes)
 
         HttpResponse<String> response
-        HttpActionResult httpActionResult = new HttpActionResult()
+        OrigoResponse origoResponse
 
         try {
             response = Unirest.post(mobileIdentitiesApi + "/customer/$organizationId/users/$userId/photo")
@@ -159,21 +193,20 @@ class OrigoClient {
                     .asString()
 
             log.info("Response: $response")
-            OrigoResponse origoResponse = new OrigoResponse(response)
-            httpActionResult.result = origoResponse
+            origoResponse = new OrigoResponse(response)
 
-        } catch (HttpException e) { // ?
+        } catch (UnirestException e) { // ?
             log.error(e.message)
-            httpActionResult.result = e
+            origoResponse = new OrigoResponse(e)
         }
 
-        return httpActionResult
+        return origoResponse
     }
 
-    HttpActionResult listCallbackSubscriptions() {
+    OrigoResponse listCallbackSubscriptions() {
 
         HttpResponse<String> response
-        HttpActionResult httpActionResult = new HttpActionResult()
+        OrigoResponse origoResponse
 
         try {
             response = Unirest.get(eventManagementApi + "/organization/$organizationId/callback")
@@ -181,44 +214,41 @@ class OrigoClient {
                     .asString()
 
             log.info("Response: $response")
-            OrigoResponse origoResponse = new OrigoResponse(response)
-            httpActionResult.result = origoResponse
+            origoResponse = new OrigoResponse(response)
 
-        } catch (UnirestException e) {
+        } catch (UnirestException e) { // ?
             log.error(e.message)
-            httpActionResult.result = e
+            origoResponse = new OrigoResponse(e)
         }
 
-        return httpActionResult
-
+        return origoResponse
     }
 
-    HttpActionResult listFilters() {
+    OrigoResponse listFilters() {
         HttpResponse<String> response
-        HttpActionResult httpActionResult = new HttpActionResult()
+        OrigoResponse origoResponse
 
         try {
             response = Unirest.get(eventManagementApi + "/organization/$organizationId/events/filter")
                     .headers(requestHeaders)
                     .asString()
 
-            OrigoResponse origoResponse = new OrigoResponse(response)
-            httpActionResult.result = origoResponse
+            origoResponse = new OrigoResponse(response)
 
-        } catch (UnirestException e) {
+        } catch (UnirestException e) { // ?
             log.error(e.message)
-            httpActionResult.result = e
+            origoResponse = new OrigoResponse(e)
         }
 
-        return httpActionResult
+        return origoResponse
 
     }
 
-    HttpActionResult getFilterById() {
+    OrigoResponse getFilterById() {
         // checks for current filters. Conditionally calls create filter
 
         HttpResponse<String> response
-        HttpActionResult httpActionResult = new HttpActionResult()
+        OrigoResponse origoResponse
 
         try {
             response = Unirest.get(eventManagementApi + "/organization/$organizationId/events/filter/$filterId")
@@ -226,18 +256,17 @@ class OrigoClient {
                     .asString()
 
             log.info("Response: $response")
-            OrigoResponse origoResponse = new OrigoResponse(response)
-            httpActionResult.result = origoResponse
+            origoResponse = new OrigoResponse(response)
 
-        } catch (UnirestException e) {
+        } catch (UnirestException e) { // ?
             log.error(e.message)
-            httpActionResult.result = e
+            origoResponse = new OrigoResponse(e)
         }
 
-        return httpActionResult
+        return origoResponse
     }
 
-    HttpActionResult createFilter(List<String> filters) {
+    OrigoResponse createFilter(List<String> filters) {
         // Filters what kinds of events this instance of the application will be subscribed to. See documentation for options: https://doc.origo.hidglobal.com/api/events-callbacks/#/Events/post_organization__organization_id__events_filter
 
         String serializedBody = new ObjectMapper().writeValueAsString([
@@ -245,7 +274,7 @@ class OrigoClient {
         ])
 
         HttpResponse<String> response
-        HttpActionResult httpActionResult = new HttpActionResult()
+        OrigoResponse origoResponse
 
         try {
             response = Unirest.post(eventManagementApi + "/organization/$organizationId/events/filter")
@@ -254,18 +283,17 @@ class OrigoClient {
                     .asString()
 
             log.info("Response: $response")
-            OrigoResponse origoResponse = new OrigoResponse(response)
-            httpActionResult.result = origoResponse
+            origoResponse = new OrigoResponse(response)
 
-        } catch (HttpException e) { // ?
+        } catch (UnirestException e) { // ?
             log.error(e.message)
-            httpActionResult.result = e
+            origoResponse = new OrigoResponse(e)
         }
 
-        return httpActionResult
+        return origoResponse
     }
 
-    HttpActionResult updatePhotoApprovalStatus(String userId, String photoId, boolean status) {
+    OrigoResponse updatePhotoApprovalStatus(String userId, String photoId, boolean status) {
         // approves photo in origo after upload. REQUIRED for photo credential to be used.
 
         String serializedBody = new ObjectMapper().writeValueAsString([
@@ -273,7 +301,7 @@ class OrigoClient {
         ])
 
         HttpResponse<String> response
-        HttpActionResult httpActionResult = new HttpActionResult()
+        OrigoResponse origoResponse
 
         try {
             response = Unirest.put(mobileIdentitiesApi + "/customer/$organizationId/users/$userId/photo/$photoId/status")
@@ -282,25 +310,30 @@ class OrigoClient {
                     .asString()
 
             log.info("Response: $response")
-            OrigoResponse origoResponse = new OrigoResponse(response)
-            httpActionResult.result = origoResponse
+            origoResponse = new OrigoResponse(response)
 
-        } catch (HttpException e) { // ?
+        } catch (UnirestException e) { // ?
             log.error(e.message)
-            httpActionResult.result = e
+            origoResponse = new OrigoResponse(e)
         }
 
-        return httpActionResult
+        return origoResponse
     }
 
-//    storePersonData() {
-//        // stores 'customFields' information in Origo employee record
-//    }
 }
 
-class OrigoResponse extends ThirdPartyResponse {
+class OrigoResponse {
+    UnirestException exception
+    boolean success
+    Object json
 
     OrigoResponse(HttpResponse<String> response) {
-        super(response)
+        json = new JsonSlurper().parseText(response.body)
+        success = response.status == 200
+    }
+
+    OrigoResponse(UnirestException ex) {
+        exception = ex
+        success = false
     }
 }

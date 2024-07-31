@@ -9,19 +9,14 @@ import org.springframework.beans.factory.annotation.Value
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty
 import org.springframework.stereotype.Service
 
-import java.time.format.DateTimeFormatter
-
 @Service
 @ConditionalOnProperty(name = 'Origo.useOrigo', havingValue = 'true')
 class OrigoService {
     // Handles business logic / processing for incoming events and requests from API
-    private static final Logger log = LoggerFactory.getLogger(OrigoService.class);
+    private static final Logger log = LoggerFactory.getLogger(OrigoService.class)
 
-    @Value('${Origo.filterSet')
+    @Value('${Origo.filterSet}')
     String filterSet
-
-    @Value('false')
-    private boolean isAuthenticated
 
     @Autowired
     OrigoClient origoClient
@@ -31,36 +26,21 @@ class OrigoService {
 
     @PostConstruct
     init() {
+//        getNewAccessToken()
 
-        def events = getEvents("", "")
 
-        eventStorageServiceLocal.configure(events)
-
-//        def processedEvents = eventStorageServiceLocal.processEvents(events)
-//
-//        eventStorageServiceLocal.store(processedEvents)
-//
-//        eventStorageServiceLocal.removeOldLogs()
     }
 
-//    def handleFilters() {
-//         IF filters match filterSet THEN ping for Events using filterId  ELSE reconfigure filters to match filterSet property.
-//        log.info("ORIGO: Checking for existing event filters ... ...")
-//
-//        def (result) = origoClient.listFilters()
-//
-//         if (/*result filters don't equal filterSet*/) {
-//         delete old filter
-//         create new filter
-//         }
-//
-//         eventControlFlow()
-//    }
+    void getNewAccessToken() {
+        OrigoResponse response = origoClient.authenticate()
 
-    //def eventControlFlow() {
-    // access logs for most recent event id and timestamp --> eventStorageServiceLocal
-    // def events = getEvents(...)
-    //}
+        if (response.success) {
+            String token = response.json.access_token
+            origoClient.setAccessToken(token)
+        } else {
+            log.error("ORIGO: Cannot obtain access token")
+        }
+    }
 
     static List<Object> getEvents(String dateFrom, String dateTo = "", String filterId = "", String callbackStatus = "") {
 //        DateTimeFormatter isoFormatter = DateTimeFormatter.ISO_DATE

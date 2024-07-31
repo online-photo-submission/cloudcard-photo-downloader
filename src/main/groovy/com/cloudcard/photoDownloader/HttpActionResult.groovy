@@ -6,16 +6,16 @@ import org.springframework.beans.factory.annotation.Value
 class HttpActionResult {
     // Wrapper for either http responses or exceptions, allowing for http calls to be placed in try/catch blocks
 
-    @Value("null")
-    def result
+    ThirdPartyResponse success = null
+    UnirestException error = null
 
     HttpActionResult() {}
 
     HttpActionResult(ThirdPartyResponse response) {
-        result = response
+        success = response
     }
 
     HttpActionResult(UnirestException exception) {
-        result = exception
+        error = exception
     }
 }
