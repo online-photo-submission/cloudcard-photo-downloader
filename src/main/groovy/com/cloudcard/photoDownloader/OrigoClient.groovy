@@ -67,7 +67,6 @@ class OrigoClient {
     String lastDateTo = ""
 
     String lastDateFrom = "1970-01-01T00:00:00Z"
-    // String callbackUrl --> May not need property
 
     private Map requestHeaders
 
@@ -110,39 +109,38 @@ class OrigoClient {
         log.info("                     Origo event filters : $filterSet")
 
         if (accessToken) {
-            setRequestHeaders(accessToken)
+            setAccessToken(accessToken)
         } else {
             log.warn("ORIGOCLIENT: No access token  present during initialization.")
         }
     }
 
-
     OrigoResponse authenticate() {
+        String url = "$certIdpApi/authentication/customer/$organizationId/token"
+        Map<String, String> headers = ["Content-Type" : "application/x-www-form-urlencoded"]
         String body = "client_id=${clientId}&client_secret=${clientSecret}&grant_type=client_credentials"
 
-        OrigoResponse origoResponse
-
-        try {
-            HttpResponse<String> response = Unirest.post(certIdpApi + "/authentication/customer/$organizationId/token")
-                    .header("Content-Type", "application/x-www-form-urlencoded")
-                    .body(body)
-                    .asString()
-
-
-            origoResponse = new OrigoResponse(response)
-            if (!origoResponse.success) {
-                log.error("ORIGOCLIENT authenticate() Error: ${response.body}")
-            } else {
-                log.info("ORIGOCLIENT authenticate() Response: $response.status")
-            }
-
-        } catch (UnirestException e) { // ?
-            log.error(e.message)
-            origoResponse = new OrigoResponse(e)
-        }
+        OrigoResponse origoResponse = makeRequest("authenticate", "post", url, headers, body)
 
         return origoResponse
     }
+
+    OrigoResponse createFilter(List<String> filters) {
+        // Filters what kinds of events this instance will look for in other calls. See documentation for options: https://doc.origo.hidglobal.com/api/events-callbacks/#/Events/post_organization__organization_id__events_filter
+
+        String serializedBody = new ObjectMapper().writeValueAsString([
+                filterSet: filters
+        ])
+
+        String url = "$eventManagementApi/organization/$organizationId/events/filter"
+
+        OrigoResponse origoResponse = makeRequest("createFiler", "post", url, requestHeaders, serializedBody)
+
+        return origoResponse
+
+    }
+
+
 
     OrigoResponse listEvents(String dateFrom = "", String dateTo = "", String filterId = "", String callbackStatus = "") {
 
@@ -270,7 +268,6 @@ class OrigoClient {
         }
 
         return origoResponse
-
     }
 
     OrigoResponse getFilterById() {
@@ -282,33 +279,6 @@ class OrigoClient {
         try {
             response = Unirest.get(eventManagementApi + "/organization/$organizationId/events/filter/$filterId")
                     .headers(requestHeaders)
-                    .asString()
-
-            log.info("Response: $response")
-            origoResponse = new OrigoResponse(response)
-
-        } catch (UnirestException e) { // ?
-            log.error(e.message)
-            origoResponse = new OrigoResponse(e)
-        }
-
-        return origoResponse
-    }
-
-    OrigoResponse createFilter(List<String> filters) {
-        // Filters what kinds of events this instance of the application will be subscribed to. See documentation for options: https://doc.origo.hidglobal.com/api/events-callbacks/#/Events/post_organization__organization_id__events_filter
-
-        String serializedBody = new ObjectMapper().writeValueAsString([
-                filterSet: filters
-        ])
-
-        HttpResponse<String> response
-        OrigoResponse origoResponse
-
-        try {
-            response = Unirest.post(eventManagementApi + "/organization/$organizationId/events/filter")
-                    .headers(requestHeaders)
-                    .body(serializedBody)
                     .asString()
 
             log.info("Response: $response")
@@ -349,6 +319,79 @@ class OrigoClient {
         return origoResponse
     }
 
+    private OrigoResponse makeRequest(String methodName, String actionType, String url, Map headers = requestHeaders, String serializedBody) {
+
+        Closure request = configureRequest(actionType, url, headers, serializedBody, methodName)
+
+        OrigoResponse origoResponse
+        try {
+            HttpResponse<String> response = request()
+
+            origoResponse = new OrigoResponse(response)
+
+            if (!origoResponse.success) {
+                log.error("ORIGOCLIENT ${methodName}() Error: status=${response.status}, ${response.body}")
+            } else {
+                log.info("ORIGOCLIENT ${methodName}() Response: $response.status")
+            }
+
+        } catch (UnirestException e) { // ?
+            log.error(e.message)
+            origoResponse = new OrigoResponse(e)
+        }
+        return origoResponse
+    }
+
+    private static Closure configureRequest(String actionType, url, headers, serializedBody, String methodName) {
+        Closure request
+
+        switch (actionType.toLowerCase()) {
+            case "post":
+                request = {
+                    HttpResponse<String> response = Unirest.post(url)
+                            .headers(headers)
+                            .body(serializedBody)
+                            .asString()
+                }
+                break
+            case "get":
+                request = {
+                    HttpResponse<String> response = Unirest.get(url)
+                            .headers(headers)
+                            .asString()
+                }
+                break
+            case "put":
+                request = {
+                    HttpResponse<String> response = Unirest.put(url)
+                            .headers(headers)
+                            .body(serializedBody)
+                            .asString()
+                }
+                break
+            case "patch":
+                request = {
+                    HttpResponse<String> response = Unirest.patch(url)
+                            .headers(headers)
+                            .body(serializedBody)
+                            .asString()
+                }
+                break
+            case "delete":
+                request = {
+                    HttpResponse<String> response = Unirest.delete(url)
+                            .headers(headers)
+                            .asString()
+                }
+                break
+            default:
+                log.error("Bad request: ${methodName} was passed an invalid HTTP action.")
+
+                request = null
+        }
+
+        return request
+    }
 }
 
 class OrigoResponse {

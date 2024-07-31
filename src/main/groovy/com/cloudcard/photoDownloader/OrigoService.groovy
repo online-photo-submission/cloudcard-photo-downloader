@@ -22,6 +22,9 @@ class OrigoService {
     OrigoClient origoClient
 
     @Autowired
+    CloudCardClient cloudCardClient
+
+    @Autowired
     OrigoEventStorageServiceLocal eventStorageServiceLocal
 
     @PostConstruct
@@ -31,36 +34,48 @@ class OrigoService {
         }
 
         if (origoClient.isAuthenticated) {
-            def events = getEvents()
+            Object events = getEvents()
         } else {
             log.info("ORIGO NOT AUTHENTICATED")
         }
 
     }
 
-    void getNewAccessToken() {
+    private boolean getNewAccessToken() {
         OrigoResponse response = origoClient.authenticate()
+        boolean result
 
         if (response.success) {
             String token = response.body.access_token
             origoClient.setAccessToken(token)
+            result = true
         } else {
             log.error("ORIGO: Cannot obtain access token")
+            result = false
         }
+
+        return result
     }
 
-//    @Scheduled(fixedDelayString = '${downloader.delay.milliseconds}', initialDelayString = "5000")
-    void getEvents(String dateFrom = "", String dateTo = "", String filterId = "", String callbackStatus = "") {
+    private void getEvents(String dateFrom = "", String dateTo = "", String filterId = "", String callbackStatus = "") {
         OrigoResponse response = origoClient.listEvents(dateFrom, dateTo, filterId, callbackStatus)
 
         if (response.success) {
             ArrayList<Object> events = response.body as ArrayList<Object>
 
-            processEvents(events)
+            processNewUsers(events)
+        } else if (response.body.responseHeader.statusCode == 401) {
+            boolean tokenSaved = getNewAccessToken()
+            if (tokenSaved) {
+                log.info("ORIGOSERVICE: Retrying getEvents() with valid access token.")
+                getEvents(dateFrom, dateTo, filterId, callbackStatus)
+            } else {
+                log.error("ORIGOSERVICE: Cannot authenticate.")
+            }
         }
     }
 
-    static void processEvents(ArrayList<Object> events) {
+    private static void processNewUsers(ArrayList<Object> events) {
         log.info("ORIGOSERVICE: Processing received events.")
         events.each {
             if (it.data.status == "USER_CREATED") {
