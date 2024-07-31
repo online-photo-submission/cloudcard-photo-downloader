@@ -6,9 +6,9 @@ import com.mashape.unirest.http.exceptions.UnirestException
 import com.mashape.unirest.http.Unirest
 import groovy.json.JsonSlurper
 import jakarta.annotation.PostConstruct
-import org.apache.http.HttpException
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
+import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty
 import org.springframework.stereotype.Component
@@ -33,14 +33,13 @@ class OrigoClient {
     private String mobileIdentitiesApi
 
     @Value('${Origo.certIdpApi}')
-    private  String certIdpApi
+    private String certIdpApi
 
     @Value('${Origo.organizationId}')
     private String organizationId
 
-    private String accessToken = "EcjMWAAAAZEI+juopWWDMSdZctoGlqZHphNrRofn"
+    private String accessToken = ""
 
-    @Value('${Origo.tokenType} ${Origo.accessToken}')
     private String authorization
 
     @Value('${Origo.contentType}')
@@ -61,18 +60,41 @@ class OrigoClient {
     @Value('${Origo.filterSet}')
     String filterSet
 
+    boolean isAuthenticated = accessToken ? true : false
+
+    @Autowired
+    Utils utils
+
+    String lastDateTo = ""
+
+    String lastDateFrom = "1970-01-01T00:00:00Z"
     // String callbackUrl --> May not need property
 
-    Map requestHeaders
+    private Map requestHeaders
+
+    void setAccessToken(String token) {
+        accessToken = token
+        println token
+        isAuthenticated = true
+        setRequestHeaders(token)
+    }
+
+    void setRequestHeaders(String token) {
+        requestHeaders = [
+                'Authorization'      : 'Bearer ' + token,
+                'Content-Type'       : contentType,
+                'Application-Version': applicationVersion,
+                'Application-ID'     : applicationId
+        ]
+    }
 
     @PostConstruct
     init() {
+
         throwIfBlank(eventManagementApi, "The Origo Event Management API URL must be specified.")
         throwIfBlank(callbackRegistrationApi, "The Origo Callback Registration API URL must be specified.")
         throwIfBlank(mobileIdentitiesApi, "The Origo Mobile Identities API URL must be specified.")
         throwIfBlank(organizationId, "The Origo organization ID must be specified.")
-        throwIfBlank(authorization, "The Origo authorization string must be specified.")
-        throwIfBlank(accessToken, "An Origo access token must be provided.")
         throwIfBlank(contentType, "The Origo content-type header must be specified.")
         throwIfBlank(applicationVersion, "The Origo application version must be specified.")
         throwIfBlank(applicationId, "Your organization's Origo Application ID must be specified.")
@@ -83,23 +105,18 @@ class OrigoClient {
         log.info("     Origo Callback Registration API URL : $callbackRegistrationApi")
         log.info("         Origo Mobile Identities API URL : $mobileIdentitiesApi")
         log.info("                   Origo organization ID : $organizationId")
-        log.info("              Origo authorization string : ${!authorization ? 'Missing' : 'Provided'}")
         log.info("               Origo content type header : $contentType")
         log.info("               Origo application version : $applicationVersion")
         log.info("                    Origo application ID : $applicationId")
         log.info("                     Origo event filters : $filterSet")
 
-        requestHeaders = [
-                'Authorization'      : authorization,
-                'Content-Type'       : contentType,
-                'Application-Version': applicationVersion,
-                'Application-ID'     : applicationId
-        ]
+        if (accessToken) {
+            setRequestHeaders(accessToken)
+        } else {
+            log.warn("ORIGOCLIENT: No access token  present during initialization.")
+        }
     }
 
-    void setAccessToken(String token) {
-        accessToken = token
-    }
 
     OrigoResponse authenticate() {
         String body = "client_id=${clientId}&client_secret=${clientSecret}&grant_type=client_credentials"
@@ -112,9 +129,13 @@ class OrigoClient {
                     .body(body)
                     .asString()
 
-            log.info("ORIGOCLIENT: Authenticate request ==> $response.status")
 
             origoResponse = new OrigoResponse(response)
+            if (!origoResponse.success) {
+                log.error("ORIGOCLIENT authenticate() Error: ${response.body}")
+            } else {
+                log.info("ORIGOCLIENT authenticate() Response: $response.status")
+            }
 
         } catch (UnirestException e) { // ?
             log.error(e.message)
@@ -124,20 +145,29 @@ class OrigoClient {
         return origoResponse
     }
 
-    OrigoResponse listEvents(String dateFrom, String dateTo, String filterId = "", String callbackStatus = "") {
+    OrigoResponse listEvents(String dateFrom = "", String dateTo = "", String filterId = "", String callbackStatus = "") {
 
-        HttpResponse<String> response
+        if (!dateFrom || dateFrom == lastDateFrom) dateFrom = lastDateFrom
+        if (!dateTo) dateTo = utils.nowAsIsoFormat()
+
         OrigoResponse origoResponse
 
-        String url = "$eventManagementApi/organization/$organizationId/events?dateFrom=$dateFrom&dateTo=$dateTo${!filterId ?: "&filterId=$filterId"}${!callbackStatus ?: "&callbackStatus=$callbackStatus"}"
+        String url = "$eventManagementApi/organization/$organizationId/events?dateFrom=$dateFrom&dateTo=$dateTo${!filterId ? "" : "&filterId=$filterId"}${!callbackStatus ? "" : "&callbackStatus=$callbackStatus"}".toString()
+
+        url = url.toString()
 
         try {
-            response = Unirest.get(url)
+            HttpResponse<String> response = Unirest.get(url)
                     .headers(requestHeaders)
                     .asString()
 
-            log.info("Response: $response")
             origoResponse = new OrigoResponse(response)
+
+            if (!origoResponse.success) {
+                log.error("ORIGOCLIENT listEvents() Error: ${response.body}")
+            } else {
+                log.info("ORIGOCLIENT listEvents() Response: $response.status")
+            }
 
         } catch (UnirestException e) { // ?
             log.error(e.message)
@@ -325,11 +355,11 @@ class OrigoClient {
 class OrigoResponse {
     UnirestException exception
     boolean success
-    Object json
+    Object body
 
     OrigoResponse(HttpResponse<String> response) {
-        json = new JsonSlurper().parseText(response.body)
-        success = response.status == 200
+        body = new JsonSlurper().parseText(response.body)
+        success = response.status >= 200 && response.status < 300
     }
 
     OrigoResponse(UnirestException ex) {

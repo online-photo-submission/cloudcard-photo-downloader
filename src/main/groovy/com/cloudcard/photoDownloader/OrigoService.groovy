@@ -1,12 +1,12 @@
 package com.cloudcard.photoDownloader
 
-import groovy.json.JsonSlurper
 import jakarta.annotation.PostConstruct
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty
+import org.springframework.scheduling.annotation.Scheduled
 import org.springframework.stereotype.Service
 
 @Service
@@ -26,8 +26,15 @@ class OrigoService {
 
     @PostConstruct
     init() {
-//        getNewAccessToken()
+        if (!origoClient.isAuthenticated) {
+            getNewAccessToken()
+        }
 
+        if (origoClient.isAuthenticated) {
+            def events = getEvents()
+        } else {
+            log.info("ORIGO NOT AUTHENTICATED")
+        }
 
     }
 
@@ -35,110 +42,31 @@ class OrigoService {
         OrigoResponse response = origoClient.authenticate()
 
         if (response.success) {
-            String token = response.json.access_token
+            String token = response.body.access_token
             origoClient.setAccessToken(token)
         } else {
             log.error("ORIGO: Cannot obtain access token")
         }
     }
 
-    static List<Object> getEvents(String dateFrom, String dateTo = "", String filterId = "", String callbackStatus = "") {
-//        DateTimeFormatter isoFormatter = DateTimeFormatter.ISO_DATE
-//
-//        String dateFromISO = isoFormatter(dateFrom)
-//        String dateToISO
-//        if (!dateTo) {
-//            dateToISO = eventStorageServiceLocal.nowAsIsoFormat()
-//        } else {
-//            dateToISO = isoFormatter(dateTo)
-//        }
-//
-//        def (result) = origoClient.listEvents(dateFromISO, dateToISO, filterId, callbackStatus)
+//    @Scheduled(fixedDelayString = '${downloader.delay.milliseconds}', initialDelayString = "5000")
+    void getEvents(String dateFrom = "", String dateTo = "", String filterId = "", String callbackStatus = "") {
+        OrigoResponse response = origoClient.listEvents(dateFrom, dateTo, filterId, callbackStatus)
 
-        String resultJson = """
-[
-                {
-                    "type": "com.origo.mi.user",
-                    "specversion": "1.0",
-                    "source": "https://dev.portal.origo.hidcloud.com/credential-management/customer/1003233/user/3456",
-                    "id": "a1b2c3d4-ef56-7890-ab12-cd34ef567890",
-                    "time": "2023-06-15T14:23:45.123Z",
-                    "datacontenttype": "application/vnd.hidglobal.origo.events.user-2.0+json",
-                    "data": {
-                        "organization_id": "1003233",
-                        "userId": "3456",
-                        "firstName": "John",
-                        "lastName": "Doe",
-                        "status": "USER_CREATED",
-                        "email": "john.doe@example.com"
-                    }
-                },{
-                    "type": "com.origo.mi.user",
-                    "specversion": "1.0",
-                    "source": "https://dev.portal.origo.hidcloud.com/credential-management/customer/1003233/user/3456",
-                    "id": "a1b2c3d4-ef56-7890-ab12-cd34ef567890",
-                    "time": "2023-06-15T14:23:45.123Z",
-                    "datacontenttype": "application/vnd.hidglobal.origo.events.user-2.0+json",
-                    "data": {
-                        "organization_id": "1003233",
-                        "userId": "3456",
-                        "firstName": "John",
-                        "lastName": "Doe",
-                        "status": "USER_CREATED",
-                        "email": "john.doe@example.com"
-                    }
-                },{
-                    "type": "com.origo.mi.user",
-                    "specversion": "1.0",
-                    "source": "https://dev.portal.origo.hidcloud.com/credential-management/customer/1003233/user/3456",
-                    "id": "a1b2c3d4-ef56-7890-ab12-cd34ef567890",
-                    "time": "2023-06-15T14:23:45.123Z",
-                    "datacontenttype": "application/vnd.hidglobal.origo.events.user-2.0+json",
-                    "data": {
-                        "organization_id": "1003233",
-                        "userId": "3456",
-                        "firstName": "John",
-                        "lastName": "Doe",
-                        "status": "USER_CREATED",
-                        "email": "john.doe@example.com"
-                    }
-                },{
-                    "type": "com.origo.mi.user",
-                    "specversion": "1.0",
-                    "source": "https://dev.portal.origo.hidcloud.com/credential-management/customer/1003233/user/3456",
-                    "id": "a1b2c3d4-ef56-7890-ab12-cd34ef567890",
-                    "time": "2023-06-15T14:23:45.123Z",
-                    "datacontenttype": "application/vnd.hidglobal.origo.events.user-2.0+json",
-                    "data": {
-                        "organization_id": "1003233",
-                        "userId": "3456",
-                        "firstName": "John",
-                        "lastName": "Doe",
-                        "status": "USER_CREATED",
-                        "email": "john.doe@example.com"
-                    }
-                },
-                {
-                    "type": "com.origo.mi.user",
-                    "specversion": "1.0",
-                    "source": "https://dev.portal.origo.hidcloud.com/credential-management/customer/1003233/user/7890",
-                    "id": "b2c3d4e5-f678-9012-ab34-cd56ef789012",
-                    "time": "2024-02-28T08:12:34.567Z",
-                    "datacontenttype": "application/vnd.hidglobal.origo.events.user-2.0+json",
-                    "data": {
-                        "organization_id": "1003233",
-                        "userId": "7890",
-                        "firstName": "Jane",
-                        "lastName": "Smith",
-                        "status": "USER_CREATED",
-                        "email": "jane.smith@example.com"
-                    }
-                }
-        ]
-        """
-        JsonSlurper jsonSlurper = new JsonSlurper()
-        def result = jsonSlurper.parseText(resultJson) as List<Object>
-        return result
+        if (response.success) {
+            ArrayList<Object> events = response.body as ArrayList<Object>
+
+            processEvents(events)
+        }
     }
 
+    static void processEvents(ArrayList<Object> events) {
+        log.info("ORIGOSERVICE: Processing received events.")
+        events.each {
+            if (it.data.status == "USER_CREATED") {
+                log.info("ORIGOSERVICE: Provisioning Origo user, $it.data.userId, in CloudCard API")
+                log.info "************************************************************"
+            }
+        }
+    }
 }

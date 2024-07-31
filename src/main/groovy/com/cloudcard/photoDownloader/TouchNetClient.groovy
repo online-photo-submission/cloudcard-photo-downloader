@@ -4,6 +4,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 
 import com.mashape.unirest.http.HttpResponse;
 import com.mashape.unirest.http.Unirest
+import groovy.json.JsonSlurper
 
 import javax.annotation.PostConstruct
 
@@ -128,5 +129,12 @@ class TouchNetClient {
     }
 }
 
-class TouchNetResponse extends ThirdPartyResponse {
+class TouchNetResponse {
+    boolean success
+    Object json
+
+    TouchNetResponse(HttpResponse<String> response) {
+        json = new JsonSlurper().parseText(response.body)
+        success = json.Status == "OK"
+    }
 }
