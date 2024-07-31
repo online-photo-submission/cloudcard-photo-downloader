@@ -38,9 +38,8 @@ class OrigoClient {
     @Value('${Origo.organizationId}')
     private String organizationId
 
-    private String accessToken = ""
-
-    private String authorization
+    @Value('${Origo.accessToken}')
+    private String accessToken
 
     @Value('${Origo.contentType}')
     private String contentType
@@ -185,7 +184,7 @@ class OrigoClient {
                 url       : "$callbackUrl",
                 filterId  : "$filterId",
                 httpHeader: "Authorization",
-                secret    : "$authorization"
+                secret    : "$authorization" // Will ERROR AS IS
         ])
 
         HttpResponse<String> response
