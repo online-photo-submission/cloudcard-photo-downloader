@@ -6,7 +6,6 @@ import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty
-import org.springframework.scheduling.annotation.Scheduled
 import org.springframework.stereotype.Service
 
 @Service
@@ -29,16 +28,10 @@ class OrigoService {
 
     @PostConstruct
     init() {
-        if (!origoClient.isAuthenticated) {
-            getNewAccessToken()
-        }
-
-        if (origoClient.isAuthenticated) {
-            Object events = getEvents()
-        } else {
-            log.info("ORIGO NOT AUTHENTICATED")
-        }
-
+            List<String> filterSet = ["USER_CREATED"]
+            OrigoResponse response = origoClient.createFilter(filterSet)
+            String filterId = response.body.filterId
+            getEvents(null, null, filterId)
     }
 
     private boolean getNewAccessToken() {
@@ -62,16 +55,20 @@ class OrigoService {
 
         if (response.success) {
             ArrayList<Object> events = response.body as ArrayList<Object>
-
             processNewUsers(events)
         } else if (response.body.responseHeader.statusCode == 401) {
-            boolean tokenSaved = getNewAccessToken()
-            if (tokenSaved) {
-                log.info("ORIGOSERVICE: Retrying getEvents() with valid access token.")
-                getEvents(dateFrom, dateTo, filterId, callbackStatus)
-            } else {
-                log.error("ORIGOSERVICE: Cannot authenticate.")
-            }
+            Closure command = { getEvents(dateFrom, dateTo, filterId, callbackStatus) }
+            authenticateAndRetry(command, "getEvents")
+        }
+    }
+
+    private void authenticateAndRetry(Closure command, String commandName) {
+        boolean tokenSaved = getNewAccessToken()
+        if (tokenSaved) {
+            log.info("ORIGOSERVICE: Retrying ${commandName}() with valid access token.")
+            command()
+        } else {
+            log.error("ORIGOSERVICE: Cannot authenticate.")
         }
     }
 
