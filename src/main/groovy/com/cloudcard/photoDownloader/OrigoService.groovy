@@ -29,9 +29,9 @@ class OrigoService {
     @PostConstruct
     init() {
             List<String> filterSet = ["USER_CREATED"]
-            OrigoResponse response = origoClient.createFilter(filterSet)
-            String filterId = response.body.filterId
-            getEvents(null, null, filterId)
+
+            String filterId = createNewFilter(filterSet)
+            List<Object> events = getEvents(null, null, filterId)
     }
 
     private boolean getNewAccessToken() {
@@ -50,16 +50,31 @@ class OrigoService {
         return result
     }
 
-    private void getEvents(String dateFrom = "", String dateTo = "", String filterId = "", String callbackStatus = "") {
-        OrigoResponse response = origoClient.listEvents(dateFrom, dateTo, filterId, callbackStatus)
+    private String createNewFilter(List<String> filterSet) {
+        OrigoResponse response = origoClient.createFilter(filterSet)
+        String filterId = ""
 
         if (response.success) {
-            ArrayList<Object> events = response.body as ArrayList<Object>
-            processNewUsers(events)
+            filterId = response.body.filterId
+        } else if (response.body.responseHeader.statusCode == 401) {
+            Closure command = { createNewFilter(filterSet) }
+            authenticateAndRetry(command, "getEvents")
+        }
+
+        return filterId
+    }
+
+    private List<Object> getEvents(String dateFrom = "", String dateTo = "", String filterId = "", String callbackStatus = "") {
+        OrigoResponse response = origoClient.listEvents(dateFrom, dateTo, filterId, callbackStatus)
+        ArrayList<Object> events = []
+        if (response.success) {
+            events = response.body as ArrayList<Object>
         } else if (response.body.responseHeader.statusCode == 401) {
             Closure command = { getEvents(dateFrom, dateTo, filterId, callbackStatus) }
             authenticateAndRetry(command, "getEvents")
         }
+
+        return events
     }
 
     private void authenticateAndRetry(Closure command, String commandName) {

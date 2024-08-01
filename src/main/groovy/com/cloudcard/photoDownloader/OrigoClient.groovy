@@ -54,7 +54,9 @@ class OrigoClient extends HttpClient {
     private String clientSecret
 
     @Value('${Origo.filterSet}')
-    String filterSet
+    String filterSetString
+
+    List<String> filterSet = []
 
     boolean isAuthenticated = accessToken ? true : false
 
@@ -92,7 +94,7 @@ class OrigoClient extends HttpClient {
         throwIfBlank(contentType, "The Origo content-type header must be specified.")
         throwIfBlank(applicationVersion, "The Origo application version must be specified.")
         throwIfBlank(applicationId, "Your organization's Origo Application ID must be specified.")
-        throwIfBlank(filterSet, "A list of Origo event filters must be specified.")
+        throwIfBlank(filterSetString, "A list of Origo event filters must be specified.")
 
         log.info('=================== Initializing Origo Client ===================')
         log.info("          Origo Event Management API URL : $eventManagementApi")
@@ -109,6 +111,8 @@ class OrigoClient extends HttpClient {
         } else {
             log.warn("ORIGOCLIENT: No access token  present during initialization.")
         }
+
+        filterSet = filterSetString.split(", ")
     }
 
     OrigoResponse authenticate() {
@@ -127,12 +131,19 @@ class OrigoClient extends HttpClient {
                 filterSet: filters
         ])
 
+        Map headers = [
+                'Authorization' : 'Bearer ' + accessToken,
+                'Content-Type' : 'application/json',
+                'Application-Id' : applicationId
+        ]
+
+        log.info(serializedBody)
+
         String url = "$eventManagementApi/organization/$organizationId/events/filter"
 
-        ResponseWrapper response = makeRequest("createFilter", "post", url, requestHeaders, serializedBody)
+        ResponseWrapper response = makeRequest("createFilter", "post", url, headers, serializedBody)
 
         return new OrigoResponse(response)
-
     }
 
     OrigoResponse listEvents(String dateFrom = "", String dateTo = "", String filterId = "", String callbackStatus = "") {
