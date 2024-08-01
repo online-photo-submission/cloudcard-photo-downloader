@@ -21,26 +21,19 @@ class OrigoService {
     OrigoClient origoClient
 
     @Autowired
-    CloudCardClient cloudCardClient
-
-    @Autowired
     OrigoEventStorageServiceLocal eventStorageServiceLocal
 
     @PostConstruct
     init() {
-            List<String> filterSet = ["USER_CREATED"]
-
-            String filterId = createNewFilter(filterSet)
-            List<Object> events = getEvents(null, null, filterId)
     }
 
     private boolean getNewAccessToken() {
-        OrigoResponse response = origoClient.authenticate()
+        ResponseWrapper response = origoClient.authenticate()
         boolean result
 
         if (response.success) {
             String token = response.body.access_token
-            origoClient.setAccessToken(token)
+            origoClient.setToken(token)
             result = true
         } else {
             log.error("ORIGO: Cannot obtain access token")
@@ -50,22 +43,37 @@ class OrigoService {
         return result
     }
 
+    private List<Object> getCurrentFilters() {
+        List<Object> filters = []
+        ResponseWrapper response = origoClient.listFilters()
+        log.info("ORIGOSERVICE Current Event Filters: " + response.body)
+
+        if (response.success) {
+            filters = response.body as List<Object>
+        } else if (response.body.responseHeader.statusCode == 401) {
+            Closure command = { getCurrentFilters() }
+            authenticateAndRetry(command, "getCurrentFilters")
+        }
+
+        return filters
+    }
+
     private String createNewFilter(List<String> filterSet) {
-        OrigoResponse response = origoClient.createFilter(filterSet)
+        ResponseWrapper response = origoClient.createFilter(filterSet)
         String filterId = ""
 
         if (response.success) {
             filterId = response.body.filterId
         } else if (response.body.responseHeader.statusCode == 401) {
             Closure command = { createNewFilter(filterSet) }
-            authenticateAndRetry(command, "getEvents")
+            authenticateAndRetry(command, "createNewFilter")
         }
 
         return filterId
     }
 
     private List<Object> getEvents(String dateFrom = "", String dateTo = "", String filterId = "", String callbackStatus = "") {
-        OrigoResponse response = origoClient.listEvents(dateFrom, dateTo, filterId, callbackStatus)
+        ResponseWrapper response = origoClient.listEvents(dateFrom, dateTo, filterId, callbackStatus)
         ArrayList<Object> events = []
         if (response.success) {
             events = response.body as ArrayList<Object>

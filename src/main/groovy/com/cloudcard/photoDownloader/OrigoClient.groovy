@@ -56,7 +56,11 @@ class OrigoClient extends HttpClient {
     @Value('${Origo.filterSet}')
     String filterSetString
 
-    List<String> filterSet = []
+    private List<String> filterSet = []
+
+    List<String> getFilterSet() {
+        return filterSet
+    }
 
     boolean isAuthenticated = accessToken ? true : false
 
@@ -69,7 +73,7 @@ class OrigoClient extends HttpClient {
 
     private Map requestHeaders
 
-    void setAccessToken(String token) {
+    void setToken(String token) {
         accessToken = token
         log.info("Saving token: $token")
         isAuthenticated = true
@@ -104,27 +108,29 @@ class OrigoClient extends HttpClient {
         log.info("               Origo content type header : $contentType")
         log.info("               Origo application version : $applicationVersion")
         log.info("                    Origo application ID : $applicationId")
-        log.info("                     Origo event filters : $filterSet")
+        log.info("                     Origo event filters : $filterSetString")
 
         if (accessToken) {
-            setAccessToken(accessToken)
+            setToken(accessToken)
         } else {
             log.warn("ORIGOCLIENT: No access token  present during initialization.")
         }
 
         filterSet = filterSetString.split(", ")
+
+        this.implementingClass = "OrigoClient"
     }
 
-    OrigoResponse authenticate() {
+    ResponseWrapper authenticate() {
         String url = "$certIdpApi/authentication/customer/$organizationId/token"
         Map<String, String> headers = ["Content-Type": "application/x-www-form-urlencoded"]
         String body = "client_id=${clientId}&client_secret=${clientSecret}&grant_type=client_credentials"
 
         ResponseWrapper response = makeRequest("authenticate", "post", url, headers, body)
-        return new OrigoResponse(response)
+        return response
     }
 
-    OrigoResponse createFilter(List<String> filters) {
+    ResponseWrapper createFilter(List<String> filters) {
         // Filters what kinds of events this instance will look for in other calls. See documentation for options: https://doc.origo.hidglobal.com/api/events-callbacks/#/Events/post_organization__organization_id__events_filter
 
         String serializedBody = new ObjectMapper().writeValueAsString([
@@ -143,10 +149,10 @@ class OrigoClient extends HttpClient {
 
         ResponseWrapper response = makeRequest("createFilter", "post", url, headers, serializedBody)
 
-        return new OrigoResponse(response)
+        return response
     }
 
-    OrigoResponse listEvents(String dateFrom = "", String dateTo = "", String filterId = "", String callbackStatus = "") {
+    ResponseWrapper listEvents(String dateFrom = "", String dateTo = "", String filterId = "", String callbackStatus = "") {
 
         if (!dateFrom || dateFrom == lastDateFrom) dateFrom = lastDateFrom
         if (!dateTo) dateTo = utils.nowAsIsoFormat()
@@ -155,46 +161,25 @@ class OrigoClient extends HttpClient {
 
         ResponseWrapper response  = makeRequest("listEvents", "get", url, requestHeaders)
 
-        return new OrigoResponse(response)
+        return response
     }
 
-//    OrigoResponse createCallbackSubscription(String filterId, String callbackUrl) {
-//        // subscribes application to Origo organization-specific events
-//
-//        String serializedBody = new ObjectMapper().writeValueAsString([
-//                url       : "$callbackUrl",
-//                filterId  : "$filterId",
-//                httpHeader: "Authorization",
-//                secret    : "$authorization" // Will ERROR AS IS
-//        ])
-//
-//        HttpResponse<String> response
-//        OrigoResponse origoResponse
-//
-//        try {
-//            response = Unirest.post(eventManagementApi + "/organization/$organizationId/callback")
-//                    .headers(requestHeaders)
-//                    .body(serializedBody)
-//                    .asString()
-//
-//            log.info("Response: $response")
-//            origoResponse = new OrigoResponse(response)
-//
-//        } catch (UnirestException e) { // ?
-//            log.error(e.message)
-//            origoResponse = new OrigoResponse(e)
-//        }
-//
-//        return origoResponse
-//    }
-//
-//    OrigoResponse uploadUserPhoto(String userId, Photo photo) {
+    ResponseWrapper listFilters() {
+
+        String url = "$eventManagementApi/organization/$organizationId/events/filter"
+
+        ResponseWrapper response = makeRequest("listFilters", "get", url, requestHeaders)
+
+        return response
+    }
+
+//    ResponseWrapper uploadUserPhoto(String userId, Photo photo) {
 //        // posts photo to User's Origo profile: https://doc.origo.hidglobal.com/api/mobile-identities/#/Photo%20ID/post-customer-organization_id-users-user_id-photo
 //
 //        String serializedBody = new ObjectMapper().writeValueAsString(photo.bytes)
 //
 //        HttpResponse<String> response
-//        OrigoResponse origoResponse
+//        ResponseWrapper response
 //
 //        try {
 //            response = Unirest.post(mobileIdentitiesApi + "/customer/$organizationId/users/$userId/photo")
@@ -203,61 +188,21 @@ class OrigoClient extends HttpClient {
 //                    .asString()
 //
 //            log.info("Response: $response")
-//            origoResponse = new OrigoResponse(response)
+//            response = new ResponseWrapper(response)
 //
 //        } catch (UnirestException e) { // ?
 //            log.error(e.message)
-//            origoResponse = new OrigoResponse(e)
+//            response = new ResponseWrapper(e)
 //        }
 //
-//        return origoResponse
+//        return response
 //    }
-//
-//    OrigoResponse listCallbackSubscriptions() {
-//
-//        HttpResponse<String> response
-//        OrigoResponse origoResponse
-//
-//        try {
-//            response = Unirest.get(eventManagementApi + "/organization/$organizationId/callback")
-//                    .headers(requestHeaders)
-//                    .asString()
-//
-//            log.info("Response: $response")
-//            origoResponse = new OrigoResponse(response)
-//
-//        } catch (UnirestException e) { // ?
-//            log.error(e.message)
-//            origoResponse = new OrigoResponse(e)
-//        }
-//
-//        return origoResponse
-//    }
-//
-//    OrigoResponse listFilters() {
-//        HttpResponse<String> response
-//        OrigoResponse origoResponse
-//
-//        try {
-//            response = Unirest.get(eventManagementApi + "/organization/$organizationId/events/filter")
-//                    .headers(requestHeaders)
-//                    .asString()
-//
-//            origoResponse = new OrigoResponse(response)
-//
-//        } catch (UnirestException e) { // ?
-//            log.error(e.message)
-//            origoResponse = new OrigoResponse(e)
-//        }
-//
-//        return origoResponse
-//    }
-//
-//    OrigoResponse getFilterById() {
+
+//    ResponseWrapper getFilterById() {
 //        // checks for current filters. Conditionally calls create filter
 //
 //        HttpResponse<String> response
-//        OrigoResponse origoResponse
+//        ResponseWrapper response
 //
 //        try {
 //            response = Unirest.get(eventManagementApi + "/organization/$organizationId/events/filter/$filterId")
@@ -265,17 +210,17 @@ class OrigoClient extends HttpClient {
 //                    .asString()
 //
 //            log.info("Response: $response")
-//            origoResponse = new OrigoResponse(response)
+//            response = new ResponseWrapper(response)
 //
 //        } catch (UnirestException e) { // ?
 //            log.error(e.message)
-//            origoResponse = new OrigoResponse(e)
+//            response = new ResponseWrapper(e)
 //        }
 //
-//        return origoResponse
+//        return response
 //    }
 //
-//    OrigoResponse updatePhotoApprovalStatus(String userId, String photoId, boolean status) {
+//    ResponseWrapper updatePhotoApprovalStatus(String userId, String photoId, boolean status) {
 //        // approves photo in origo after upload. REQUIRED for photo credential to be used.
 //
 //        String serializedBody = new ObjectMapper().writeValueAsString([
@@ -283,7 +228,7 @@ class OrigoClient extends HttpClient {
 //        ])
 //
 //        HttpResponse<String> response
-//        OrigoResponse origoResponse
+//        ResponseWrapper response
 //
 //        try {
 //            response = Unirest.put(mobileIdentitiesApi + "/customer/$organizationId/users/$userId/photo/$photoId/status")
@@ -292,27 +237,15 @@ class OrigoClient extends HttpClient {
 //                    .asString()
 //
 //            log.info("Response: $response")
-//            origoResponse = new OrigoResponse(response)
+//            response = new ResponseWrapper(response)
 //
 //        } catch (UnirestException e) { // ?
 //            log.error(e.message)
-//            origoResponse = new OrigoResponse(e)
+//            response = new ResponseWrapper(e)
 //        }
 //
-//        return origoResponse
+//        return response
 //    }
 
 
-}
-
-class OrigoResponse {
-    UnirestException exception
-    boolean success
-    Object body
-
-    OrigoResponse(ResponseWrapper wrapper) {
-        success = wrapper.success
-        exception = wrapper.exception
-        body = wrapper.body
-    }
 }
