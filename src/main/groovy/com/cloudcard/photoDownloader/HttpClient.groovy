@@ -11,7 +11,7 @@ import org.slf4j.LoggerFactory
 class HttpClient {
     private static final Logger log = LoggerFactory.getLogger(HttpClient.class)
 
-    String implementingClass
+    String implementingClass // used to inform logger of source of error
 
     private boolean debug = true
 

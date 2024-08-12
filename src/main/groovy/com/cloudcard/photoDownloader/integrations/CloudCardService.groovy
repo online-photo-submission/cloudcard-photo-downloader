@@ -1,5 +1,8 @@
-package com.cloudcard.photoDownloader
+package com.cloudcard.photoDownloader.integrations
 
+
+import com.cloudcard.photoDownloader.Person
+import com.cloudcard.photoDownloader.ResponseWrapper
 import jakarta.annotation.PostConstruct
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
@@ -15,7 +18,6 @@ class CloudCardService {
 
     @PostConstruct
     init() {
-
     }
 
     private boolean getNewAccessToken() {
@@ -27,22 +29,22 @@ class CloudCardService {
             cloudCardClient.setToken(token)
             result = true
         } else {
-            log.error("CloudCard: Cannot obtain access token")
+            log.error("Cannot obtain access token")
             result = false
         }
 
         return result
     }
 
-    private String createNewPerson(Person person) {
-        ResponseWrapper response = cloudCardClient.provisionPerson(person)
+    String provisionPerson(Person person) {
+        ResponseWrapper response = cloudCardClient.createPerson(person)
         String personId = ""
 
         if (response.success) {
             personId = response.body.id.toString()
-        } else if (response.status == 401) {
-            Closure command = { createNewPerson(person) }
-            authenticateAndRetry(command, "createNewPerson")
+        } else if (response.status == 401 || response.status == 401) {
+            Closure command = { provisionPerson(person) }
+            authenticateAndRetry(command, "provisionPerson")
         }
 
         return personId
@@ -51,10 +53,10 @@ class CloudCardService {
     private void authenticateAndRetry(Closure command, String commandName) {
         boolean tokenSaved = getNewAccessToken()
         if (tokenSaved) {
-            log.info("ORIGOSERVICE: Retrying ${commandName}() with valid access token.")
+            log.info("Retrying ${commandName}() with valid access token.")
             command()
         } else {
-            log.error("ORIGOSERVICE: Cannot authenticate.")
+            log.error("Cannot authenticate.")
         }
     }
 }

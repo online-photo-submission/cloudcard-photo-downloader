@@ -1,17 +1,16 @@
-package com.cloudcard.photoDownloader
+package com.cloudcard.photoDownloader.integrations.origo
 
+import com.cloudcard.photoDownloader.ResponseWrapper
 import jakarta.annotation.PostConstruct
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Value
-import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty
 import org.springframework.stereotype.Service
 
 @Service
-@ConditionalOnProperty(name = 'Origo.useOrigo', havingValue = 'true')
 class OrigoService {
-    // Handles business logic / processing for incoming events and requests from API
+
     private static final Logger log = LoggerFactory.getLogger(OrigoService.class)
 
     @Value('${Origo.filterSet}')
@@ -19,13 +18,6 @@ class OrigoService {
 
     @Autowired
     OrigoClient origoClient
-
-    @Autowired
-    OrigoEventStorageServiceLocal eventStorageServiceLocal
-
-    @PostConstruct
-    init() {
-    }
 
     private boolean getNewAccessToken() {
         ResponseWrapper response = origoClient.authenticate()
@@ -50,7 +42,7 @@ class OrigoService {
 
         if (response.success) {
             filters = response.body as List<Object>
-        } else if (response.body.responseHeader.statusCode == 401) {
+        } else if (response.status == 401) {
             Closure command = { getCurrentFilters() }
             authenticateAndRetry(command, "getCurrentFilters")
         }
@@ -72,12 +64,12 @@ class OrigoService {
         return filterId
     }
 
-    private List<Object> getEvents(String dateFrom = "", String dateTo = "", String filterId = "", String callbackStatus = "") {
+    List<Object> getEvents(String dateFrom = "", String dateTo = "", String filterId = "", String callbackStatus = "") {
         ResponseWrapper response = origoClient.listEvents(dateFrom, dateTo, filterId, callbackStatus)
         ArrayList<Object> events = []
         if (response.success) {
             events = response.body as ArrayList<Object>
-        } else if (response.body.responseHeader.statusCode == 401) {
+        } else if (response.status == 401) {
             Closure command = { getEvents(dateFrom, dateTo, filterId, callbackStatus) }
             authenticateAndRetry(command, "getEvents")
         }

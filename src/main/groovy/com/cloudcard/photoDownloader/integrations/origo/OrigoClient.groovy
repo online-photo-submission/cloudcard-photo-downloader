@@ -1,7 +1,8 @@
-package com.cloudcard.photoDownloader
+package com.cloudcard.photoDownloader.integrations.origo
 
-import com.mashape.unirest.http.HttpResponse
-import com.mashape.unirest.http.exceptions.UnirestException
+import com.cloudcard.photoDownloader.HttpClient
+import com.cloudcard.photoDownloader.ResponseWrapper
+import com.cloudcard.photoDownloader.Utils
 import jakarta.annotation.PostConstruct
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
@@ -15,9 +16,9 @@ import static com.cloudcard.photoDownloader.ApplicationPropertiesValidator.throw
 
 
 @Component
-@ConditionalOnProperty(name = 'Origo.useOrigo', havingValue = 'true')
 class OrigoClient extends HttpClient {
     // Makes requests to Origo API
+
     private static final Logger log = LoggerFactory.getLogger(OrigoClient.class)
 
     @Value('${Origo.eventManagementApi}')

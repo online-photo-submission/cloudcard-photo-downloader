@@ -1,5 +1,8 @@
-package com.cloudcard.photoDownloader
+package com.cloudcard.photoDownloader.integrations
 
+import com.cloudcard.photoDownloader.HttpClient
+import com.cloudcard.photoDownloader.Person
+import com.cloudcard.photoDownloader.ResponseWrapper
 import com.fasterxml.jackson.databind.ObjectMapper
 import jakarta.annotation.PostConstruct
 import org.slf4j.Logger
@@ -64,7 +67,7 @@ class CloudCardClient extends HttpClient {
     }
 
     ResponseWrapper authenticate() {
-        String url = "https://test-api.onlinephotosubmission.com/authentication-token"
+        String url = "$cloudCardApi/authentication-token"
         String serializedBody = new ObjectMapper().writeValueAsString([
                 'persistentAccessToken': persistentAccessToken
         ])
@@ -79,13 +82,13 @@ class CloudCardClient extends HttpClient {
         return response
     }
 
-    ResponseWrapper provisionPerson(Person person) {
+    ResponseWrapper createPerson(Person person) {
         String url = "$cloudCardApi/person?renderResource=true"
         String serializedBody = new ObjectMapper().writeValueAsString(person)
         log.info(serializedBody)
         Map headers = requestHeaders
 
-        ResponseWrapper response = makeRequest("provisionPerson", "post", url, headers, serializedBody)
+        ResponseWrapper response = makeRequest("createPerson", "post", url, headers, serializedBody)
 
         return response
     }

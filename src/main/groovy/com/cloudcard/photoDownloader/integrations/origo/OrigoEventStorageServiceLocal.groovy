@@ -1,4 +1,5 @@
-package com.cloudcard.photoDownloader
+package com.cloudcard.photoDownloader.integrations.origo
+
 
 import groovy.json.JsonOutput
 import groovy.json.JsonSlurper
@@ -14,8 +15,7 @@ import java.time.ZonedDateTime
 import java.time.format.DateTimeFormatter
 
 @Component
-@ConditionalOnProperty(name = 'Origo.useOrigo', havingValue = 'true')
-class OrigoEventStorageServiceLocal implements IOrigoStorageService {
+class OrigoEventStorageServiceLocal {
     // configures temporary local storage for Origo event ids and timestamps
 
     private static final Logger log = LoggerFactory.getLogger(OrigoEventStorageServiceLocal.class)
