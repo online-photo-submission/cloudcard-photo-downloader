@@ -55,7 +55,7 @@ class HttpClient {
             log.info("DEBUG REQUEST - actionType: $actionType")
             log.info("DEBUG REQUEST - url: $url")
             log.info("DEBUG REQUEST - headers: $headers")
-            log.info("DEBUG REQUEST - body: $serializedBody")
+//            log.info("DEBUG REQUEST - body: $serializedBody")
             log.info("END DEBUG REQUEST **********************************")
         }
 
