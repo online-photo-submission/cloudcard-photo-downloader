@@ -15,6 +15,6 @@ class ProvisioningService {
 
     @PostConstruct
     init() {
-        origoService.ge
+//        origoService.ge
     }
 }
