@@ -121,13 +121,12 @@ class OrigoClient extends HttpClient {
         return response
     }
 
-    ResponseWrapper uploadUserPhoto(Photo photo) {
+    ResponseWrapper uploadUserPhoto(Photo photo, String bytes) {
         // posts photo to User's Origo profile: https://doc.origo.hidglobal.com/api/mobile-identities/#/Photo%20ID/post-customer-organization_id-users-user_id-photo
 
         String url = "$mobileIdentitiesApi/customer/$organizationId/users/${photo.person.identifier}/photo"
-        String serializedBody = new ObjectMapper().writeValueAsString(photo.bytes)
 
-        ResponseWrapper response = makeRequest("uploadUserPhoto", "post", url, requestHeaders, serializedBody)
+        ResponseWrapper response = makeRequest("uploadUserPhoto", "post", url, requestHeaders, bytes)
 
         return response
     }

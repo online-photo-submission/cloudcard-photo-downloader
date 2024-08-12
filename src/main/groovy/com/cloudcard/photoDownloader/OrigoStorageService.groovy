@@ -62,13 +62,13 @@ class OrigoStorageService implements StorageService {
         log.info("Uploading to Origo: $photo.id for person: $photo.person.email")
 
         String accountId = resolveAccountId(photo)
-//        String photoBase64 = getBytesBase64(photo)
+        String photoBase64 = getBytesBase64(photo)
 //
 //        if (!accountId || !photoBase64) {
 //            return null
 //        }
 
-        ResponseWrapper upload = origoClient.uploadUserPhoto(photo)
+        ResponseWrapper upload = origoClient.uploadUserPhoto(photo, photoBase64)
 
         if (!upload.success) {
             log.error("Photo $photo.id for $photo.person.email failed to upload into Origo.")
