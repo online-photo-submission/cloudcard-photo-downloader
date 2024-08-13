@@ -61,11 +61,14 @@ class OrigoStorageService implements StorageService {
         String accountId = resolveAccountId(photo)
         String fileType = resolveFileType(photo)
 
-        if (!fileType) return null
+        if (!fileType || (fileType != "png" && fileType != "jpg")) {
+            log.error("Photo $photo.id for $photo.person.email has an invalid file type.")
+            return null
+        }
 
         ResponseWrapper upload = origoClient.uploadUserPhoto(photo, fileType)
 
-        if (!upload.success && upload.status == 401) {
+        if (upload.status == 401) {
             origoClient.authenticate()
             save(photo)
             return null
@@ -74,23 +77,16 @@ class OrigoStorageService implements StorageService {
             return null
         }
 
-        String origoPhotoId = ""
-        ResponseWrapper approved = null
-
-        if (upload.success) { // Auto approve depending on app.properties
-            origoPhotoId = upload.body?.id
-            approved = origoClient.accountPhotoApprove(photo, origoPhotoId)
-            if (!approved.success) {
-                log.error("Photo ${photo.id} for $photo.person.email failed to be auto-approved.")
-//            return null
-            }
+        String origoPhotoId = upload.body?.id
+        ResponseWrapper approved = origoClient.accountPhotoApprove(photo, origoPhotoId)
+        if (!approved.success) {
+            log.error("Photo ${photo.id} for $photo.person.email was uploaded, but failed to be auto-approved.")
         }
 
         return new PhotoFile(accountId, null, photo.id)
     }
 
     String resolveFileType(Photo photo) {
-        // May need to handle "jpeg vs jpg"
 
         String fileType = ""
         if (photo.links.bytes && photo.links.bytes.length() > 3) {
@@ -99,7 +95,7 @@ class OrigoStorageService implements StorageService {
             log.error("Could not resolve filetype for photo $photo.id for user $photo.person.email")
         }
 
-        return fileType
+        return fileType.toLowerCase()
     }
 
     String resolveAccountId(Photo photo) {
@@ -111,15 +107,6 @@ class OrigoStorageService implements StorageService {
         }
 
         return accountId
-    }
-
-    String getBytesBase64(Photo photo) {
-        if (!photo.bytes) {
-            log.error("Photo $photo.id for $photo.person.email is missing binary data, so it cannot be uploaded to Origo.")
-            return null
-        }
-
-        return Base64.getEncoder().encodeToString(photo.bytes)
     }
 
 }

@@ -1,6 +1,5 @@
 package com.cloudcard.photoDownloader
 
-import com.fasterxml.jackson.databind.ObjectMapper
 import com.mashape.unirest.http.HttpResponse
 import com.mashape.unirest.http.Unirest
 import com.mashape.unirest.http.exceptions.UnirestException
@@ -9,22 +8,24 @@ import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 
 class HttpClient {
+    // This class can be extended for easy HTTP requests to a given API through the makeRequests() method
+
     private static final Logger log = LoggerFactory.getLogger(HttpClient.class)
 
-    String implementingClass // used to inform logger of source of error
-
-    private boolean debug = true
+    String implementingClass
+    // used to inform logger of error source
 
     ResponseWrapper makeRequest(String methodName, String actionType, String url, Map headers, String bodyString = "", byte[] bodyBytes = null) {
+        // Provides an all-in-one http request builder which packages
 
         if (bodyString && bodyBytes) {
-            log.info("Cannot send string and binary in same request.")
-            return null
+            log.info("Cannot send string and photo file in same request.")
+            return new ResponseWrapper(400)
         }
 
         Body body
-        if (bodyString)  body = new Body(bodyString)
-        else if (bodyBytes)  body = new Body(bodyBytes)
+        if (bodyString) body = new Body(bodyString)
+        else if (bodyBytes) body = new Body(bodyBytes)
         else body = null
 
         Closure request = configureRequest(methodName, actionType, url, headers, body)
@@ -37,10 +38,10 @@ class HttpClient {
                 if (response.status >= 500) {
                     throw new UnirestException("${implementingClass ?: "Class not Specified"}: ${methodName}() Error: status=${response?.status}, ${response?.body}")
                 }
-                wrapper = new ResponseWrapper(response.status, response.body)
+               wrapper = new ResponseWrapper(response.status, response.body)
             } else {
                 wrapper = new ResponseWrapper(response)
-                log.info("${implementingClass ?: "Class not Specified"}: ${methodName}() Response: $response.status")
+                log.info("${implementingClass ?: "Class not Specified"}: ${methodName}() Response status: $response.status")
             }
 
         } catch (UnirestException e) { // ?
@@ -48,25 +49,16 @@ class HttpClient {
             wrapper = new ResponseWrapper(e)
         }
 
-        if (debug) {
-            log.info("DEBUG REQUEST - Response: " + new ObjectMapper().writeValueAsString(wrapper))
-        }
-
         return wrapper
     }
 
     private Closure configureRequest(String methodName, String actionType, String url, Map headers, Body body = null) {
-        Closure request
-        HttpResponse<String> response
 
-        if (debug) {
-            log.info("DEBUG REQUEST **************************************")
-            log.info("DEBUG REQUEST - methodName: $methodName")
-            log.info("DEBUG REQUEST - actionType: $actionType")
-            log.info("DEBUG REQUEST - url: $url")
-            log.info("DEBUG REQUEST - headers: $headers")
-//            log.info("DEBUG REQUEST - body: $body.data")
-            log.info("END DEBUG REQUEST **********************************")
+        HttpResponse<String> response
+        Closure request = {
+            response = Unirest.get(url)
+                    .headers(headers)
+                    .asString()
         }
 
         switch (actionType.toLowerCase()) {
@@ -75,13 +67,6 @@ class HttpClient {
                     response = Unirest.post(url)
                             .headers(headers)
                             .body(body.data)
-                            .asString()
-                }
-                break
-            case "get":
-                request = {
-                    response = Unirest.get(url)
-                            .headers(headers)
                             .asString()
                 }
                 break
@@ -108,16 +93,12 @@ class HttpClient {
                             .asString()
                 }
                 break
-            default:
-                log.error("HttpClient: ${methodName}() was passed invalid parameters.")
-
-                request = null
+            case "get": // get is set as default
+                break
         }
 
         return request
     }
-
-
 }
 
 class ResponseWrapper {
@@ -126,8 +107,8 @@ class ResponseWrapper {
     Object body
     int status
 
-    ResponseWrapper(int code, String response = "No response body", boolean isSuccessful = false) {
-        body = response
+    ResponseWrapper(int code, String responseBody = "No response body", boolean isSuccessful = false) {
+        body = responseBody
         status = code
         success = isSuccessful
     }
@@ -138,11 +119,11 @@ class ResponseWrapper {
         success = response.status >= 200 && response.status < 300
     }
 
-    ResponseWrapper(UnirestException ex) {
-        exception = ex
+    ResponseWrapper(UnirestException e) {
+        exception = e
         status = 0
         success = false
-        body = null
+        body = e.getMessage()
     }
 }
 

@@ -20,9 +20,6 @@ class OrigoClient extends HttpClient {
     @Value('${Origo.eventManagementApi}')
     private String eventManagementApi
 
-    @Value('${Origo.callbackRegistrationApi}')
-    private String callbackRegistrationApi
-
     @Value('${Origo.mobileIdentitiesApi}')
     private String mobileIdentitiesApi
 
@@ -56,14 +53,13 @@ class OrigoClient extends HttpClient {
 
     void authorizeRequests(String token) {
         accessToken = token
-        log.info("Saving token: $token")
         isAuthenticated = true
         setRequestHeaders(token)
     }
 
     void setRequestHeaders(String token) {
         requestHeaders = [
-                'Authorization'      : 'Bearer ' + token,
+                'Authorization'      : "Bearer $token" as String,
                 'Content-Type'       : contentType,
                 'Application-Version': applicationVersion,
                 'Application-ID'     : applicationId
@@ -73,16 +69,16 @@ class OrigoClient extends HttpClient {
     @PostConstruct
     init() {
         throwIfBlank(eventManagementApi, "The Origo Event Management API URL must be specified.")
-        throwIfBlank(callbackRegistrationApi, "The Origo Callback Registration API URL must be specified.")
         throwIfBlank(mobileIdentitiesApi, "The Origo Mobile Identities API URL must be specified.")
         throwIfBlank(organizationId, "The Origo organization ID must be specified.")
+        throwIfBlank(clientSecret, "The Origo client secret must be specified.")
+        throwIfBlank(clientId, "The Origo client ID must be specified.")
         throwIfBlank(contentType, "The Origo content-type header must be specified.")
         throwIfBlank(applicationVersion, "The Origo application version must be specified.")
         throwIfBlank(applicationId, "Your organization's Origo Application ID must be specified.")
 
         log.info('=================== Initializing Origo Client ===================')
         log.info("          Origo Event Management API URL : $eventManagementApi")
-        log.info("     Origo Callback Registration API URL : $callbackRegistrationApi")
         log.info("         Origo Mobile Identities API URL : $mobileIdentitiesApi")
         log.info("                   Origo organization ID : $organizationId")
         log.info("               Origo content type header : $contentType")
@@ -92,14 +88,16 @@ class OrigoClient extends HttpClient {
         if (accessToken) {
             authorizeRequests(accessToken)
         } else {
-            log.warn("ORIGOCLIENT: No access token  present during initialization.")
+            log.info("No access token present during initialization.")
         }
 
-        this.implementingClass = "OrigoClient"
+        this.implementingClass = this.class.name
     }
 
     boolean authenticate() {
-        ResponseWrapper response = getAccessToken()
+        // Stores token for future requests
+
+        ResponseWrapper response = requestAccessToken()
         String token = ""
         boolean result = false
 
@@ -114,7 +112,9 @@ class OrigoClient extends HttpClient {
         return result
     }
 
-    ResponseWrapper getAccessToken() {
+    ResponseWrapper requestAccessToken() {
+        // https://doc.origo.hidglobal.com/api/authentication/
+
         String url = "$certIdpApi/authentication/customer/$organizationId/token"
         Map<String, String> headers = ["Content-Type": "application/x-www-form-urlencoded"]
         String body = "client_id=${clientId}&client_secret=${clientSecret}&grant_type=client_credentials"
@@ -124,7 +124,7 @@ class OrigoClient extends HttpClient {
     }
 
     ResponseWrapper uploadUserPhoto(Photo photo, String fileType) {
-        // posts photo to User's Origo profile: https://doc.origo.hidglobal.com/api/mobile-identities/#/Photo%20ID/post-customer-organization_id-users-user_id-photo
+        // https://doc.origo.hidglobal.com/api/mobile-identities/#/Photo%20ID/post-customer-organization_id-users-user_id-photo
 
         String url = "$mobileIdentitiesApi/customer/$organizationId/users/${photo.person.identifier}/photo"
 
@@ -138,7 +138,7 @@ class OrigoClient extends HttpClient {
 
 
     ResponseWrapper accountPhotoApprove(Photo photo, String id) {
-        // approves photo in origo after upload. REQUIRED for photo credential to be used.
+        // https://doc.origo.hidglobal.com/api/mobile-identities/#/Photo%20ID/put-customer-organization_id-users-user_id-photo-photo_id-status
 
         String url = "$mobileIdentitiesApi/customer/$organizationId/users/${photo.person.identifier}/photo/${id}/status"
         String serializedBody = new ObjectMapper().writeValueAsString([
@@ -149,6 +149,4 @@ class OrigoClient extends HttpClient {
 
         return response
     }
-
-
 }
