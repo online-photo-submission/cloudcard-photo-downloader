@@ -45,7 +45,7 @@ class OrigoStorageService implements StorageService {
             if (!origoClient.authenticate()) return []
         }
 
-        List<PhotoFile> photoFiles = photos.collect { save(it) }
+        List<PhotoFile> photoFiles = photos.collect { save(it) }.findAll { it != null }
 
         return photoFiles
     }
@@ -60,11 +60,6 @@ class OrigoStorageService implements StorageService {
 
         String accountId = resolveAccountId(photo)
         String fileType = resolveFileType(photo)
-//        String photoBase64 = getBytesBase64(photo)
-//
-//        if (!accountId || !photoBase64) {
-//            return null
-//        }
 
         if (!fileType) return null
 
@@ -79,19 +74,24 @@ class OrigoStorageService implements StorageService {
             return null
         }
 
-        String photoId = upload.body.id
+        String origoPhotoId = ""
+        ResponseWrapper approved = null
 
-        ResponseWrapper approved = origoClient.accountPhotoApprove(photo, photoId)
-
-        if (!approved.success) {
-            log.error("Photo $photo.id for $photo.person.email failed to be auto-approved.")
-            return null
+        if (upload.success) { // Auto approve depending on app.properties
+            origoPhotoId = upload.body?.id
+            approved = origoClient.accountPhotoApprove(photo, origoPhotoId)
+            if (!approved.success) {
+                log.error("Photo ${photo.id} for $photo.person.email failed to be auto-approved.")
+//            return null
+            }
         }
 
-        return new PhotoFile(accountId, accountId, photo.id)
+        return new PhotoFile(accountId, null, photo.id)
     }
 
     String resolveFileType(Photo photo) {
+        // May need to handle "jpeg vs jpg"
+
         String fileType = ""
         if (photo.links.bytes && photo.links.bytes.length() > 3) {
             fileType = photo.links.bytes[-3..-1]

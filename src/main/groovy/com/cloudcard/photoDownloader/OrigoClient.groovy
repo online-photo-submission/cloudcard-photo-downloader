@@ -129,7 +129,7 @@ class OrigoClient extends HttpClient {
         String url = "$mobileIdentitiesApi/customer/$organizationId/users/${photo.person.identifier}/photo"
 
         Map headers = requestHeaders.clone() as Map
-        headers['Content-Type'] = 'application/vnd.assaabloy.ma.credential-management-2.2+' + fileType
+        headers['Content-Type'] = "application/vnd.assaabloy.ma.credential-management-2.2+$fileType" as String
 
         ResponseWrapper response = makeRequest("uploadUserPhoto", "post", url, headers, null, photo.bytes)
 
