@@ -42,6 +42,9 @@ class CSVManifestFileService implements ManifestFileService {
     @Value('${CSVManifestFileService.dateFormat:}')
     String dateFormat
 
+    @Value('${CSVManifestFileService.customFilePath:}')
+    String customFilePath
+
     @Value('#{${CSVManifestFileService.headerAndColumnMap:}}')
     Map<String,String> headerAndColumnMap
 
@@ -60,6 +63,7 @@ class CSVManifestFileService implements ManifestFileService {
         log.info("CSV Manifest File Service escapeCharacter   : $escapeCharacter")
         log.info("CSV Manifest File Service dateFormat        : $dateFormat")
         log.info("CSV Manifest File Service headerAndColumnMap: $headerAndColumnMap")
+        log.info("CSV Manifest File Service customFilePath    : $customFilePath")
 
     }
 
@@ -108,6 +112,8 @@ class CSVManifestFileService implements ManifestFileService {
         if (column == 'photo_fullFilePath') { return file.fileName }
 
         if (column == 'photo_fileName') { return "${file.baseName}.jpg" }
+
+        if (column == 'photo_customFilePath') { return "${customFilePath}${file.baseName}.jpg" }
 
         def currentObject = photo
 
