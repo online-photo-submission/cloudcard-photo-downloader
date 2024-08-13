@@ -16,7 +16,7 @@ class HttpClient {
     // used to inform logger of error source
 
     ResponseWrapper makeRequest(String methodName, String actionType, String url, Map headers, String bodyString = "", byte[] bodyBytes = null) {
-        // Provides an all-in-one http request builder which packages
+        // Provides an all-in-one http request builder which packages unirest client into one method call
 
         if (bodyString && bodyBytes) {
             log.info("Cannot send string and photo file in same request.")
