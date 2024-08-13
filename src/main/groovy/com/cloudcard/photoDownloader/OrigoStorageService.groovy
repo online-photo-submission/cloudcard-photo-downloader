@@ -41,19 +41,16 @@ class OrigoStorageService implements StorageService {
 
         log.info("Uploading Photos to Origo")
 
-        String sessionId = origoClient.getAccessToken()
-
-        if (!sessionId) {
-            log.error("Failed to login to the Origo API")
-            return []
+        if (!origoClient.isAuthenticated) {
+            if (!origoClient.authenticate()) return []
         }
 
-        List<PhotoFile> photoFiles = photos.collect { save(it, sessionId) }
+        List<PhotoFile> photoFiles = photos.collect { save(it) }
 
         return photoFiles
     }
 
-    PhotoFile save(Photo photo, String sessionId) {
+    PhotoFile save(Photo photo) {
         if (!photo.person) {
             log.error("Person does not exist for photo $photo.id and it cannot be uploaded to Origo.")
             return null
@@ -62,27 +59,47 @@ class OrigoStorageService implements StorageService {
         log.info("Uploading to Origo: $photo.id for person: $photo.person.email")
 
         String accountId = resolveAccountId(photo)
-        String photoBase64 = getBytesBase64(photo)
+        String fileType = resolveFileType(photo)
+//        String photoBase64 = getBytesBase64(photo)
 //
 //        if (!accountId || !photoBase64) {
 //            return null
 //        }
 
-        ResponseWrapper upload = origoClient.uploadUserPhoto(photo, photoBase64)
+        if (!fileType) return null
 
-        if (!upload.success) {
+        ResponseWrapper upload = origoClient.uploadUserPhoto(photo, fileType)
+
+        if (!upload.success && upload.status == 401) {
+            origoClient.authenticate()
+            save(photo)
+            return null
+        } else if (!upload.success) {
             log.error("Photo $photo.id for $photo.person.email failed to upload into Origo.")
             return null
         }
 
-        ResponseWrapper approved = origoClient.accountPhotoApprove(photo)
+        String photoId = upload.body.id
+
+        ResponseWrapper approved = origoClient.accountPhotoApprove(photo, photoId)
 
         if (!approved.success) {
             log.error("Photo $photo.id for $photo.person.email failed to be auto-approved.")
             return null
         }
 
-        return new PhotoFile(accountId, null, photo.id)
+        return new PhotoFile(accountId, accountId, photo.id)
+    }
+
+    String resolveFileType(Photo photo) {
+        String fileType = ""
+        if (photo.links.bytes && photo.links.bytes.length() > 3) {
+            fileType = photo.links.bytes[-3..-1]
+        } else {
+            log.error("Could not resolve filetype for photo $photo.id for user $photo.person.email")
+        }
+
+        return fileType
     }
 
     String resolveAccountId(Photo photo) {

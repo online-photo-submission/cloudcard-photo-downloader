@@ -15,9 +15,19 @@ class HttpClient {
 
     private boolean debug = true
 
-    ResponseWrapper makeRequest(String methodName, String actionType, String url, Map headers, String serializedBody = "") {
+    ResponseWrapper makeRequest(String methodName, String actionType, String url, Map headers, String bodyString = "", byte[] bodyBytes = null) {
 
-        Closure request = configureRequest(methodName, actionType, url, headers, serializedBody)
+        if (bodyString && bodyBytes) {
+            log.info("Cannot send string and binary in same request.")
+            return null
+        }
+
+        Body body
+        if (bodyString)  body = new Body(bodyString)
+        else if (bodyBytes)  body = new Body(bodyBytes)
+        else body = null
+
+        Closure request = configureRequest(methodName, actionType, url, headers, body)
         ResponseWrapper wrapper
 
         try {
@@ -45,7 +55,7 @@ class HttpClient {
         return wrapper
     }
 
-    private Closure configureRequest(String methodName, String actionType, String url, Map headers, String serializedBody = "") {
+    private Closure configureRequest(String methodName, String actionType, String url, Map headers, Body body = null) {
         Closure request
         HttpResponse<String> response
 
@@ -55,7 +65,7 @@ class HttpClient {
             log.info("DEBUG REQUEST - actionType: $actionType")
             log.info("DEBUG REQUEST - url: $url")
             log.info("DEBUG REQUEST - headers: $headers")
-//            log.info("DEBUG REQUEST - body: $serializedBody")
+//            log.info("DEBUG REQUEST - body: $body.data")
             log.info("END DEBUG REQUEST **********************************")
         }
 
@@ -64,7 +74,7 @@ class HttpClient {
                 request = {
                     response = Unirest.post(url)
                             .headers(headers)
-                            .body(serializedBody)
+                            .body(body.data)
                             .asString()
                 }
                 break
@@ -79,7 +89,7 @@ class HttpClient {
                 request = {
                     response = Unirest.put(url)
                             .headers(headers)
-                            .body(serializedBody)
+                            .body(body.data)
                             .asString()
                 }
                 break
@@ -87,7 +97,7 @@ class HttpClient {
                 request = {
                     response = Unirest.patch(url)
                             .headers(headers)
-                            .body(serializedBody)
+                            .body(body.data)
                             .asString()
                 }
                 break
@@ -133,5 +143,17 @@ class ResponseWrapper {
         status = 0
         success = false
         body = null
+    }
+}
+
+class Body {
+    Object data = null
+
+    Body(String info) {
+        data = info
+    }
+
+    Body(byte[] file) {
+        data = file
     }
 }

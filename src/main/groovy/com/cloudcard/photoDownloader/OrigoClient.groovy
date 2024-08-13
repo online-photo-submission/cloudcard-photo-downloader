@@ -54,7 +54,7 @@ class OrigoClient extends HttpClient {
 
     private Map requestHeaders
 
-    void setToken(String token) {
+    void authorizeRequests(String token) {
         accessToken = token
         log.info("Saving token: $token")
         isAuthenticated = true
@@ -90,7 +90,7 @@ class OrigoClient extends HttpClient {
         log.info("                    Origo application ID : $applicationId")
 
         if (accessToken) {
-            setToken(accessToken)
+            authorizeRequests(accessToken)
         } else {
             log.warn("ORIGOCLIENT: No access token  present during initialization.")
         }
@@ -98,21 +98,23 @@ class OrigoClient extends HttpClient {
         this.implementingClass = "OrigoClient"
     }
 
-    String getAccessToken() {
-        ResponseWrapper response = authenticate()
+    boolean authenticate() {
+        ResponseWrapper response = getAccessToken()
         String token = ""
+        boolean result = false
 
         if (response.success) {
             token = response.body.access_token
-            setToken(token)
+            authorizeRequests(token)
+            result = true
         } else {
-            log.error("ORIGO: Cannot obtain access token")
+            log.error("Cannot obtain access token")
         }
 
-        return token
+        return result
     }
 
-    ResponseWrapper authenticate() {
+    ResponseWrapper getAccessToken() {
         String url = "$certIdpApi/authentication/customer/$organizationId/token"
         Map<String, String> headers = ["Content-Type": "application/x-www-form-urlencoded"]
         String body = "client_id=${clientId}&client_secret=${clientSecret}&grant_type=client_credentials"
@@ -121,26 +123,29 @@ class OrigoClient extends HttpClient {
         return response
     }
 
-    ResponseWrapper uploadUserPhoto(Photo photo, String bytes) {
+    ResponseWrapper uploadUserPhoto(Photo photo, String fileType) {
         // posts photo to User's Origo profile: https://doc.origo.hidglobal.com/api/mobile-identities/#/Photo%20ID/post-customer-organization_id-users-user_id-photo
 
         String url = "$mobileIdentitiesApi/customer/$organizationId/users/${photo.person.identifier}/photo"
 
-        ResponseWrapper response = makeRequest("uploadUserPhoto", "post", url, requestHeaders, bytes)
+        Map headers = requestHeaders.clone() as Map
+        headers['Content-Type'] = 'application/vnd.assaabloy.ma.credential-management-2.2+' + fileType
+
+        ResponseWrapper response = makeRequest("uploadUserPhoto", "post", url, headers, null, photo.bytes)
 
         return response
     }
 
 
-    ResponseWrapper accountPhotoApprove(Photo photo) {
+    ResponseWrapper accountPhotoApprove(Photo photo, String id) {
         // approves photo in origo after upload. REQUIRED for photo credential to be used.
 
-        String url = "$mobileIdentitiesApi/customer/$organizationId/users/${photo.person.id}/photo/${photo.id}/status"
+        String url = "$mobileIdentitiesApi/customer/$organizationId/users/${photo.person.identifier}/photo/${id}/status"
         String serializedBody = new ObjectMapper().writeValueAsString([
                 status: 'APPROVE'
         ])
 
-        ResponseWrapper response = makeRequest("uploadUserPhoto", "put", url, requestHeaders, serializedBody)
+        ResponseWrapper response = makeRequest("accountPhotoApprove", "put", url, requestHeaders, serializedBody)
 
         return response
     }
