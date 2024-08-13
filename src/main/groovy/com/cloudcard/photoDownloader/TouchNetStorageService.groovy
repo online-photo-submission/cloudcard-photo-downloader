@@ -47,7 +47,7 @@ class TouchNetStorageService implements StorageService {
             return []
         }
 
-        List<PhotoFile> photoFiles = photos.collect { save(it, sessionId) }
+        List<PhotoFile> photoFiles = photos.collect { save(it, sessionId) }.findAll { it != null }
 
         if (!touchNetClient.operatorLogout(sessionId)) {
             log.warn("Failed to logout of the TouchNet API")
