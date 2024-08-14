@@ -11,7 +11,7 @@ ext {
 }
 
 group = 'com.onlinephotosubmission'
-version = '24.06.20.1402'
+version = '24.08.13.1722'
 
 java {
     sourceCompatibility = '17'

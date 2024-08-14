@@ -27,6 +27,7 @@ class CSVManifestFileServiceSpec extends Specification {
             "PhotoLink": "bytes",
             "DateSubmitted": "dateSubmitted"
         ]
+        csvManifestFileService.customFilePath = "//random/nonsense/"
     }
 
     def "test createManifestFile generates file with correct content"() {
@@ -76,6 +77,7 @@ class CSVManifestFileServiceSpec extends Specification {
         "date property"         | "dateCreated"                   | new Photo(id: 1, person: new Person(identifier: "123", email: "test@example.com"), bytes: null, dateCreated: parseDate("Fri Feb 16 11:41:44 EST 2024")) | null                                                                     | "2024-02-16"
         "custom Field property" | "person.customFields.Full Name" | new Photo(id: 1, person: new Person(identifier: "123", email: "test@example.com", customFields: ["Full Name": "James"]), bytes: null)                   | null                                                                     | "James"
         "photo full file path"  | "photo_fullFilePath"            | new Photo(id: 1, person: new Person(identifier: "123", email: "test@example.com"), bytes: null)                                                         | new PhotoFile("photo1", "/Users/Calvin/downloaded-photos/photo1.jpg", 1) | "/Users/Calvin/downloaded-photos/photo1.jpg"
+        "photo custom path"     | "photo_customFilePath"          | new Photo(id: 1, person: new Person(identifier: "123", email: "test@example.com"), bytes: null)                                                         | new PhotoFile("photo2", "photo2.jpg", 1)                                 | "//random/nonsense/photo2.jpg"
         "photo file name"       | "photo_fileName"                | new Photo(id: 1, person: new Person(identifier: "123", email: "test@example.com"), bytes: null)                                                         | new PhotoFile("photo2", "photo2.jpg", 1)                                 | "photo2.jpg"
     }
 

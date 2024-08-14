@@ -99,16 +99,13 @@ class TouchNetStorageServiceSpec extends Specification{
         List<PhotoFile> photoFiles = service.save(photos)
 
         then:
-        photoFiles.size() == 3
-        photoFiles.eachWithIndex { it, index ->
-            if (index == 1) {
-                assert !it
-            } else {
-                assert it
-                assert it.photoId == index
-                assert it.baseName == identifiers[index]
-            }
-        }
+        photoFiles.size() == 2
+        assert photoFiles[0]
+        photoFiles[0].baseName == identifiers[0]
+        photoFiles[0].photoId == 0
+        assert photoFiles[1]
+        photoFiles[1].baseName == identifiers[2]
+        photoFiles[1].photoId == 2
 
         1 * service.touchNetClient.operatorLogin() >> sessionId
         1 * service.fileNameResolver.getBaseName(photos[0]) >> identifiers[0]
