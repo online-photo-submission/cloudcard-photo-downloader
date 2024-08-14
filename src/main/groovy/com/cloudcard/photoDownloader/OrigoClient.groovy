@@ -91,7 +91,7 @@ class OrigoClient extends HttpClient {
             log.info("No access token present during initialization.")
         }
 
-        this.implementingClass = this.class.name
+        this.extendingClass = this.class.name
     }
 
     boolean authenticate() {
@@ -105,8 +105,6 @@ class OrigoClient extends HttpClient {
             token = response.body.access_token
             authorizeRequests(token)
             result = true
-        } else {
-            log.error("Cannot obtain access token")
         }
 
         return result
@@ -119,7 +117,10 @@ class OrigoClient extends HttpClient {
         Map<String, String> headers = ["Content-Type": "application/x-www-form-urlencoded"]
         String body = "client_id=${clientId}&client_secret=${clientSecret}&grant_type=client_credentials"
 
-        ResponseWrapper response = makeRequest("authenticate", "post", url, headers, body)
+        ResponseWrapper response = makeRequest("post", url, headers, body)
+
+        handleResponseLogging("requestAccessToken", response, "Error while authenticating with Origo.")
+
         return response
     }
 
@@ -131,7 +132,9 @@ class OrigoClient extends HttpClient {
         Map headers = requestHeaders.clone() as Map
         headers['Content-Type'] = "application/vnd.assaabloy.ma.credential-management-2.2+$fileType" as String
 
-        ResponseWrapper response = makeRequest("uploadUserPhoto", "post", url, headers, null, photo.bytes)
+        ResponseWrapper response = makeRequest("post", url, headers, null, photo.bytes)
+
+        handleResponseLogging("uploadUserPhoto", response)
 
         return response
     }
@@ -145,7 +148,9 @@ class OrigoClient extends HttpClient {
                 status: 'APPROVE'
         ])
 
-        ResponseWrapper response = makeRequest("accountPhotoApprove", "put", url, requestHeaders, serializedBody)
+        ResponseWrapper response = makeRequest("put", url, requestHeaders, serializedBody)
+
+        handleResponseLogging("accountPhotoApprove", response)
 
         return response
     }

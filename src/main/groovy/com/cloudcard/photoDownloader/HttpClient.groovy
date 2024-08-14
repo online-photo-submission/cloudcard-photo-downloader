@@ -8,18 +8,18 @@ import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 
 class HttpClient {
-    // This class can be extended for easy HTTP requests to a given API through the makeRequests() method
+    // This class can be extended for easy HTTP requests to a given API through the makeRequests() method. If you need to send custom requests with multiple body types such as json strings and files, it is recommended to build that request separately.
 
     private static final Logger log = LoggerFactory.getLogger(HttpClient.class)
 
-    String implementingClass
+    String extendingClass = "HttpClient"
     // used to inform logger of error source
 
-    ResponseWrapper makeRequest(String methodName, String actionType, String url, Map headers, String bodyString = "", byte[] bodyBytes = null) {
-        // Provides an all-in-one http request builder which packages unirest client into one method call
+    ResponseWrapper makeRequest(String actionType, String url, Map headers, String bodyString = "", byte[] bodyBytes = null) {
+        // Provides an all-in-one http request builder which packages unirest client into a single method call
 
         if (bodyString && bodyBytes) {
-            log.info("Cannot send string and photo file in same request.")
+            log.error("Cannot send string and file in same request.")
             return new ResponseWrapper(400)
         }
 
@@ -28,22 +28,11 @@ class HttpClient {
         else if (bodyBytes) body = new Body(bodyBytes)
         else body = null
 
-        Closure request = configureRequest(methodName, actionType, url, headers, body)
+        Closure request = configureRequest(actionType, url, headers, body)
         ResponseWrapper wrapper
 
         try {
-            HttpResponse<String> response = request()
-
-            if (response?.status < 200 || response?.status >= 300 || !response?.body) {
-                if (response.status >= 500) {
-                    throw new UnirestException("${implementingClass ?: "Class not Specified"}: ${methodName}() Error: status=${response?.status}, ${response?.body}")
-                }
-               wrapper = new ResponseWrapper(response.status, response.body)
-            } else {
-                wrapper = new ResponseWrapper(response)
-                log.info("${implementingClass ?: "Class not Specified"}: ${methodName}() Response status: $response.status")
-            }
-
+            wrapper = new ResponseWrapper(request())
         } catch (UnirestException e) { // ?
             log.error(e.message)
             wrapper = new ResponseWrapper(e)
@@ -52,7 +41,7 @@ class HttpClient {
         return wrapper
     }
 
-    private Closure configureRequest(String methodName, String actionType, String url, Map headers, Body body = null) {
+    private Closure configureRequest(String actionType, String url, Map headers, Body body = null) {
 
         HttpResponse<String> response
         Closure request = {
@@ -99,6 +88,16 @@ class HttpClient {
 
         return request
     }
+
+    void handleResponseLogging(String methodName, ResponseWrapper response, String customErrorMessage = "") {
+        String standardResponseString = "$extendingClass - $methodName() Response status: $response.status"
+
+        if (response.success) {
+            log.info("$standardResponseString success")
+        } else {
+            log.error("$standardResponseString, ${customErrorMessage ?: response.body}")
+        }
+    }
 }
 
 class ResponseWrapper {
@@ -107,21 +106,25 @@ class ResponseWrapper {
     Object body
     int status
 
-    ResponseWrapper(int code, String responseBody = "No response body", boolean isSuccessful = false) {
+    static boolean isSuccessful(int code) {
+        return code >= 200 && code < 300
+    }
+
+    ResponseWrapper(int code, String responseBody = "No response body") {
         body = responseBody
         status = code
-        success = isSuccessful
+        success = isSuccessful(code)
     }
 
     ResponseWrapper(HttpResponse<String> response) {
-        body = new JsonSlurper().parseText(response.body)
+        body = response?.body ? new JsonSlurper().parseText(response.body) : "No response body."
         status = response.status
-        success = response.status >= 200 && response.status < 300
+        success = isSuccessful(response.status)
     }
 
     ResponseWrapper(UnirestException e) {
         exception = e
-        status = 0
+        status = 500
         success = false
         body = e.getMessage()
     }
