@@ -47,9 +47,7 @@ dependencies {
     implementation files('lib/ojdbc8.jar')
 
     /* *** OVERRIDDEN VULNERABLE TRANSITIVE DEPENDENCIES *** */
-    implementation 'org.yaml:snakeyaml:2.1'
-    testImplementation 'org.springframework.cloud:spring-cloud-stream-test-binder'
-    //spring-boot-starter
+    implementation 'org.yaml:snakeyaml:2.1' //spring-boot-starter
 }
 
 tasks.named('test') {
