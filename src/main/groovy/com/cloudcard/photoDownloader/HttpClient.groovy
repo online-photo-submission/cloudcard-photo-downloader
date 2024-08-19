@@ -3,6 +3,7 @@ package com.cloudcard.photoDownloader
 import com.mashape.unirest.http.HttpResponse
 import com.mashape.unirest.http.Unirest
 import com.mashape.unirest.http.exceptions.UnirestException
+import groovy.json.JsonException
 import groovy.json.JsonSlurper
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
@@ -45,7 +46,7 @@ class HttpClient {
 
         try {
             wrapper = new ResponseWrapper(request())
-        } catch (UnirestException e) { // ?
+        } catch (Exception e) { // ?
             log.error(e.message)
             wrapper = new ResponseWrapper(e)
         }
@@ -114,28 +115,47 @@ class HttpClient {
 }
 
 class ResponseWrapper {
-    UnirestException exception
+    private static final Logger log = LoggerFactory.getLogger(ResponseWrapper.class)
+
+    Exception exception
     boolean success
     Object body
     int status
+
+    Object parseBody(String body = null) {
+        Object result
+
+        if (body) {
+            try {
+                result = new JsonSlurper().parseText(body)
+            } catch (JsonException e) {
+                log.error(e.message)
+                result = body.toString()
+            }
+        } else {
+            result = "No response body."
+        }
+
+        return result
+    }
 
     static boolean isSuccessful(int code) {
         return code >= 200 && code < 300
     }
 
     ResponseWrapper(int code, String responseBody = "No response body") {
-        body = responseBody
+        body = parseBody(responseBody)
         status = code
         success = isSuccessful(code)
     }
 
     ResponseWrapper(HttpResponse<String> response) {
-        body = response?.body ? new JsonSlurper().parseText(response.body) : "No response body."
+        body = parseBody(response?.body)
         status = response.status
         success = isSuccessful(response.status)
     }
 
-    ResponseWrapper(UnirestException e) {
+    ResponseWrapper(Exception e) {
         exception = e
         status = 500
         success = false

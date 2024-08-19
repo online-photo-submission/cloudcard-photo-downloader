@@ -1,5 +1,7 @@
 package com.cloudcard.photoDownloader
 
+import com.mashape.unirest.http.exceptions.UnirestException
+import spock.lang.Ignore
 import spock.lang.Specification
 
 class HttpClientSpec extends Specification{
@@ -42,6 +44,23 @@ class HttpClientSpec extends Specification{
         then:
         request.status == 400
         request.body == "Cannot send string and file in same request. Aborted."
+    }
+
+//    @Ignore
+    def "response should fail for invalid url"() {
+        HttpClient httpClient = new HttpClient()
+
+        when:
+        String action = "GET"
+        String url = "https://www.google.com"
+        Map headers = [
+                "Accept": "application/json" as String
+        ]
+
+        ResponseWrapper response = httpClient.makeRequest(action, url, headers)
+
+        then:
+        !response.success
     }
 
 
