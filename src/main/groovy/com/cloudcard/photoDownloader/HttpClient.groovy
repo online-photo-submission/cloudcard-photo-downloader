@@ -17,7 +17,7 @@ class HttpClient {
 
     private static final Logger log = LoggerFactory.getLogger(HttpClient.class)
 
-    String extendingClass = "Base"
+    String source = "HttpClient"
     // used to inform logger of error source
 
     static final String GET = "GET"
@@ -26,7 +26,7 @@ class HttpClient {
     static final String PATCH = "PATCH"
     static final String DELETE = "DELETE"
 
-    ResponseWrapper makeRequest(String actionType, String url, Map headers, String bodyString = "", byte[] bodyBytes = null) {
+    ResponseWrapper makeRequest(String actionType, String url, Map headers = null, String bodyString = "", byte[] bodyBytes = null) {
         // Provides an all-in-one http request builder which packages unirest client into a single method call
 
         if (![GET, POST, PUT, PATCH, DELETE].contains(actionType.toUpperCase())) {
@@ -54,7 +54,7 @@ class HttpClient {
         return wrapper
     }
 
-    private Closure configureRequest(String actionType, String url, Map headers, Body body = null) {
+    private Closure configureRequest(String actionType, String url, Map headers = null, Body body = null) {
 
         HttpResponse<String> response
         Closure request = {
@@ -102,15 +102,20 @@ class HttpClient {
         return request
     }
 
-    void handleResponseLogging(String methodName, ResponseWrapper response, String customErrorMessage = "") {
-        String standardResponseString = "$extendingClass - $methodName() Response status: $response.status"
+    String handleResponseLogging(String methodName, ResponseWrapper response, String customErrorMessage = "") {
+        String standardResponseString = "$source - $methodName() Response status: $response.status"
+        String result
 
         if (response.success) {
-            log.info("$standardResponseString success")
+            result = "$standardResponseString success"
+            log.info(result)
         } else {
-            customErrorMessage && log.error("$extendingClass - $customErrorMessage")
-            log.error("$standardResponseString, ${response.body}")
+            result = "$standardResponseString, ${customErrorMessage ?: response.body}"
+
+            log.error(result)
         }
+
+        return result
     }
 }
 
@@ -122,14 +127,14 @@ class ResponseWrapper {
     Object body
     int status
 
-    Object parseBody(String body = null) {
+    static Object parseBody(String body = null) {
         Object result
 
         if (body) {
             try {
                 result = new JsonSlurper().parseText(body)
             } catch (JsonException e) {
-                log.error(e.message)
+                log.error("Body was unable to be parsed into object: $e.message")
                 result = body.toString()
             }
         } else {
@@ -145,13 +150,13 @@ class ResponseWrapper {
 
     ResponseWrapper(int code, String responseBody = "No response body") {
         body = parseBody(responseBody)
-        status = code
+        status = code as int
         success = isSuccessful(code)
     }
 
     ResponseWrapper(HttpResponse<String> response) {
         body = parseBody(response?.body)
-        status = response.status
+        status = response.status as int
         success = isSuccessful(response.status)
     }
 
@@ -159,7 +164,7 @@ class ResponseWrapper {
         exception = e
         status = 500
         success = false
-        body = e.getMessage()
+        body = parseBody(e.getMessage())
     }
 }
 

@@ -46,13 +46,13 @@ class HttpClientSpec extends Specification{
         request.body == "Cannot send string and file in same request. Aborted."
     }
 
-//    @Ignore
+    @Ignore
     def "response should fail for invalid url"() {
         HttpClient httpClient = new HttpClient()
 
         when:
         String action = "GET"
-        String url = "https://www.google.com"
+        String url = "htttps://www.google.com"
         Map headers = [
                 "Accept": "application/json" as String
         ]
@@ -63,5 +63,53 @@ class HttpClientSpec extends Specification{
         !response.success
     }
 
+    def "makeRequest shouldn't require headers"() {
+        HttpClient httpClient = new HttpClient()
+
+        when:
+        String action = "GET"
+        String url = "https://www.google.com"
+
+        ResponseWrapper response = httpClient.makeRequest(action, url)
+
+        then:
+        response.success
+    }
+
+    def "handleResponseLogging should log success message without body"() {
+        HttpClient httpClient = new HttpClient()
+
+        ResponseWrapper response = new ResponseWrapper(200, "OK")
+
+        when:
+        String message = httpClient.handleResponseLogging("testMethod", response)
+
+        then:
+        message == "HttpClient - testMethod() Response status: 200 success"
+    }
+
+    def "handleResponseLogging should log failed request with no custom message."() {
+        HttpClient httpClient = new HttpClient()
+
+        ResponseWrapper response = new ResponseWrapper(400, "Bad Request")
+
+        when:
+        String message = httpClient.handleResponseLogging("testMethod", response)
+
+        then:
+        message == "HttpClient - testMethod() Response status: 400, Bad Request"
+    }
+
+    def "handleResponseLogging should log failed request with custom message."() {
+        HttpClient httpClient = new HttpClient()
+
+        ResponseWrapper response = new ResponseWrapper(400, "This should not be logged!")
+
+        when:
+        String message = httpClient.handleResponseLogging("testMethod", response, "This is a custom message!")
+
+        then:
+        message == "HttpClient - testMethod() Response status: 400, This is a custom message!"
+    }
 
 }

@@ -95,7 +95,7 @@ class OrigoClient {
             log.info("No access token present during initialization.")
         }
 
-        httpClient.extendingClass = this.class.name
+        httpClient.source = this.class.name
     }
 
     boolean authenticate() {
