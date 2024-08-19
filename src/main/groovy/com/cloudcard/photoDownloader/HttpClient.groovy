@@ -6,21 +6,33 @@ import com.mashape.unirest.http.exceptions.UnirestException
 import groovy.json.JsonSlurper
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
+import org.springframework.stereotype.Component
 
+import javax.annotation.PostConstruct
+
+@Component
 class HttpClient {
     // This class can be extended for easy HTTP requests to a given API through the makeRequests() method. If you need to send custom requests with multiple body types such as json strings and files, it is recommended to build that request separately.
 
     private static final Logger log = LoggerFactory.getLogger(HttpClient.class)
 
-    String extendingClass = "HttpClient"
+    String extendingClass = "Base"
     // used to inform logger of error source
+
+    static final String GET = "GET"
+    static final String POST = "POST"
+    static final String PUT = "PUT"
+    static final String PATCH = "PATCH"
+    static final String DELETE = "DELETE"
 
     ResponseWrapper makeRequest(String actionType, String url, Map headers, String bodyString = "", byte[] bodyBytes = null) {
         // Provides an all-in-one http request builder which packages unirest client into a single method call
 
+        if (![GET, POST, PUT, PATCH, DELETE].contains(actionType.toUpperCase())) {
+            return new ResponseWrapper(400, "Invalid Http action type. Aborted.")
+        }
         if (bodyString && bodyBytes) {
-            log.error("Cannot send string and file in same request.")
-            return new ResponseWrapper(400)
+            return new ResponseWrapper(400, "Cannot send string and file in same request. Aborted.")
         }
 
         Body body
@@ -50,8 +62,8 @@ class HttpClient {
                     .asString()
         }
 
-        switch (actionType.toLowerCase()) {
-            case "post":
+        switch (actionType) {
+            case POST:
                 request = {
                     response = Unirest.post(url)
                             .headers(headers)
@@ -59,7 +71,7 @@ class HttpClient {
                             .asString()
                 }
                 break
-            case "put":
+            case PUT:
                 request = {
                     response = Unirest.put(url)
                             .headers(headers)
@@ -67,7 +79,7 @@ class HttpClient {
                             .asString()
                 }
                 break
-            case "patch":
+            case PATCH:
                 request = {
                     response = Unirest.patch(url)
                             .headers(headers)
@@ -75,14 +87,14 @@ class HttpClient {
                             .asString()
                 }
                 break
-            case "delete":
+            case DELETE:
                 request = {
                     response = Unirest.delete(url)
                             .headers(headers)
                             .asString()
                 }
                 break
-            case "get": // get is set as default
+            case GET: // get is set as default
                 break
         }
 
@@ -95,7 +107,8 @@ class HttpClient {
         if (response.success) {
             log.info("$standardResponseString success")
         } else {
-            log.error("$standardResponseString, ${customErrorMessage ?: response.body}")
+            customErrorMessage && log.error("$extendingClass - $customErrorMessage")
+            log.error("$standardResponseString, ${response.body}")
         }
     }
 }

@@ -4,6 +4,7 @@ package com.cloudcard.photoDownloader
 import jakarta.annotation.PostConstruct
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
+import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Component
 import com.fasterxml.jackson.databind.ObjectMapper
@@ -12,10 +13,13 @@ import static com.cloudcard.photoDownloader.ApplicationPropertiesValidator.throw
 
 
 @Component
-class OrigoClient extends HttpClient {
+class OrigoClient {
     // Makes requests to Origo API
 
     private static final Logger log = LoggerFactory.getLogger(OrigoClient.class)
+
+    @Autowired
+    HttpClient httpClient
 
     @Value('${Origo.eventManagementApi}')
     private String eventManagementApi
@@ -91,7 +95,7 @@ class OrigoClient extends HttpClient {
             log.info("No access token present during initialization.")
         }
 
-        this.extendingClass = this.class.name
+        httpClient.extendingClass = this.class.name
     }
 
     boolean authenticate() {
@@ -117,9 +121,9 @@ class OrigoClient extends HttpClient {
         Map<String, String> headers = ["Content-Type": "application/x-www-form-urlencoded"]
         String body = "client_id=${clientId}&client_secret=${clientSecret}&grant_type=client_credentials"
 
-        ResponseWrapper response = makeRequest("post", url, headers, body)
+        ResponseWrapper response = httpClient.makeRequest(httpClient.POST, url, headers, body)
 
-        handleResponseLogging("requestAccessToken", response, "Error while authenticating with Origo.")
+        httpClient.handleResponseLogging("requestAccessToken", response, "Error while authenticating with Origo.")
 
         return response
     }
@@ -132,9 +136,9 @@ class OrigoClient extends HttpClient {
         Map headers = requestHeaders.clone() as Map
         headers['Content-Type'] = "application/vnd.assaabloy.ma.credential-management-2.2+$fileType" as String
 
-        ResponseWrapper response = makeRequest("post", url, headers, null, photo.bytes)
+        ResponseWrapper response = httpClient.makeRequest(httpClient.POST, url, headers, null, photo.bytes)
 
-        handleResponseLogging("uploadUserPhoto", response)
+        httpClient.handleResponseLogging("uploadUserPhoto", response)
 
         return response
     }
@@ -148,9 +152,9 @@ class OrigoClient extends HttpClient {
                 status: 'APPROVE'
         ])
 
-        ResponseWrapper response = makeRequest("put", url, requestHeaders, serializedBody)
+        ResponseWrapper response = httpClient.makeRequest(httpClient.PUT, url, requestHeaders, serializedBody)
 
-        handleResponseLogging("accountPhotoApprove", response)
+        httpClient.handleResponseLogging("accountPhotoApprove", response)
 
         return response
     }
