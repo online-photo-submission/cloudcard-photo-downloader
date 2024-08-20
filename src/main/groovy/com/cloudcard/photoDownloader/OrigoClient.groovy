@@ -19,8 +19,6 @@ class OrigoClient {
     private static final Logger log = LoggerFactory.getLogger(OrigoClient.class)
 
     @Autowired
-    HttpClient _httpClient
-
     HttpClient httpClient
 
     @Value('${Origo.eventManagementApi}')
@@ -97,7 +95,6 @@ class OrigoClient {
             log.info("No access token present during initialization.")
         }
 
-        setHttpClient(_httpClient)
         httpClient.source = this.class.name
 
     }
@@ -125,7 +122,7 @@ class OrigoClient {
         Map<String, String> headers = ["Content-Type": "application/x-www-form-urlencoded"]
         String body = "client_id=${clientId}&client_secret=${clientSecret}&grant_type=client_credentials"
 
-        ResponseWrapper response = httpClient.makeRequest(httpClient.POST, url, headers, body)
+        ResponseWrapper response = httpClient.makeRequest(Actions.POST.value, url, headers, body)
 
         httpClient.handleResponseLogging("requestAccessToken", response, "Error while authenticating with Origo.")
 
@@ -140,7 +137,7 @@ class OrigoClient {
         Map headers = requestHeaders.clone() as Map
         headers['Content-Type'] = "application/vnd.assaabloy.ma.credential-management-2.2+$fileType" as String
 
-        ResponseWrapper response = httpClient.makeRequest(httpClient.POST, url, headers, null, photo.bytes)
+        ResponseWrapper response = httpClient.makeRequest(Actions.POST.value, url, headers, null, photo.bytes)
 
         httpClient.handleResponseLogging("uploadUserPhoto", response)
 
@@ -156,7 +153,7 @@ class OrigoClient {
                 status: 'APPROVE'
         ])
 
-        ResponseWrapper response = httpClient.makeRequest(httpClient.PUT, url, requestHeaders, serializedBody)
+        ResponseWrapper response = httpClient.makeRequest(Actions.PUT.value, url, requestHeaders, serializedBody)
 
         httpClient.handleResponseLogging("accountPhotoApprove", response)
 

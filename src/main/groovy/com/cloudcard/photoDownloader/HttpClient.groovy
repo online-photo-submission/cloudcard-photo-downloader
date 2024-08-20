@@ -17,16 +17,10 @@ class HttpClient {
     String source = "HttpClient"
     // used to inform logger of error source
 
-    static final String GET = "GET"
-    static final String POST = "POST"
-    static final String PUT = "PUT"
-    static final String PATCH = "PATCH"
-    static final String DELETE = "DELETE"
-
     ResponseWrapper makeRequest(String actionType, String url, Map headers = null, String bodyString = "", byte[] bodyBytes = null) {
         // Provides an all-in-one http request builder which packages unirest client into a single method call
 
-        if (![GET, POST, PUT, PATCH, DELETE].contains(actionType.toUpperCase())) {
+        if (!Actions.values().any {it.value == actionType.toUpperCase()}) {
             return new ResponseWrapper(400, "Invalid Http action type. Aborted.")
         }
         if (bodyString && bodyBytes) {
@@ -61,7 +55,7 @@ class HttpClient {
         }
 
         switch (actionType) {
-            case POST:
+            case Actions.POST.value:
                 request = {
                     response = Unirest.post(url)
                             .headers(headers)
@@ -69,7 +63,7 @@ class HttpClient {
                             .asString()
                 }
                 break
-            case PUT:
+            case Actions.PUT.value:
                 request = {
                     response = Unirest.put(url)
                             .headers(headers)
@@ -77,7 +71,7 @@ class HttpClient {
                             .asString()
                 }
                 break
-            case PATCH:
+            case Actions.PATCH.value:
                 request = {
                     response = Unirest.patch(url)
                             .headers(headers)
@@ -85,14 +79,14 @@ class HttpClient {
                             .asString()
                 }
                 break
-            case DELETE:
+            case Actions.DELETE.value:
                 request = {
                     response = Unirest.delete(url)
                             .headers(headers)
                             .asString()
                 }
                 break
-            case GET: // get is set as default
+            case Actions.GET: // get is set as default
                 break
         }
 
@@ -113,6 +107,16 @@ class HttpClient {
         }
 
         return result
+    }
+}
+
+enum Actions {
+    GET("GET"), POST("POST"), PUT("PUT"), PATCH("PATCH"), DELETE("DELETE")
+
+    String value
+
+    Actions(String action) {
+        this.value = action
     }
 }
 

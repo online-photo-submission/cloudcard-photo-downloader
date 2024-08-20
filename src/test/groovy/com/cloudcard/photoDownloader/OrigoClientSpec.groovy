@@ -1,6 +1,5 @@
 package com.cloudcard.photoDownloader
 
-import spock.lang.Ignore
 import spock.lang.Specification
 
 class OrigoClientSpec extends Specification {
@@ -13,8 +12,10 @@ class OrigoClientSpec extends Specification {
             'Application-ID'     : 'ORIGO-APPLICATION'
     ]
 
+    HttpClient httpClient
+
     def setup() {
-        HttpClient httpClient = new HttpClient()
+        httpClient = Mock(HttpClient)
         origoClient = new OrigoClient(httpClient: httpClient)
 
         origoClient.eventManagementApi = "https://api.mock-event-management.com"
@@ -26,7 +27,8 @@ class OrigoClientSpec extends Specification {
         origoClient.applicationId = "ORIGO-APPLICATION"
         origoClient.clientId = "67890"
         origoClient.clientSecret = "Password1234"
-        origoClient.authorizeRequests "this-is-a-fake-access-token"
+        origoClient.authorizeRequests "this-is-the-original-access-token"
+
     }
 
     def "Should be initialized"() {
@@ -34,44 +36,38 @@ class OrigoClientSpec extends Specification {
         origoClient != null
     }
 
-    def "Should fail to authenticate without stubbing"() {
+    def "Should fail to authenticate with bad request"() {
+
+        origoClient.metaClass.requestAccessToken = { -> new ResponseWrapper(400) }
+
         expect:
         !origoClient.authenticate()
+        origoClient.accessToken == "this-is-the-original-access-token"
+
+        cleanup:
+        origoClient.metaClass = null
     }
 
-    def "Should authenticate with mock API"() {
-        HttpClient httpClient = Mock()
-        String url = "https://api.mock-cert-idp.com/authentication/customer/12345/token"
-        String body = "client_id=67890&client_secret=Password1234&grant_type=client_credentials"
-        Map headers = ['Content-Type' : 'application/x-www-form-urlencoded']
+    def "Should authenticate with good request"() {
         Object responseBody = '{"access_token" : "this-is-your-mock-access-token"}'
 
-        httpClient.makeRequest(httpClient.POST, url, headers, body) >> new ResponseWrapper(200, responseBody)
-        origoClient.httpClient = httpClient
+        origoClient.metaClass.requestAccessToken = { -> new ResponseWrapper(200, responseBody) }
 
         expect:
         origoClient.authenticate()
+        origoClient.accessToken == "this-is-your-mock-access-token"
+
+        cleanup:
+        origoClient.metaClass = null
     }
 
-    def "Should upload user photo to mock API"() {
-        HttpClient httpClient = Mock()
-        String url = "https://api.mock-mobile-identities.com/customer/12345/users/person-1/photo"
-
-        Map headers = requestHeaders.clone() as Map
-        headers['Content-Type'] = 'application/vnd.assaabloy.ma.credential-management-2.2+jpg'
+    def "uploadUserPhoto should upload user photo."() {
 
         Object responseBody = '{"id" : "new-photo-id"}'
 
-        Person person = new Person()
-        person.identifier = "person-1"
+        Photo photo = new Photo(id: 1, person: new Person(identifier: "person-1"), bytes: new byte[] {1})
 
-        Photo photo = new Photo()
-        photo.id = 1234
-        photo.person = person
-        photo.bytes = new byte[] {1}
-
-        httpClient.makeRequest(httpClient.POST, url, headers, null, photo.bytes) >> new ResponseWrapper(200, responseBody)
-        origoClient.httpClient = httpClient
+        httpClient.makeRequest(_, _, _, _, _) >> new ResponseWrapper(200, responseBody)
 
         when:
         ResponseWrapper response = origoClient.uploadUserPhoto(photo, "jpg")
@@ -82,24 +78,14 @@ class OrigoClientSpec extends Specification {
         response.body.id == "new-photo-id"
     }
 
-    def "Should approve user photo in mock API"() {
-        HttpClient httpClient = Mock()
-        String url = "https://api.mock-mobile-identities.com/customer/12345/users/person-1/photo/1234/status"
+    def "accountPhotoApprove should approve user photo in mock API"() {
 
-        String body = '{"status":"APPROVE"}'
+        Photo photo = new Photo(id: 1, person: new Person(identifier: "person-1"), bytes: new byte[] {1})
 
-        Person person = new Person()
-        person.identifier = "person-1"
-
-        Photo photo = new Photo()
-        photo.id = 1234
-        photo.person = person
-
-        httpClient.makeRequest(httpClient.PUT, url, requestHeaders, body) >> new ResponseWrapper(200)
-        origoClient.httpClient = httpClient
+        httpClient.makeRequest(_, _, _, _) >> new ResponseWrapper(200)
 
         when:
-        ResponseWrapper response = origoClient.accountPhotoApprove(person.identifier, "1234")
+        ResponseWrapper response = origoClient.accountPhotoApprove(photo.person.identifier, "1")
 
         then:
         response.success
