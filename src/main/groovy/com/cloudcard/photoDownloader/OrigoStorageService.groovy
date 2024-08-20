@@ -77,7 +77,7 @@ class OrigoStorageService implements StorageService {
         }
 
         String origoPhotoId = upload.body?.id
-        ResponseWrapper approved = origoClient.accountPhotoApprove(photo, origoPhotoId)
+        ResponseWrapper approved = origoClient.accountPhotoApprove(photo.person.identifier, origoPhotoId)
 
         if (!approved.success) {
             log.error("Photo ${photo.id} for $photo.person.email was uploaded, but failed to be auto-approved.")

@@ -2,14 +2,11 @@ package com.cloudcard.photoDownloader
 
 import com.mashape.unirest.http.HttpResponse
 import com.mashape.unirest.http.Unirest
-import com.mashape.unirest.http.exceptions.UnirestException
 import groovy.json.JsonException
 import groovy.json.JsonSlurper
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Component
-
-import javax.annotation.PostConstruct
 
 @Component
 class HttpClient {
@@ -133,8 +130,7 @@ class ResponseWrapper {
         if (body) {
             try {
                 result = new JsonSlurper().parseText(body)
-            } catch (JsonException e) {
-                log.error("Body was unable to be parsed into object: $e.message")
+            } catch (JsonException ignored) {
                 result = body.toString()
             }
         } else {

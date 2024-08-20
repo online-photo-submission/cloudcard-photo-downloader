@@ -19,37 +19,39 @@ class OrigoClient {
     private static final Logger log = LoggerFactory.getLogger(OrigoClient.class)
 
     @Autowired
+    HttpClient _httpClient
+
     HttpClient httpClient
 
     @Value('${Origo.eventManagementApi}')
-    private String eventManagementApi
+    String eventManagementApi
 
     @Value('${Origo.mobileIdentitiesApi}')
-    private String mobileIdentitiesApi
+    String mobileIdentitiesApi
 
     @Value('${Origo.certIdpApi}')
-    private String certIdpApi
+    String certIdpApi
 
     @Value('${Origo.organizationId}')
-    private String organizationId
+    String organizationId
 
     @Value('${Origo.accessToken}')
-    private String accessToken
+    String accessToken
 
     @Value('${Origo.contentType}')
-    private String contentType
+    String contentType
 
     @Value('${Origo.applicationVersion}')
-    private String applicationVersion
+    String applicationVersion
 
     @Value('${Origo.applicationId}')
-    private String applicationId
+    String applicationId
 
     @Value('${Origo.clientId}')
-    private String clientId
+    String clientId
 
     @Value('${Origo.clientSecret}')
-    private String clientSecret
+    String clientSecret
 
     boolean isAuthenticated = accessToken ? true : false
 
@@ -95,7 +97,9 @@ class OrigoClient {
             log.info("No access token present during initialization.")
         }
 
+        setHttpClient(_httpClient)
         httpClient.source = this.class.name
+
     }
 
     boolean authenticate() {
@@ -144,10 +148,10 @@ class OrigoClient {
     }
 
 
-    ResponseWrapper accountPhotoApprove(Photo photo, String id) {
+    ResponseWrapper accountPhotoApprove(String userId, String id) {
         // https://doc.origo.hidglobal.com/api/mobile-identities/#/Photo%20ID/put-customer-organization_id-users-user_id-photo-photo_id-status
 
-        String url = "$mobileIdentitiesApi/customer/$organizationId/users/${photo.person.identifier}/photo/${id}/status"
+        String url = "$mobileIdentitiesApi/customer/$organizationId/users/${userId}/photo/${id}/status"
         String serializedBody = new ObjectMapper().writeValueAsString([
                 status: 'APPROVE'
         ])
