@@ -61,17 +61,11 @@ class OrigoStorageService implements StorageService {
         String accountId = resolveAccountId(photo)
         String fileType = resolveFileType(photo)
 
-        if (!fileType || (fileType != "png" && fileType != "jpg")) {
-            log.error("Photo $photo.id for $photo.person.email has an invalid file type.")
-            return null
-        }
+        if (!fileType) return null
 
         ResponseWrapper upload = origoClient.uploadUserPhoto(photo, fileType)
 
-        if (upload.status == 401) {
-            origoClient.authenticate() && save(photo)
-            return null
-        } else if (!upload.success) {
+        if (!upload.success) {
             log.error("Photo $photo.id for $photo.person.email failed to upload into Origo.")
             return null
         }
@@ -88,15 +82,21 @@ class OrigoStorageService implements StorageService {
     }
 
     String resolveFileType(Photo photo) {
-
         String fileType = ""
+
         if (photo.links.bytes && photo.links.bytes.length() > 3) {
-            fileType = photo.links.bytes[-3..-1]
+            String subString = photo.links.bytes[-3..-1].toLowerCase()
+
+            if (["png", "jpg"].contains(subString)) {
+                fileType = subString
+            } else {
+                log.error("Photo $photo.id for $photo.person.email has an invalid file type.")
+            }
         } else {
             log.error("Could not resolve filetype for photo $photo.id for user $photo.person.email")
         }
 
-        return fileType.toLowerCase()
+        return fileType
     }
 
     String resolveAccountId(Photo photo) {

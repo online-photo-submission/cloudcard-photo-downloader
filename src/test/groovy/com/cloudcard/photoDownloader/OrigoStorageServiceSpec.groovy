@@ -129,27 +129,98 @@ class OrigoStorageServiceSpec extends Specification {
     }
 
     @Unroll
-    def "should not save photo with incorrect #description filetype"() {
+    def "should save photos with correct filetype: #description"() {
         origoStorageService = Spy(OrigoStorageService) {
             resolveAccountId(_) >> "123"
             resolveFileType(_) >> extension
         }
 
-        boolean correctExtension = ["jpg", "png"].contains(extension)
+        Photo photo = new Photo(id: testNumber, person: new Person(identifier: "person-$testNumber", email: "hello$testNumber@mail.com"), bytes: new byte[]{1})
+        Object uploadResponse = '{"id" : "new-photo-id"}'
+
+        OrigoClient _origoClient = Mock()
+        _origoClient.isAuthenticated >> true
+        _origoClient.uploadUserPhoto(_, _) >> new ResponseWrapper(200, uploadResponse)
+        _origoClient.accountPhotoApprove(_, _) >> new ResponseWrapper(200)
+        origoStorageService.origoClient = _origoClient
 
         when:
-        origoStorageService.save(photo)
+        PhotoFile result = origoStorageService.save(photo)
 
         then:
-        correctExtension && photoFile
-        !correctExtension && !photoFile
+
+        (result == null) == photoFileIsNull
 
         where:
-        extension | description | photo                                                                            || photoFile
-        ""        | "blank"     | new Photo(id: 1, person: new Person(identifier: "person"), bytes: new byte[]{1}) || null
-        "jpeg"        | "jpeg"     | new Photo(id: 1, person: new Person(identifier: "person"), bytes: new byte[]{1}) || null
-        "pdf"        | "pdf"     | new Photo(id: 1, person: new Person(identifier: "person"), bytes: new byte[]{1}) || null
-        "docx"        | "docx"     | new Photo(id: 1, person: new Person(identifier: "person"), bytes: new byte[]{1}) || null
-        "docx"        | "docx"     | new Photo(id: 1, person: new Person(identifier: "person"), bytes: new byte[]{1}) || null
+        extension | description                  | testNumber || photoFileIsNull
+        ""        | "\"\"     - failed to save." | 1          || true
+        "jpeg"    | "\"jpeg\" - failed to save." | 2          || true
+        "jpg"     | "\"jpg\"  - saved."          | 3          || false
+        "pdf"     | "\"pdf\"  - failed to save." | 4          || true
+        "png"     | "\"png\"  - saved."          | 5          || false
+        "docx"    | "\"docx\" - failed to save." | 6          || true
     }
+
+    def "should not save a photo if upload fails"() {
+        def origoStorageService = Spy(OrigoStorageService) {
+            resolveAccountId(_) >> "123"
+            resolveFileType(_) >> "jpg"
+        }
+
+        Photo photo = new Photo(id: 1, person: new Person(identifier: "person-1", email: "hello1@mail.com"), bytes: new byte[]{1})
+
+        OrigoClient _origoClient = Mock()
+        _origoClient.uploadUserPhoto(_, _) >> new ResponseWrapper(400, "Bad Request")
+        _origoClient.authenticate() >> true
+        origoStorageService.origoClient = _origoClient
+
+        when:
+        PhotoFile photoFile = origoStorageService.save(photo)
+
+        then:
+        photoFile == null
+
+    }
+
+    def "should approve photo if upload is successful"() {
+        Object uploadResponse = '{"id" : "new-photo-id"}'
+
+        def origoStorageService = Spy(OrigoStorageService) {
+            resolveAccountId(_) >> "123"
+            resolveFileType(_) >> "jpg"
+        }
+
+        Photo photo = new Photo(id: 1, person: new Person(identifier: "person-1", email: "hello1@mail.com"), bytes: new byte[]{1})
+
+        OrigoClient _origoClient = Mock()
+        _origoClient.uploadUserPhoto(_, _) >> new ResponseWrapper(200, uploadResponse)
+        _origoClient.authenticate() >> true
+        origoStorageService.origoClient = _origoClient
+
+        when:
+        PhotoFile photoFile = origoStorageService.save(photo)
+
+        then:
+        1 * origoStorageService.origoClient.accountPhotoApprove(_, _) >> new ResponseWrapper(200)
+        photoFile != null
+    }
+
+    @Unroll
+    def "should pull file type from aws png or jpg link - #description " ( ) {
+
+        Photo photo = new Photo(id: 1, person: new Person(identifier: "person-1", email: "hello1@mail.com"), links: links, bytes: new byte[]{1})
+
+        when:
+        String fileType = origoStorageService.resolveFileType(photo)
+
+        then:
+        fileType == result
+
+        where:
+        links                                                      | description        || result
+        new Links(bytes: "https://api.aws.fake.com/some-file.jpg") | "\"jpg\" - Correct"    || "jpg"
+        new Links(bytes: "https://api.aws.fake.com/some-file.png") | "\"png\" - Correct"    || "png"
+        new Links(bytes: "https://api.aws.fake.com/some-file.exe") | "\"\" - Incorrect" || ""
+    }
+
 }
