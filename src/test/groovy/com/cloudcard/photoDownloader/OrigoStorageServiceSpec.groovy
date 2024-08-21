@@ -1,6 +1,7 @@
 package com.cloudcard.photoDownloader
 
 import spock.lang.Specification
+import spock.lang.Unroll
 
 class OrigoStorageServiceSpec extends Specification {
     OrigoStorageService origoStorageService
@@ -120,8 +121,35 @@ class OrigoStorageServiceSpec extends Specification {
         10 * origoStorageService.save(_ as Photo)
     }
 
-//    def "should not save a photo with a null person property"() {
-//        Photo photo = new Photo(id: 5, person: null, bytes: new byte[]{1})
-//
-//    }
+    def "should not save a photo with a null person property"() {
+        Photo photo = new Photo(id: 5, person: null, bytes: new byte[]{1})
+
+        expect:
+        !origoStorageService.save(photo)
+    }
+
+    @Unroll
+    def "should not save photo with incorrect #description filetype"() {
+        origoStorageService = Spy(OrigoStorageService) {
+            resolveAccountId(_) >> "123"
+            resolveFileType(_) >> extension
+        }
+
+        boolean correctExtension = ["jpg", "png"].contains(extension)
+
+        when:
+        origoStorageService.save(photo)
+
+        then:
+        correctExtension && photoFile
+        !correctExtension && !photoFile
+
+        where:
+        extension | description | photo                                                                            || photoFile
+        ""        | "blank"     | new Photo(id: 1, person: new Person(identifier: "person"), bytes: new byte[]{1}) || null
+        "jpeg"        | "jpeg"     | new Photo(id: 1, person: new Person(identifier: "person"), bytes: new byte[]{1}) || null
+        "pdf"        | "pdf"     | new Photo(id: 1, person: new Person(identifier: "person"), bytes: new byte[]{1}) || null
+        "docx"        | "docx"     | new Photo(id: 1, person: new Person(identifier: "person"), bytes: new byte[]{1}) || null
+        "docx"        | "docx"     | new Photo(id: 1, person: new Person(identifier: "person"), bytes: new byte[]{1}) || null
+    }
 }
