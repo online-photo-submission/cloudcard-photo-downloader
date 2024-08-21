@@ -45,7 +45,7 @@ class OrigoStorageService implements StorageService {
             if (!origoClient.authenticate()) return []
         }
 
-        List<PhotoFile> photoFiles = photos.findAll { save(it) }
+        List<PhotoFile> photoFiles = photos.findResults { save(it) }
 
         return photoFiles
     }
@@ -84,6 +84,7 @@ class OrigoStorageService implements StorageService {
         }
 
         return new PhotoFile(accountId, null, photo.id)
+
     }
 
     String resolveFileType(Photo photo) {
