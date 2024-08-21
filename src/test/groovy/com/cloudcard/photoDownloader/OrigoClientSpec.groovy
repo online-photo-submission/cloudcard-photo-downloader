@@ -5,13 +5,6 @@ import spock.lang.Specification
 class OrigoClientSpec extends Specification {
     OrigoClient origoClient
 
-    Map requestHeaders = [
-            'Authorization'      : 'Bearer this-is-a-fake-access-token',
-            'Content-Type'       : 'application/vnd.assaabloy.ma.credential-management-2.2+json',
-            'Application-Version': '2.2',
-            'Application-ID'     : 'ORIGO-APPLICATION'
-    ]
-
     HttpClient httpClient
 
     def setup() {

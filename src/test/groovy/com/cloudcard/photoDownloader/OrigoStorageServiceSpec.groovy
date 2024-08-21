@@ -136,7 +136,7 @@ class OrigoStorageServiceSpec extends Specification {
         }
 
         Photo photo = new Photo(id: testNumber, person: new Person(identifier: "person-$testNumber", email: "hello$testNumber@mail.com"), bytes: new byte[]{1})
-        Object uploadResponse = '{"id" : "new-photo-id"}'
+        Object uploadResponse = '{"id" : 321}'
 
         OrigoClient _origoClient = Mock()
         _origoClient.isAuthenticated >> true
@@ -145,20 +145,19 @@ class OrigoStorageServiceSpec extends Specification {
         origoStorageService.origoClient = _origoClient
 
         when:
-        PhotoFile result = origoStorageService.save(photo)
+        PhotoFile photoFile = origoStorageService.save(photo)
 
         then:
-
-        (result == null) == photoFileIsNull
+        photoFile == result
 
         where:
-        extension | description                  | testNumber || photoFileIsNull
-        ""        | "\"\"     - failed to save." | 1          || true
-        "jpeg"    | "\"jpeg\" - failed to save." | 2          || true
-        "jpg"     | "\"jpg\"  - saved."          | 3          || false
-        "pdf"     | "\"pdf\"  - failed to save." | 4          || true
-        "png"     | "\"png\"  - saved."          | 5          || false
-        "docx"    | "\"docx\" - failed to save." | 6          || true
+        extension | description                  | testNumber || result
+        ""        | "\"\"     - failed to save." | 1          || null
+        "jpeg"    | "\"jpeg\" - failed to save." | 2          || null
+        "jpg"     | "\"jpg\"  - saved."          | 3          || new PhotoFile("123", null, 3)
+        "pdf"     | "\"pdf\"  - failed to save." | 4          || null
+        "png"     | "\"png\"  - saved."          | 5          || new PhotoFile("123", null, 5)
+        "docx"    | "\"docx\" - failed to save." | 6          || null
     }
 
     def "should not save a photo if upload fails"() {
@@ -220,7 +219,7 @@ class OrigoStorageServiceSpec extends Specification {
         links                                                      | description         || result
         new Links(bytes: "https://api.aws.fake.com/some-file.jpg") | "\"jpg\" - Correct" || "jpg"
         new Links(bytes: "https://api.aws.fake.com/some-file.png") | "\"png\" - Correct" || "png"
-        new Links(bytes: "https://api.aws.fake.com/some-file.exe") | "\"\" - Incorrect"  || ""
+        new Links(bytes: "https://api.aws.fake.com/some-file.exe") | "\"exe\" - Incorrect"  || "exe"
     }
 
     @Unroll
