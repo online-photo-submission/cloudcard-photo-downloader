@@ -84,7 +84,7 @@ class OrigoStorageService implements StorageService {
     String resolveFileType(Photo photo) {
         String fileType = ""
 
-        if (photo.links.bytes && photo.links.bytes.length() > 3) {
+        if (photo.links?.bytes && photo.links?.bytes.length() > 3) {
             String subString = photo.links.bytes[-3..-1].toLowerCase()
 
             if (["png", "jpg"].contains(subString)) {

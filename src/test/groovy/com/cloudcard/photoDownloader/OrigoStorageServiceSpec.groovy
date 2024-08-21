@@ -206,7 +206,7 @@ class OrigoStorageServiceSpec extends Specification {
     }
 
     @Unroll
-    def "should pull file type from aws png or jpg link - #description " ( ) {
+    def "resolveFileType should pull file type from aws png or jpg link - #description "() {
 
         Photo photo = new Photo(id: 1, person: new Person(identifier: "person-1", email: "hello1@mail.com"), links: links, bytes: new byte[]{1})
 
@@ -217,10 +217,27 @@ class OrigoStorageServiceSpec extends Specification {
         fileType == result
 
         where:
-        links                                                      | description        || result
-        new Links(bytes: "https://api.aws.fake.com/some-file.jpg") | "\"jpg\" - Correct"    || "jpg"
-        new Links(bytes: "https://api.aws.fake.com/some-file.png") | "\"png\" - Correct"    || "png"
-        new Links(bytes: "https://api.aws.fake.com/some-file.exe") | "\"\" - Incorrect" || ""
+        links                                                      | description         || result
+        new Links(bytes: "https://api.aws.fake.com/some-file.jpg") | "\"jpg\" - Correct" || "jpg"
+        new Links(bytes: "https://api.aws.fake.com/some-file.png") | "\"png\" - Correct" || "png"
+        new Links(bytes: "https://api.aws.fake.com/some-file.exe") | "\"\" - Incorrect"  || ""
+    }
+
+    @Unroll
+    def "resolveFileType should return empty string with invalid aws link - result #description"() {
+        Photo photo = new Photo(id: 1, person: new Person(identifier: "person-1", email: "hello1@mail.com"), links: links, bytes: new byte[]{1})
+
+        when:
+        String fileType = origoStorageService.resolveFileType(photo)
+
+        then:
+        fileType == result
+
+        where:
+        links                  | description             || result
+        null                   | "\"null\""              || ""
+        new Links(bytes: "jp") | "\"Link is too short\"" || ""
+
     }
 
 }
