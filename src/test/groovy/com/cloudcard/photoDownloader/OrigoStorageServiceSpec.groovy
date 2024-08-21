@@ -23,21 +23,22 @@ class OrigoStorageServiceSpec extends Specification {
         origoClient.applicationId = "ORIGO-APPLICATION"
         origoClient.clientId = "67890"
         origoClient.clientSecret = "Password1234"
-        origoClient.authorizeRequests "this-is-a-fake-access-token"
+        origoClient.authorizeRequests "this-is-the-original-access-token"
+
     }
 
-    def "save (multiple) should fail when passed empty list"() {
+    def "save (multiple) should return empty when passed empty list"() {
         List<PhotoFile> photoFiles = origoStorageService.save([])
 
         expect:
         !photoFiles[0]
     }
 
-    def "should authenticate if necessary"() {
-        List<PhotoFile> photoFiles = origoStorageService.save([])
+    def "should authenticate if client is logged out"() {
+        origoStorageService.save([])
 
         OrigoClient _origoClient = Mock()
-        _origoClient.isAuthenticated = false
+        _origoClient.isAuthenticated >> false
         origoStorageService.origoClient = _origoClient
 
         when:
@@ -47,9 +48,80 @@ class OrigoStorageServiceSpec extends Specification {
         1 * origoStorageService.origoClient.authenticate()
     }
 
-//    def "should iterate through and save a list of photos"() {
-//        List<Photo> photos = [
-//                new Photo(id: 1, person: new Person(identifier: "person-1"), bytes: new byte[] {1})
-//        ]
+    def "should iterate through and save a list of photos"() {
+        List<Photo> photos = [
+                new Photo(id: 1, person: new Person(identifier: "person-1"), bytes: new byte[]{1}),
+                new Photo(id: 2, person: new Person(identifier: "person-2"), bytes: new byte[]{1}),
+                new Photo(id: 3, person: new Person(identifier: "person-3"), bytes: new byte[]{1}),
+                new Photo(id: 4, person: new Person(identifier: "person-4"), bytes: new byte[]{1}),
+                new Photo(id: 5, person: new Person(identifier: "person-5"), bytes: new byte[]{1}),
+                new Photo(id: 6, person: new Person(identifier: "person-6"), bytes: new byte[]{1}),
+                new Photo(id: 7, person: new Person(identifier: "person-7"), bytes: new byte[]{1}),
+                new Photo(id: 8, person: new Person(identifier: "person-8"), bytes: new byte[]{1}),
+                new Photo(id: 9, person: new Person(identifier: "person-9"), bytes: new byte[]{1}),
+                new Photo(id: 10, person: new Person(identifier: "person-10"), bytes: new byte[]{1})
+        ]
+
+        Object uploadResponse = '{"id" : "new-photo-id"}'
+
+        OrigoClient _origoClient = Mock()
+        _origoClient.isAuthenticated >> true
+        _origoClient.uploadUserPhoto(_, _) >> new ResponseWrapper(200, uploadResponse)
+        _origoClient.accountPhotoApprove(_, _) >> new ResponseWrapper(200)
+
+        origoStorageService = Spy(OrigoStorageService) {
+            resolveAccountId(_) >> "123"
+            resolveFileType(_) >> "png"
+        }
+
+        origoStorageService.origoClient = _origoClient
+
+        when:
+        List<PhotoFile> files = origoStorageService.save(photos)
+
+        then:
+        files.size() == 10
+        10 * origoStorageService.save(_ as Photo)
+    }
+
+    def "should save 8 of 10 photos"() {
+        List<Photo> photos = [
+                new Photo(id: 1, person: new Person(identifier: "person-1"), bytes: new byte[]{1}),
+                new Photo(id: 2, person: new Person(identifier: "person-2"), bytes: new byte[]{1}),
+                new Photo(id: 3, person: new Person(identifier: "person-3"), bytes: new byte[]{1}),
+                new Photo(id: 4, person: new Person(identifier: "person-4"), bytes: new byte[]{1}),
+                new Photo(id: 5, person: null, bytes: new byte[]{1}),
+                new Photo(id: 6, person: new Person(identifier: "person-6"), bytes: new byte[]{1}),
+                new Photo(id: 7, person: null, bytes: new byte[]{1}),
+                new Photo(id: 8, person: new Person(identifier: "person-8"), bytes: new byte[]{1}),
+                new Photo(id: 9, person: new Person(identifier: "person-9"), bytes: new byte[]{1}),
+                new Photo(id: 10, person: new Person(identifier: "person-10"), bytes: new byte[]{1})
+        ]
+
+        Object uploadResponse = '{"id" : "new-photo-id"}'
+
+        OrigoClient _origoClient = Mock()
+        _origoClient.isAuthenticated >> true
+        _origoClient.uploadUserPhoto(_, _) >> new ResponseWrapper(200, uploadResponse)
+        _origoClient.accountPhotoApprove(_, _) >> new ResponseWrapper(200)
+
+        origoStorageService = Spy(OrigoStorageService) {
+            resolveAccountId(_) >> "123"
+            resolveFileType(_) >> "png"
+        }
+
+        origoStorageService.origoClient = _origoClient
+
+        when:
+        List<PhotoFile> files = origoStorageService.save(photos)
+
+        then:
+        files.size() == 8
+        10 * origoStorageService.save(_ as Photo)
+    }
+
+//    def "should not save a photo with a null person property"() {
+//        Photo photo = new Photo(id: 5, person: null, bytes: new byte[]{1})
+//
 //    }
 }

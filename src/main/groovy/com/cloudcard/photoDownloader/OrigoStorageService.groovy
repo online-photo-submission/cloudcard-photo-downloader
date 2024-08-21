@@ -45,7 +45,7 @@ class OrigoStorageService implements StorageService {
             if (!origoClient.authenticate()) return []
         }
 
-        List<PhotoFile> photoFiles = photos.collect { save(it) }.findAll { it != null }
+        List<PhotoFile> photoFiles = photos.findAll { save(it) }
 
         return photoFiles
     }
