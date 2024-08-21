@@ -49,6 +49,42 @@ class OrigoStorageServiceSpec extends Specification {
         1 * origoStorageService.origoClient.authenticate()
     }
 
+    def "should return [] if authentication fails"() {
+        origoStorageService.save([])
+
+        OrigoClient _origoClient = Mock()
+        _origoClient.isAuthenticated >> false
+        _origoClient.authenticate() >> false
+        origoStorageService.origoClient = _origoClient
+
+        when:
+        List<PhotoFile> photoFiles = origoStorageService.save([new Photo()])
+
+        then:
+        1 * origoStorageService.origoClient.authenticate()
+        photoFiles.size() == 0
+        0 * origoStorageService.origoClient.uploadUserPhoto(_, _)
+        0 * origoStorageService.origoClient.accountPhotoApprove(_, _)
+    }
+
+//    def "should set isAuthenticated to false if 401 response received"() {
+//        Photo photo = new Photo(id: 1, person: new Person(identifier: "person-1", email: "hello1@mail.com"), links: new Links(bytes: "www.api-fake.com/img.png"), bytes: new byte[]{1})
+//
+//        origoStorageService = Spy(OrigoStorageService) {
+//            uploadUserPhoto(_, _) >> new ResponseWrapper(401, "Invalid Credentials")
+//        }
+//
+//        OrigoClient _origoClient = Mock()
+//        _origoClient.isAuthenticated >> true
+//        origoStorageService.origoClient = _origoClient
+//
+//        when:
+//        origoStorageService.save(photo)
+//
+//        then:
+//        origoStorageService.origoClient.isAuthenticated == false
+//    }
+
     def "should iterate through and save a list of photos"() {
         List<Photo> photos = [
                 new Photo(id: 1, person: new Person(identifier: "person-1"), bytes: new byte[]{1}),
@@ -179,6 +215,8 @@ class OrigoStorageServiceSpec extends Specification {
         then:
         photoFile == null
 
+        // verify certain methods don't get called here
+
     }
 
     def "should approve photo if upload is successful"() {
@@ -216,10 +254,10 @@ class OrigoStorageServiceSpec extends Specification {
         fileType == result
 
         where:
-        links                                                      | description         || result
-        new Links(bytes: "https://api.aws.fake.com/some-file.jpg") | "\"jpg\" - Correct" || "jpg"
-        new Links(bytes: "https://api.aws.fake.com/some-file.png") | "\"png\" - Correct" || "png"
-        new Links(bytes: "https://api.aws.fake.com/some-file.exe") | "\"exe\" - Incorrect"  || "exe"
+        links                                                      | description           || result
+        new Links(bytes: "https://api.aws.fake.com/some-file.jpg") | "\"jpg\" - Correct"   || "jpg"
+        new Links(bytes: "https://api.aws.fake.com/some-file.png") | "\"png\" - Correct"   || "png"
+        new Links(bytes: "https://api.aws.fake.com/some-file.exe") | "\"exe\" - Incorrect" || "exe"
     }
 
     @Unroll

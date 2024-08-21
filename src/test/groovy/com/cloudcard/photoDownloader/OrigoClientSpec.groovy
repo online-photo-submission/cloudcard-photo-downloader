@@ -85,5 +85,4 @@ class OrigoClientSpec extends Specification {
         response.status == 200
     }
 
-
 }

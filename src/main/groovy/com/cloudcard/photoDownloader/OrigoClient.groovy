@@ -110,6 +110,8 @@ class OrigoClient {
             token = response.body.access_token
             authorizeRequests(token)
             result = true
+        } else {
+            isAuthenticated = false
         }
 
         return result

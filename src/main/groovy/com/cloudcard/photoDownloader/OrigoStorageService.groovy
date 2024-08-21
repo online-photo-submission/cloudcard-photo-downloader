@@ -42,7 +42,9 @@ class OrigoStorageService implements StorageService {
         log.info("Uploading Photos to Origo")
 
         if (!origoClient.isAuthenticated) {
-            if (!origoClient.authenticate()) return []
+            if (!origoClient.authenticate()) {
+                return []
+            }
         }
 
         List<PhotoFile> photoFiles = photos.findResults { save(it) }
@@ -69,6 +71,7 @@ class OrigoStorageService implements StorageService {
         ResponseWrapper upload = origoClient.uploadUserPhoto(photo, fileType)
 
         if (!upload.success) {
+            if (upload.status == 401) origoClient.isAuthenticated = false
             log.error("Photo $photo.id for $photo.person.email failed to upload into Origo.")
             return null
         }
@@ -77,6 +80,7 @@ class OrigoStorageService implements StorageService {
         ResponseWrapper approved = origoClient.accountPhotoApprove(photo.person.identifier, origoPhotoId)
 
         if (!approved.success) {
+            if (upload.status == 401) origoClient.isAuthenticated = false
             log.error("Photo ${photo.id} for $photo.person.email was uploaded, but failed to be auto-approved.")
         }
 
@@ -96,10 +100,6 @@ class OrigoStorageService implements StorageService {
         }
 
         return fileType
-    }
-
-    boolean validateFileType(String fileType) {
-
     }
 
     String resolveAccountId(Photo photo) {
