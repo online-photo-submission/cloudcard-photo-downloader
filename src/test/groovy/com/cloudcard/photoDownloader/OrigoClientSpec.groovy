@@ -86,4 +86,29 @@ class OrigoClientSpec extends Specification {
         response.status == 200
     }
 
+    def "authorize requests should set up headers with accessToken"() {
+        given:
+        String accessToken = "0123456789abcdefghijklmnopqrstuvwxyz"
+        origoClient = Spy(OrigoClient) {
+            it.contentType = "application/vnd.assaabloy.ma.credential-management-2.2+json"
+            it.applicationVersion = "2.2"
+            it.applicationId = "ORIGO-APPLICATION"
+        }
+
+        when:
+        boolean result = origoClient.authorizeRequests accessToken
+
+        then:
+        result
+        origoClient.accessToken == "0123456789abcdefghijklmnopqrstuvwxyz"
+        origoClient.isAuthenticated
+        origoClient.requestHeaders == [
+                'Authorization'      : "Bearer 0123456789abcdefghijklmnopqrstuvwxyz" as String,
+                'Content-Type'       : 'application/vnd.assaabloy.ma.credential-management-2.2+json',
+                'Application-Version': '2.2',
+                'Application-ID'     : 'ORIGO-APPLICATION'
+        ]
+        1 * origoClient.setRequestHeaders(_)
+    }
+
 }

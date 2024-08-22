@@ -33,8 +33,6 @@ class OrigoClient {
     @Value('${Origo.organizationId}')
     String organizationId
 
-    @Value('${Origo.accessToken}')
-    String accessToken
 
     @Value('${Origo.contentType}')
     String contentType
@@ -51,18 +49,28 @@ class OrigoClient {
     @Value('${Origo.clientSecret}')
     String clientSecret
 
-    boolean isAuthenticated = accessToken ? true : false
+    String accessToken
 
-    private Map requestHeaders
+    boolean isAuthenticated = false
 
-    void authorizeRequests(String token) {
+    Map requestHeaders
+
+    boolean authorizeRequests(String token) {
+        boolean result = false
+
         accessToken = token
         isAuthenticated = true
-        setRequestHeaders(token)
+        Map headers = setRequestHeaders(token)
+
+        if (accessToken == token
+                && isAuthenticated
+                && headers == requestHeaders) result = true
+
+        return result
     }
 
-    void setRequestHeaders(String token) {
-        requestHeaders = [
+    Map setRequestHeaders(String token) {
+        return requestHeaders = [
                 'Authorization'      : "Bearer $token" as String,
                 'Content-Type'       : contentType,
                 'Application-Version': applicationVersion,
@@ -89,12 +97,6 @@ class OrigoClient {
         log.info("               Origo application version : $applicationVersion")
         log.info("                    Origo application ID : $applicationId")
 
-        if (accessToken) {
-            authorizeRequests(accessToken)
-        } else {
-            log.info("No access token present during initialization.")
-        }
-
         httpClient.source = this.class.name
 
     }
@@ -108,8 +110,7 @@ class OrigoClient {
 
         if (response.success) {
             token = response.body.access_token
-            authorizeRequests(token)
-            result = true
+            result = authorizeRequests(token)
         } else {
             isAuthenticated = false
         }

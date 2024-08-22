@@ -28,7 +28,6 @@ class OrigoStorageService implements StorageService {
     @PostConstruct
     void init() {
         throwIfTrue(fileNameResolver == null, "The File Name Resolver must be specified.")
-        throwIfTrue(fileNameResolver == null, "The File Name Resolver must be specified.")
 
         log.info("   File Name Resolver : $fileNameResolver.class.simpleName")
     }
@@ -71,13 +70,12 @@ class OrigoStorageService implements StorageService {
         ResponseWrapper upload = origoClient.uploadUserPhoto(photo, fileType)
 
         if (!upload.success) {
-            if (upload.status == 401)  origoClient.isAuthenticated = false
+            if (upload.status == 401) origoClient.isAuthenticated = false
             log.error("Photo $photo.id for $photo.person.email failed to upload into Origo.")
             return null
         }
 
-        String origoPhotoId = upload.body?.id
-        ResponseWrapper approved = origoClient.accountPhotoApprove(photo.person.identifier, origoPhotoId)
+        ResponseWrapper approved = origoClient.accountPhotoApprove(photo.person.identifier as String, upload.body?.id as String)
 
         if (!approved.success) {
             if (upload.status == 401) origoClient.isAuthenticated = false

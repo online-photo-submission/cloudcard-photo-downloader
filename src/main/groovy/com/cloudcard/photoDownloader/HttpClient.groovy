@@ -10,12 +10,12 @@ import org.springframework.stereotype.Component
 
 @Component
 class HttpClient {
-    // This class can be extended for easy HTTP requests to a given API through the makeRequests() method. If you need to send custom requests with multiple body types such as json strings and files, it is recommended to build that request separately.
+    // This class can instantiated for easy HTTP requests to a given API through the makeRequests() method. If you need to send custom requests with multiple body types such as json strings and files, it is recommended to build that request separately.
 
     private static final Logger log = LoggerFactory.getLogger(HttpClient.class)
 
     String source = "HttpClient"
-    // used to inform logger of error source
+    // used to inform logger of error source. Put "httpClient.source = this.class.name" in init() method
 
     ResponseWrapper makeRequest(String actionType, String url, Map headers = null, String bodyString = "", byte[] bodyBytes = null) {
         // Provides an all-in-one http request builder which packages unirest client into a single method call
@@ -86,7 +86,7 @@ class HttpClient {
                             .asString()
                 }
                 break
-            case Actions.GET: // get is set as default
+            case Actions.GET.value: // get is set as default
                 break
         }
 
@@ -121,8 +121,6 @@ enum Actions {
 }
 
 class ResponseWrapper {
-    private static final Logger log = LoggerFactory.getLogger(ResponseWrapper.class)
-
     Exception exception
     boolean success
     Object body
