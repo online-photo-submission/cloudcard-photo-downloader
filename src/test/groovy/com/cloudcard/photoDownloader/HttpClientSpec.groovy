@@ -1,12 +1,12 @@
 package com.cloudcard.photoDownloader
 
-import com.mashape.unirest.http.exceptions.UnirestException
 import spock.lang.Ignore
 import spock.lang.Specification
 
-class HttpClientSpec extends Specification{
+class HttpClientSpec extends Specification {
 
     def "should be initialized"() {
+        given:
         HttpClient httpClient = new HttpClient()
 
         expect:
@@ -14,6 +14,7 @@ class HttpClientSpec extends Specification{
     }
 
     def "makeRequest should error if called without required args"() {
+        given:
         HttpClient httpClient = new HttpClient()
 
         when:
@@ -24,10 +25,11 @@ class HttpClientSpec extends Specification{
     }
 
     def "makeRequest should give proper error if called with invalid action type"() {
+        given:
         HttpClient httpClient = new HttpClient()
 
         when:
-        def request = httpClient.makeRequest("ddelete", "url", ['foo' : 'bar'])
+        def request = httpClient.makeRequest("ddelete", "url", ['foo': 'bar'])
 
         then:
         request.status == 400
@@ -35,11 +37,12 @@ class HttpClientSpec extends Specification{
     }
 
     def "makeRequest should not allow string and file as bodies"() {
+        given:
         HttpClient httpClient = new HttpClient()
 
         when:
-        byte[] bytes = new byte[] {1}
-        def request = httpClient.makeRequest("post", "url", ['foo' : 'bar'], "string body", bytes)
+        byte[] bytes = new byte[]{1}
+        def request = httpClient.makeRequest("post", "url", ['foo': 'bar'], "string body", bytes)
 
         then:
         request.status == 400
@@ -48,6 +51,7 @@ class HttpClientSpec extends Specification{
 
     @Ignore
     def "response should fail for invalid url"() {
+        given:
         HttpClient httpClient = new HttpClient()
 
         when:
@@ -64,6 +68,7 @@ class HttpClientSpec extends Specification{
     }
 
     def "makeRequest shouldn't require headers"() {
+        given:
         HttpClient httpClient = new HttpClient()
 
         when:
@@ -77,6 +82,7 @@ class HttpClientSpec extends Specification{
     }
 
     def "handleResponseLogging should log success message without body"() {
+        given:
         HttpClient httpClient = new HttpClient()
 
         ResponseWrapper response = new ResponseWrapper(200, "OK")
@@ -89,6 +95,7 @@ class HttpClientSpec extends Specification{
     }
 
     def "handleResponseLogging should log failed request with no custom message."() {
+        given:
         HttpClient httpClient = new HttpClient()
 
         ResponseWrapper response = new ResponseWrapper(400, "Bad Request")
@@ -101,6 +108,7 @@ class HttpClientSpec extends Specification{
     }
 
     def "handleResponseLogging should log failed request with custom message."() {
+        given:
         HttpClient httpClient = new HttpClient()
 
         ResponseWrapper response = new ResponseWrapper(400, "This should not be logged!")

@@ -30,7 +30,7 @@ class OrigoClientSpec extends Specification {
     }
 
     def "Should fail to authenticate with bad request"() {
-
+        given:
         origoClient.metaClass.requestAccessToken = { -> new ResponseWrapper(400) }
 
         expect:
@@ -42,6 +42,7 @@ class OrigoClientSpec extends Specification {
     }
 
     def "Should authenticate with good request"() {
+        given:
         Object responseBody = '{"access_token" : "this-is-your-mock-access-token"}'
 
         origoClient.metaClass.requestAccessToken = { -> new ResponseWrapper(200, responseBody) }
@@ -55,10 +56,10 @@ class OrigoClientSpec extends Specification {
     }
 
     def "uploadUserPhoto should upload user photo."() {
-
+        given:
         Object responseBody = '{"id" : "new-photo-id"}'
 
-        Photo photo = new Photo(id: 1, person: new Person(identifier: "person-1"), bytes: new byte[] {1})
+        Photo photo = new Photo(id: 1, person: new Person(identifier: "person-1"), bytes: new byte[]{1})
 
         httpClient.makeRequest(_, _, _, _, _) >> new ResponseWrapper(200, responseBody)
 
@@ -72,8 +73,8 @@ class OrigoClientSpec extends Specification {
     }
 
     def "accountPhotoApprove should approve user photo in mock API"() {
-
-        Photo photo = new Photo(id: 1, person: new Person(identifier: "person-1"), bytes: new byte[] {1})
+        given:
+        Photo photo = new Photo(id: 1, person: new Person(identifier: "person-1"), bytes: new byte[]{1})
 
         httpClient.makeRequest(_, _, _, _) >> new ResponseWrapper(200)
 

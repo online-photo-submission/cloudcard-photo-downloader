@@ -29,6 +29,7 @@ class OrigoStorageServiceSpec extends Specification {
     }
 
     def "save (multiple) should return empty when passed empty list"() {
+        given:
         List<PhotoFile> photoFiles = origoStorageService.save([])
 
         expect:
@@ -36,6 +37,7 @@ class OrigoStorageServiceSpec extends Specification {
     }
 
     def "should authenticate if client is logged out"() {
+        given:
         origoStorageService.save([])
 
         OrigoClient _origoClient = Mock()
@@ -50,6 +52,7 @@ class OrigoStorageServiceSpec extends Specification {
     }
 
     def "should return [] if authentication fails"() {
+        given:
         origoStorageService.save([])
 
         OrigoClient _origoClient = Mock()
@@ -67,25 +70,30 @@ class OrigoStorageServiceSpec extends Specification {
         0 * origoStorageService.origoClient.accountPhotoApprove(_, _)
     }
 
-//    def "should set isAuthenticated to false if 401 response received"() {
-//        Photo photo = new Photo(id: 1, person: new Person(identifier: "person-1", email: "hello1@mail.com"), links: new Links(bytes: "www.api-fake.com/img.png"), bytes: new byte[]{1})
-//
-//        origoStorageService = Spy(OrigoStorageService) {
-//            uploadUserPhoto(_, _) >> new ResponseWrapper(401, "Invalid Credentials")
-//        }
-//
-//        OrigoClient _origoClient = Mock()
-//        _origoClient.isAuthenticated >> true
-//        origoStorageService.origoClient = _origoClient
-//
-//        when:
-//        origoStorageService.save(photo)
-//
-//        then:
-//        origoStorageService.origoClient.isAuthenticated == false
-//    }
+    def "should set isAuthenticated to false if 401 response received"() {
+        given:
+        Photo photo = new Photo(id: 1, person: new Person(identifier: "person-1", email: "hello1@mail.com"), links: new Links(bytes: "www.api-fake.com/img.png"), bytes: new byte[]{1})
+
+        origoStorageService = Spy(OrigoStorageService) {
+            resolveFileType(_) >> "png"
+            resolveAccountId(_) >> "123"
+        }
+
+        OrigoClient _origoClient = Mock()
+        origoStorageService.origoClient = _origoClient
+
+        when:
+        PhotoFile photoFile = origoStorageService.save(photo)
+
+        then:
+        photoFile == null
+        !origoStorageService.origoClient.isAuthenticated
+        1 * origoStorageService.origoClient.uploadUserPhoto(_, _) >> new ResponseWrapper(401, "Invalid Credentials")
+        0 * origoStorageService.origoClient.accountPhotoApprove(_, _)
+    }
 
     def "should iterate through and save a list of photos"() {
+        given:
         List<Photo> photos = [
                 new Photo(id: 1, person: new Person(identifier: "person-1"), bytes: new byte[]{1}),
                 new Photo(id: 2, person: new Person(identifier: "person-2"), bytes: new byte[]{1}),
@@ -122,6 +130,7 @@ class OrigoStorageServiceSpec extends Specification {
     }
 
     def "should save 8 of 10 photos"() {
+        given:
         List<Photo> photos = [
                 new Photo(id: 1, person: new Person(identifier: "person-1"), bytes: new byte[]{1}),
                 new Photo(id: 2, person: new Person(identifier: "person-2"), bytes: new byte[]{1}),
@@ -158,6 +167,7 @@ class OrigoStorageServiceSpec extends Specification {
     }
 
     def "should not save a photo with a null person property"() {
+        given:
         Photo photo = new Photo(id: 5, person: null, bytes: new byte[]{1})
 
         expect:
@@ -166,6 +176,7 @@ class OrigoStorageServiceSpec extends Specification {
 
     @Unroll
     def "should save photos with correct filetype: #description"() {
+        given:
         origoStorageService = Spy(OrigoStorageService) {
             resolveAccountId(_) >> "123"
             resolveFileType(_) >> extension
@@ -197,6 +208,7 @@ class OrigoStorageServiceSpec extends Specification {
     }
 
     def "should not save a photo if upload fails"() {
+        given:
         def origoStorageService = Spy(OrigoStorageService) {
             resolveAccountId(_) >> "123"
             resolveFileType(_) >> "jpg"
@@ -220,6 +232,7 @@ class OrigoStorageServiceSpec extends Specification {
     }
 
     def "should approve photo if upload is successful"() {
+        given:
         Object uploadResponse = '{"id" : "new-photo-id"}'
 
         def origoStorageService = Spy(OrigoStorageService) {
@@ -244,7 +257,7 @@ class OrigoStorageServiceSpec extends Specification {
 
     @Unroll
     def "resolveFileType should pull file type from aws png or jpg link - #description "() {
-
+        given:
         Photo photo = new Photo(id: 1, person: new Person(identifier: "person-1", email: "hello1@mail.com"), links: links, bytes: new byte[]{1})
 
         when:
@@ -262,6 +275,7 @@ class OrigoStorageServiceSpec extends Specification {
 
     @Unroll
     def "resolveFileType should return empty string with invalid aws link - result #description"() {
+        given:
         Photo photo = new Photo(id: 1, person: new Person(identifier: "person-1", email: "hello1@mail.com"), links: links, bytes: new byte[]{1})
 
         when:
