@@ -20,7 +20,7 @@ class HttpClient {
     ResponseWrapper makeRequest(String actionType, String url, Map headers = null, String bodyString = "", byte[] bodyBytes = null) {
         // Provides an all-in-one http request builder which packages unirest client into a single method call
 
-        if (!Actions.values().any {it.value == actionType.toUpperCase()}) {
+        if (!Actions.values().any { it.value == actionType.toUpperCase() }) {
             return new ResponseWrapper(400, "Invalid Http action type. Aborted.")
         }
         if (bodyString && bodyBytes) {
@@ -46,10 +46,10 @@ class HttpClient {
     }
 
     private Closure configureRequest(String actionType, String url, Map headers = null, Body body = null) {
+        if (!Actions.values().any { it.value == actionType.toUpperCase() }) return null
 
-        HttpResponse<String> response
         Closure request = {
-            response = Unirest.get(url)
+            Unirest.get(url)
                     .headers(headers)
                     .asString()
         }
@@ -57,7 +57,7 @@ class HttpClient {
         switch (actionType) {
             case Actions.POST.value:
                 request = {
-                    response = Unirest.post(url)
+                    Unirest.post(url)
                             .headers(headers)
                             .body(body.data)
                             .asString()
@@ -65,7 +65,7 @@ class HttpClient {
                 break
             case Actions.PUT.value:
                 request = {
-                    response = Unirest.put(url)
+                    Unirest.put(url)
                             .headers(headers)
                             .body(body.data)
                             .asString()
@@ -73,7 +73,7 @@ class HttpClient {
                 break
             case Actions.PATCH.value:
                 request = {
-                    response = Unirest.patch(url)
+                    Unirest.patch(url)
                             .headers(headers)
                             .body(body.data)
                             .asString()
@@ -81,7 +81,7 @@ class HttpClient {
                 break
             case Actions.DELETE.value:
                 request = {
-                    response = Unirest.delete(url)
+                    Unirest.delete(url)
                             .headers(headers)
                             .asString()
                 }

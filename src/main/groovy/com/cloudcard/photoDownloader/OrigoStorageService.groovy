@@ -28,8 +28,10 @@ class OrigoStorageService implements StorageService {
     @PostConstruct
     void init() {
         throwIfTrue(fileNameResolver == null, "The File Name Resolver must be specified.")
+        throwIfTrue(origoClient == null, "The Origo Client must be specified.")
 
         log.info("   File Name Resolver : $fileNameResolver.class.simpleName")
+        log.info("         Origo Client : $origoClient.class.simpleName")
     }
 
     List<PhotoFile> save(Collection<Photo> photos) {

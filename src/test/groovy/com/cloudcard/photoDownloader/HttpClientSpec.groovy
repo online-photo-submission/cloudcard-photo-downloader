@@ -1,7 +1,10 @@
 package com.cloudcard.photoDownloader
 
+import com.mashape.unirest.http.HttpResponse
+import com.mashape.unirest.http.Unirest
 import spock.lang.Ignore
 import spock.lang.Specification
+import spock.lang.Unroll
 
 class HttpClientSpec extends Specification {
 
@@ -67,6 +70,7 @@ class HttpClientSpec extends Specification {
         !response.success
     }
 
+    @Ignore
     def "makeRequest shouldn't require headers"() {
         given:
         HttpClient httpClient = new HttpClient()

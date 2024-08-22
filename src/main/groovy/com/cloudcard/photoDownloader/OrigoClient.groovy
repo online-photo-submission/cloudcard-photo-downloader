@@ -33,7 +33,6 @@ class OrigoClient {
     @Value('${Origo.organizationId}')
     String organizationId
 
-
     @Value('${Origo.contentType}')
     String contentType
 
