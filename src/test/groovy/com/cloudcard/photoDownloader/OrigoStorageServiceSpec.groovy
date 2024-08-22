@@ -232,8 +232,6 @@ class OrigoStorageServiceSpec extends Specification {
         then:
         photoFile == null
 
-        // verify certain methods don't get called here
-
     }
 
     def "should approve photo if upload is successful"() {
