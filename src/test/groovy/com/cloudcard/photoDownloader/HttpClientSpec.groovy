@@ -124,4 +124,19 @@ class HttpClientSpec extends Specification {
         message == "HttpClient - testMethod() Response status: 400, This is a custom message!"
     }
 
+    @Ignore
+    def "makeRequest should return 400 error if configureRequest is passed invalid action type"() {
+        // Requires lines 23 - 25 to be commented in HttpClient to bypass first validation
+
+        given:
+        HttpClient httpClient = new HttpClient()
+
+        when:
+        ResponseWrapper response = httpClient.makeRequest("POST", "url.com", ['Content-Type' : "application/json"] as Map)
+
+        then:
+        !response.success
+        response.status == 400
+        response.body == "No response body"
+    }
 }

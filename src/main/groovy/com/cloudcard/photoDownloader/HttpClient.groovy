@@ -20,9 +20,10 @@ class HttpClient {
     ResponseWrapper makeRequest(String actionType, String url, Map headers = null, String bodyString = "", byte[] bodyBytes = null) {
         // Provides an all-in-one http request builder which packages unirest client into a single method call
 
-        if (!Actions.values().any { it.value == actionType.toUpperCase() }) {
+        if (!Actions.isValid(actionType)) {
             return new ResponseWrapper(400, "Invalid Http action type. Aborted.")
         }
+
         if (bodyString && bodyBytes) {
             return new ResponseWrapper(400, "Cannot send string and file in same request. Aborted.")
         }
@@ -45,8 +46,8 @@ class HttpClient {
         return wrapper
     }
 
-    private Closure configureRequest(String actionType, String url, Map headers = null, Body body = null) {
-        if (!Actions.values().any { it.value == actionType.toUpperCase() }) return null
+    Closure configureRequest(String actionType, String url, Map headers = null, Body body = null) {
+        if (!Actions.isValid(actionType)) return { -> 400 }
 
         Closure request = {
             Unirest.get(url)
@@ -117,6 +118,12 @@ enum Actions {
 
     Actions(String action) {
         this.value = action
+    }
+
+    static boolean isValid(String actionType) {
+        if (!values().any { it.value == actionType.toUpperCase() }) return false
+
+        true
     }
 }
 
