@@ -28,6 +28,11 @@ class OrigoStorageServiceSpec extends Specification {
 
     }
 
+    def "should be initialized"() {
+        expect:
+        origoStorageService != null
+    }
+
     def "save (multiple) should return empty when passed empty list"() {
         given:
         List<PhotoFile> photoFiles = origoStorageService.save([])
