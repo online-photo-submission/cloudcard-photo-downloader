@@ -11,9 +11,10 @@ class OrigoStorageServiceSpec extends Specification {
     def setup() {
         origoStorageService = new OrigoStorageService()
 
-        origoClient = new OrigoClient()
-        HttpClient httpClient = new HttpClient()
-        origoClient = new OrigoClient(httpClient: httpClient)
+        FileNameResolver fileNameResolver = Mock()
+        HttpClient httpClient = Mock()
+        origoClient = Mock(OrigoClient)
+        origoClient.httpClient = httpClient
 
         origoClient.eventManagementApi = "https://api.mock-event-management.com"
         origoClient.mobileIdentitiesApi = "https://api.mock-mobile-identities.com"
@@ -24,13 +25,24 @@ class OrigoStorageServiceSpec extends Specification {
         origoClient.applicationId = "ORIGO-APPLICATION"
         origoClient.clientId = "67890"
         origoClient.clientSecret = "Password1234"
-        origoClient.authorizeRequests "this-is-the-original-access-token"
 
+        origoStorageService.origoClient = origoClient
+        origoStorageService.fileNameResolver = fileNameResolver
     }
 
     def "should be initialized"() {
         expect:
         origoStorageService != null
+    }
+
+    def "origoClient should be initialized"() {
+        expect:
+        origoStorageService.origoClient != null
+    }
+
+    def "filenameResolver should be initialized"() {
+        expect:
+        origoStorageService.fileNameResolver != null
     }
 
     def "save (multiple) should return empty when passed empty list"() {
@@ -41,63 +53,7 @@ class OrigoStorageServiceSpec extends Specification {
         !photoFiles[0]
     }
 
-    def "should authenticate if client is logged out"() {
-        given:
-        origoStorageService.save([])
-
-        OrigoClient _origoClient = Mock()
-        _origoClient.isAuthenticated >> false
-        origoStorageService.origoClient = _origoClient
-
-        when:
-        origoStorageService.save([new Photo()])
-
-        then:
-        1 * origoStorageService.origoClient.authenticate()
-    }
-
-    def "should return [] if authentication fails"() {
-        given:
-        origoStorageService.save([])
-
-        OrigoClient _origoClient = Mock()
-        _origoClient.isAuthenticated >> false
-        _origoClient.authenticate() >> false
-        origoStorageService.origoClient = _origoClient
-
-        when:
-        List<PhotoFile> photoFiles = origoStorageService.save([new Photo()])
-
-        then:
-        1 * origoStorageService.origoClient.authenticate()
-        photoFiles.size() == 0
-        0 * origoStorageService.origoClient.uploadUserPhoto(_, _)
-        0 * origoStorageService.origoClient.accountPhotoApprove(_, _)
-    }
-
-    def "should set isAuthenticated to false if 401 response received"() {
-        given:
-        Photo photo = new Photo(id: 1, person: new Person(identifier: "person-1", email: "hello1@mail.com"), links: new Links(bytes: "www.api-fake.com/img.png"), bytes: new byte[]{1})
-
-        origoStorageService = Spy(OrigoStorageService) {
-            resolveFileType(_) >> "png"
-            resolveAccountId(_) >> "123"
-        }
-
-        OrigoClient _origoClient = Mock()
-        origoStorageService.origoClient = _origoClient
-
-        when:
-        PhotoFile photoFile = origoStorageService.save(photo)
-
-        then:
-        photoFile == null
-        !origoStorageService.origoClient.isAuthenticated
-        1 * origoStorageService.origoClient.uploadUserPhoto(_, _) >> new ResponseWrapper(401, "Invalid Credentials")
-        0 * origoStorageService.origoClient.accountPhotoApprove(_, _)
-    }
-
-    def "should iterate through and save a list of photos"() {
+    def "save (multiple) should iterate through and save a list of photos"() {
         given:
         List<Photo> photos = [
                 new Photo(id: 1, person: new Person(identifier: "person-1"), bytes: new byte[]{1}),
@@ -111,57 +67,39 @@ class OrigoStorageServiceSpec extends Specification {
                 new Photo(id: 9, person: new Person(identifier: "person-9"), bytes: new byte[]{1}),
                 new Photo(id: 10, person: new Person(identifier: "person-10"), bytes: new byte[]{1})
         ]
-
-        Object uploadResponse = '{"id" : "new-photo-id"}'
-
-        OrigoClient _origoClient = Mock()
-        _origoClient.isAuthenticated >> true
-        _origoClient.uploadUserPhoto(_, _) >> new ResponseWrapper(200, uploadResponse)
-        _origoClient.accountPhotoApprove(_, _) >> new ResponseWrapper(200)
-
-        origoStorageService = Spy(OrigoStorageService) {
-            resolveAccountId(_) >> "123"
-            resolveFileType(_) >> "png"
-        }
-
-        origoStorageService.origoClient = _origoClient
+        origoStorageService = Spy(OrigoStorageService)
 
         when:
         List<PhotoFile> files = origoStorageService.save(photos)
 
         then:
         files.size() == 10
-        10 * origoStorageService.save(_ as Photo)
+        10 * origoStorageService.save(_ as Photo) >> new PhotoFile("baseName", null, 123)
     }
 
     def "should save 8 of 10 photos"() {
         given:
         List<Photo> photos = [
                 new Photo(id: 1, person: new Person(identifier: "person-1"), bytes: new byte[]{1}),
-                new Photo(id: 2, person: new Person(identifier: "person-2"), bytes: new byte[]{1}),
+                new Photo(id: 2, person: null, bytes: new byte[]{1}),
                 new Photo(id: 3, person: new Person(identifier: "person-3"), bytes: new byte[]{1}),
                 new Photo(id: 4, person: new Person(identifier: "person-4"), bytes: new byte[]{1}),
                 new Photo(id: 5, person: null, bytes: new byte[]{1}),
                 new Photo(id: 6, person: new Person(identifier: "person-6"), bytes: new byte[]{1}),
-                new Photo(id: 7, person: null, bytes: new byte[]{1}),
+                new Photo(id: 7, person: new Person(identifier: "person-7"), bytes: new byte[]{1}),
                 new Photo(id: 8, person: new Person(identifier: "person-8"), bytes: new byte[]{1}),
                 new Photo(id: 9, person: new Person(identifier: "person-9"), bytes: new byte[]{1}),
                 new Photo(id: 10, person: new Person(identifier: "person-10"), bytes: new byte[]{1})
         ]
+        origoStorageService = Spy(OrigoStorageService)
+        origoStorageService.metaClass.save = {
+            Photo photo ->
+                if (!photo.person) {
+                    return null
+                }
 
-        Object uploadResponse = '{"id" : "new-photo-id"}'
-
-        OrigoClient _origoClient = Mock()
-        _origoClient.isAuthenticated >> true
-        _origoClient.uploadUserPhoto(_, _) >> new ResponseWrapper(200, uploadResponse)
-        _origoClient.accountPhotoApprove(_, _) >> new ResponseWrapper(200)
-
-        origoStorageService = Spy(OrigoStorageService) {
-            resolveAccountId(_) >> "123"
-            resolveFileType(_) >> "png"
+                return new PhotoFile("baseName", null, 123)
         }
-
-        origoStorageService.origoClient = _origoClient
 
         when:
         List<PhotoFile> files = origoStorageService.save(photos)
@@ -188,13 +126,10 @@ class OrigoStorageServiceSpec extends Specification {
         }
 
         Photo photo = new Photo(id: testNumber, person: new Person(identifier: "person-$testNumber", email: "hello$testNumber@mail.com"), bytes: new byte[]{1})
-        Object uploadResponse = '{"id" : 321}'
 
-        OrigoClient _origoClient = Mock()
-        _origoClient.isAuthenticated >> true
-        _origoClient.uploadUserPhoto(_, _) >> new ResponseWrapper(200, uploadResponse)
-        _origoClient.accountPhotoApprove(_, _) >> new ResponseWrapper(200)
-        origoStorageService.origoClient = _origoClient
+        origoClient.makeAuthenticatedRequest(_) >> new ResponseWrapper(200)
+
+        origoStorageService.origoClient = origoClient
 
         when:
         PhotoFile photoFile = origoStorageService.save(photo)
@@ -212,50 +147,112 @@ class OrigoStorageServiceSpec extends Specification {
         "docx"    | "\"docx\" - failed to save." | 6          || null
     }
 
-    def "should not save a photo if upload fails"() {
+    def "should not save a photo if upload fails and overrideCurrentPhoto is false"() {
         given:
         def origoStorageService = Spy(OrigoStorageService) {
             resolveAccountId(_) >> "123"
             resolveFileType(_) >> "jpg"
+            it.overrideCurrentPhoto >> false
         }
 
         Photo photo = new Photo(id: 1, person: new Person(identifier: "person-1", email: "hello1@mail.com"), bytes: new byte[]{1})
 
-        OrigoClient _origoClient = Mock()
-        _origoClient.uploadUserPhoto(_, _) >> new ResponseWrapper(400, "Bad Request")
-        _origoClient.authenticate() >> true
-        origoStorageService.origoClient = _origoClient
+        origoClient.makeAuthenticatedRequest(_) >> new ResponseWrapper(400)
+
+        origoStorageService.origoClient = origoClient
 
         when:
         PhotoFile photoFile = origoStorageService.save(photo)
 
         then:
         photoFile == null
-
     }
 
-    def "should approve photo if upload is successful"() {
-        given:
-        Object uploadResponse = '{"id" : "new-photo-id"}'
 
+    def "should removeCurrentPhoto and save if upload fails but overrideCurrentPhoto is true"() {
+        given:
         def origoStorageService = Spy(OrigoStorageService) {
             resolveAccountId(_) >> "123"
             resolveFileType(_) >> "jpg"
+            it.overrideCurrentPhoto = true
         }
 
         Photo photo = new Photo(id: 1, person: new Person(identifier: "person-1", email: "hello1@mail.com"), bytes: new byte[]{1})
 
-        OrigoClient _origoClient = Mock()
-        _origoClient.uploadUserPhoto(_, _) >> new ResponseWrapper(200, uploadResponse)
-        _origoClient.authenticate() >> true
-        origoStorageService.origoClient = _origoClient
+        origoStorageService.origoClient = origoClient
 
         when:
         PhotoFile photoFile = origoStorageService.save(photo)
 
         then:
-        1 * origoStorageService.origoClient.accountPhotoApprove(_, _) >> new ResponseWrapper(200)
+        1 * origoStorageService.removeCurrentPhoto(_) >> {}
+        3 * origoClient.makeAuthenticatedRequest(_) >> new ResponseWrapper(400) >> new ResponseWrapper(200) >> new ResponseWrapper(200)
         photoFile != null
+    }
+
+    def "should return null if second upload attempt fails"() {
+        given:
+        def origoStorageService = Spy(OrigoStorageService) {
+            resolveAccountId(_) >> "123"
+            resolveFileType(_) >> "jpg"
+            it.overrideCurrentPhoto = true
+        }
+
+        Photo photo = new Photo(id: 1, person: new Person(identifier: "person-1", email: "hello1@mail.com"), bytes: new byte[]{1})
+
+        origoStorageService.origoClient = origoClient
+
+        when:
+        PhotoFile photoFile = origoStorageService.save(photo)
+
+        then:
+        1 * origoStorageService.removeCurrentPhoto(_) >> {}
+        2 * origoClient.makeAuthenticatedRequest(_) >> new ResponseWrapper(400) >> new ResponseWrapper(400)
+        photoFile == null
+    }
+
+
+    def "should return photofile if photo approval succeeds"() {
+        given:
+        def origoStorageService = Spy(OrigoStorageService) {
+            resolveAccountId(_) >> "123"
+            resolveFileType(_) >> "jpg"
+            it.overrideCurrentPhoto = true
+        }
+
+        Photo photo = new Photo(id: 1, person: new Person(identifier: "person-1", email: "hello1@mail.com"), bytes: new byte[]{1})
+
+        origoStorageService.origoClient = origoClient
+
+        when:
+        PhotoFile photoFile = origoStorageService.save(photo)
+
+        then:
+        1 * origoStorageService.removeCurrentPhoto(_) >> {}
+        3 * origoClient.makeAuthenticatedRequest(_) >> new ResponseWrapper(400) >> new ResponseWrapper(200) >> new ResponseWrapper(200)
+        photoFile != null
+    }
+
+
+    def "should return null if photo approval fails"() {
+        given:
+        def origoStorageService = Spy(OrigoStorageService) {
+            resolveAccountId(_) >> "123"
+            resolveFileType(_) >> "jpg"
+            it.overrideCurrentPhoto = true
+        }
+
+        Photo photo = new Photo(id: 1, person: new Person(identifier: "person-1", email: "hello1@mail.com"), bytes: new byte[]{1})
+
+        origoStorageService.origoClient = origoClient
+
+        when:
+        PhotoFile photoFile = origoStorageService.save(photo)
+
+        then:
+        1 * origoStorageService.removeCurrentPhoto(_) >> {}
+        3 * origoClient.makeAuthenticatedRequest(_) >> new ResponseWrapper(400) >> new ResponseWrapper(200) >> new ResponseWrapper(400)
+        photoFile == null
     }
 
     @Unroll
@@ -294,40 +291,26 @@ class OrigoStorageServiceSpec extends Specification {
 
     }
 
-    def "should call removeCurrentPhoto() if upload returns 400 status and overridecurrentPhoto == true"() {
-        given:
-        def origoStorageService = Spy(OrigoStorageService) {
-            resolveAccountId(_) >> "123"
-            resolveFileType(_) >> "jpg"
-            it.overrideCurrentPhoto = true
-        }
-
-        Photo photo = new Photo(id: 1, person: new Person(identifier: "person-1", email: "hello1@mail.com"), bytes: new byte[]{1})
-
-        OrigoClient _origoClient = Mock()
-        _origoClient.uploadUserPhoto(_, _) >> new ResponseWrapper(400)
-        _origoClient.authenticate() >> true
-        origoStorageService.origoClient = _origoClient
-
-        when:
-        origoStorageService.save(photo)
-
-        then:
-        1 * origoStorageService.removeCurrentPhoto(_)
-    }
-
-    def "replacePhoto should call getUserDetails"() {
+    def "removeCurrentPhoto should get user details and delete user photo"() {
         given:
         Photo photo = new Photo(id: 1, person: new Person(identifier: "person-1", email: "hello1@mail.com"), bytes: new byte[]{1})
-
-        OrigoClient _origoClient = Mock()
-        origoStorageService.origoClient = _origoClient
+        String userDetails = '{"urn:hid:scim:api:ma:2.2:User:Photo":{"id":[123456]}}'
 
         when:
         origoStorageService.removeCurrentPhoto(photo)
 
         then:
-        1 * origoStorageService.origoClient.getUserDetails(photo.person.identifier) >> new ResponseWrapper(200)
+        2 * origoStorageService.origoClient.makeAuthenticatedRequest(_) >> new ResponseWrapper(200, userDetails) >> new ResponseWrapper(200)
     }
 
+    def "removeCurrentPhoto shouldn't delete if getUserDetails fails"() {
+        given:
+        Photo photo = new Photo(id: 1, person: new Person(identifier: "person-1", email: "hello1@mail.com"), bytes: new byte[]{1})
+
+        when:
+        origoStorageService.removeCurrentPhoto(photo)
+
+        then:
+        1 * origoStorageService.origoClient.makeAuthenticatedRequest(_) >> new ResponseWrapper(400)
+    }
 }

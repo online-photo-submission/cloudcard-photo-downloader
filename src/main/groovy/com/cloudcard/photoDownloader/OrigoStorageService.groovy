@@ -30,7 +30,6 @@ class OrigoStorageService implements StorageService {
     @Value('${Origo.overrideCurrentPhoto}')
     boolean overrideCurrentPhoto
 
-
     @PostConstruct
     void init() {
         throwIfTrue(fileNameResolver == null, "The File Name Resolver must be specified.")
@@ -71,7 +70,6 @@ class OrigoStorageService implements StorageService {
             return null
         }
 
-
         ResponseWrapper upload = origoClient.makeAuthenticatedRequest { origoClient.uploadUserPhoto(photo, fileType) }
 
         if (upload.status == 400 && overrideCurrentPhoto) {
@@ -87,6 +85,7 @@ class OrigoStorageService implements StorageService {
 
         if (!approved.success) {
             log.error("Photo ${photo.id} for $photo.person.email was uploaded, but failed to be auto-approved.")
+            return null
         }
 
         return new PhotoFile(accountId, null, photo.id)
@@ -94,6 +93,8 @@ class OrigoStorageService implements StorageService {
     }
 
     void removeCurrentPhoto(Photo photo) {
+        log.info("  =========== Override Current Photo Option Selected ===========")
+        log.info("                --> Removing existing photo ID <--             ")
         ResponseWrapper details = origoClient.makeAuthenticatedRequest { origoClient.getUserDetails(photo.person.identifier) }
 
         if (details.success) {

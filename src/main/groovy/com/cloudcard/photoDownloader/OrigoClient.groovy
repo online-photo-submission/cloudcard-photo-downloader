@@ -175,7 +175,6 @@ class OrigoClient {
 
     ResponseWrapper getUserDetails(String userId) {
         // https://doc.origo.hidglobal.com/api/mobile-identities/#/Users/get-customer-organization_id-users-user_id
-        if (!userId) throw new Exception("Missing Arguments.")
 
         ResponseWrapper response
 
@@ -194,7 +193,6 @@ class OrigoClient {
 
     ResponseWrapper deletePhoto(String userId, String photoId) {
         // https://doc.origo.hidglobal.com/api/mobile-identities/#/Photo%20ID/delete-customer-organization_id-users-user_id-photo-photo_id
-        if (!userId || !photoId) throw new Exception("Missing Arguments.")
 
         ResponseWrapper response
 

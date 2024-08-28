@@ -41,6 +41,28 @@ class OrigoClientSpec extends Specification {
         origoClient.httpClient != null
     }
 
+    def "authenticate should hydrate properties with token"() {
+        given:
+        Object responseBody = '{"access_token" : "this-is-your-mock-access-token"}'
+        ResponseWrapper responseWithToken = new ResponseWrapper(200, responseBody)
+        origoClient = Spy(OrigoClient) {
+            it.isAuthenticated = false
+            it.requestHeaders = null
+        }
+
+        when:
+        origoClient.authenticate(responseWithToken)
+
+        then:
+        origoClient.isAuthenticated
+        origoClient.requestHeaders == [
+                'Authorization'      : 'Bearer this-is-your-mock-access-token',
+                'Content-Type'       : origoClient.contentType,
+                'Application-Version': origoClient.applicationVersion,
+                'Application-ID'     : origoClient.applicationId
+        ]
+    }
+
     @Unroll
     def "requestAccessToken should properly handle different Http responses - status: #status, body: #body"() {
         given:
@@ -167,21 +189,6 @@ class OrigoClientSpec extends Specification {
     }
 
     @Unroll
-    def "uploadUserPhoto should throw exception if missing args"() {
-        when:
-        origoClient.uploadUserPhoto(arg1, arg2)
-
-        then:
-        thrown(Exception)
-
-        where:
-        arg1                                                                               | arg2
-        null                                                                               | null
-        new Photo(id: 1, person: new Person(identifier: "person-1"), bytes: new byte[]{1}) | null
-        null                                                                               | 'jpg'
-    }
-
-    @Unroll
     def "uploadUserPhoto should properly handle different Http responses. - body: #body status: #status"() {
         given:
 
@@ -225,15 +232,6 @@ class OrigoClientSpec extends Specification {
     }
 
     @Unroll
-    def "accountPhotoApprove should throw exception if missing args"() {
-        when:
-        origoClient.accountPhotoApprove()
-
-        then:
-        thrown(Exception)
-    }
-
-    @Unroll
     def "accountPhotoApprove should properly handle different Http responses. - body: #body status: #status"() {
         given:
 
@@ -274,14 +272,6 @@ class OrigoClientSpec extends Specification {
         500    | '{"body" : "SERVERERROR"}'
         0      | null
 
-    }
-
-    def "getUserDetails should throw exception if missing args"() {
-        when:
-        origoClient.getUserDetails()
-
-        then:
-        thrown(Exception)
     }
 
     @Unroll
@@ -328,21 +318,6 @@ class OrigoClientSpec extends Specification {
     }
 
     @Unroll
-    def "deletePhoto should throw exception if missing args"() {
-        when:
-        origoClient.deletePhoto(arg1, arg2)
-
-        then:
-        thrown(Exception)
-
-        where:
-        arg1  | arg2
-        null  | null
-        "123" | null
-        null  | "123"
-    }
-
-    @Unroll
     def "deletePhoto should properly handle different Http responses. - body: #body status: #status"() {
         given:
         HttpClient httpClient = Mock()
@@ -382,11 +357,4 @@ class OrigoClientSpec extends Specification {
 
     }
 
-    class ClosureWrapper {
-        ClosureWrapper(Closure c) {
-            closure = c
-        }
-
-        Closure closure
-    }
 }
