@@ -16,76 +16,18 @@ class HttpClientSpec extends Specification {
         httpClient != null
     }
 
-    def "makeRequest should error if called without required args"() {
+    def "source should be defined"() {
         given:
         HttpClient httpClient = new HttpClient()
 
-        when:
-        httpClient.makeRequest()
+        expect:
+        httpClient.source != ""
+        httpClient.source != null
+        httpClient.source == "HttpClient"
 
-        then:
-        thrown(Exception)
     }
 
-    def "makeRequest should give proper error if called with invalid action type"() {
-        given:
-        HttpClient httpClient = new HttpClient()
-
-        when:
-        def request = httpClient.makeRequest("ddelete", "url", ['foo': 'bar'])
-
-        then:
-        request.status == 400
-        request.body == "Invalid Http action type. Aborted."
-    }
-
-    def "makeRequest should not allow string and file as bodies"() {
-        given:
-        HttpClient httpClient = new HttpClient()
-
-        when:
-        byte[] bytes = new byte[]{1}
-        def request = httpClient.makeRequest("post", "url", ['foo': 'bar'], "string body", bytes)
-
-        then:
-        request.status == 400
-        request.body == "Cannot send string and file in same request. Aborted."
-    }
-
-    @Ignore
-    def "response should fail for invalid url"() {
-        given:
-        HttpClient httpClient = new HttpClient()
-
-        when:
-        String action = "GET"
-        String url = "htttps://www.google.com"
-        Map headers = [
-                "Accept": "application/json" as String
-        ]
-
-        ResponseWrapper response = httpClient.makeRequest(action, url, headers)
-
-        then:
-        !response.success
-    }
-
-    @Ignore
-    def "makeRequest shouldn't require headers"() {
-        given:
-        HttpClient httpClient = new HttpClient()
-
-        when:
-        String action = "GET"
-        String url = "https://www.google.com"
-
-        ResponseWrapper response = httpClient.makeRequest(action, url)
-
-        then:
-        response.success
-    }
-
-    def "handleResponseLogging should log success message without body"() {
+    def "handleResponseLogging should log success message without response body"() {
         given:
         HttpClient httpClient = new HttpClient()
 
@@ -124,19 +66,4 @@ class HttpClientSpec extends Specification {
         message == "HttpClient - testMethod() Response status: 400, This is a custom message!"
     }
 
-    @Ignore
-    def "makeRequest should return 400 error if configureRequest is passed invalid action type"() {
-        // Requires lines 23 - 25 to be commented in HttpClient to bypass first validation
-
-        given:
-        HttpClient httpClient = new HttpClient()
-
-        when:
-        ResponseWrapper response = httpClient.makeRequest("POST", "url.com", ['Content-Type' : "application/json"] as Map)
-
-        then:
-        !response.success
-        response.status == 400
-        response.body == "No response body"
-    }
 }

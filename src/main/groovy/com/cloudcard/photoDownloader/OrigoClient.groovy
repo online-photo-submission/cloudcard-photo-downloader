@@ -80,14 +80,13 @@ class OrigoClient {
 
     }
 
-    boolean authenticate() {
+    boolean authenticate(ResponseWrapper responseWithToken) {
         // Stores token for future requests
 
-        ResponseWrapper response = requestAccessToken()
         String token = ""
 
-        if (response.success) {
-            token = response.body.access_token
+        if (responseWithToken.success) {
+            token = responseWithToken.body.access_token
             accessToken = token
             requestHeaders = [
                     'Authorization'      : "Bearer $token" as String,
@@ -108,7 +107,7 @@ class OrigoClient {
 
         ResponseWrapper response
 
-        if (!isAuthenticated && authenticate() || isAuthenticated) {
+        if (!isAuthenticated && authenticate(requestAccessToken()) || isAuthenticated) {
             response = request()
         } else {
             response = new ResponseWrapper(new AuthException())
@@ -138,84 +137,77 @@ class OrigoClient {
 
     ResponseWrapper uploadUserPhoto(Photo photo, String fileType) {
         // https://doc.origo.hidglobal.com/api/mobile-identities/#/Photo%20ID/post-customer-organization_id-users-user_id-photo
-        makeAuthenticatedRequest {
-            ResponseWrapper response
+        ResponseWrapper response
 
-            String url = "$mobileIdentitiesApi/customer/$organizationId/users/${photo.person.identifier}/photo"
-            Map headers = requestHeaders.clone() as Map
-            headers['Content-Type'] = "application/vnd.assaabloy.ma.credential-management-2.2+$fileType" as String
+        String url = "$mobileIdentitiesApi/customer/$organizationId/users/${photo.person.identifier}/photo"
+        Map headers = requestHeaders.clone() as Map
+        headers['Content-Type'] = "application/vnd.assaabloy.ma.credential-management-2.2+$fileType" as String
 
-            try {
-                response = new ResponseWrapper(unirestWrapper.post(url, headers, photo.bytes))
-            } catch (Exception e) {
-                response = new ResponseWrapper(e)
-            }
-
-            httpClient.handleResponseLogging("uploadUserPhoto", response)
-
-            return response
+        try {
+            response = new ResponseWrapper(unirestWrapper.post(url, headers, photo.bytes))
+        } catch (Exception e) {
+            response = new ResponseWrapper(e)
         }
-    }
 
+        httpClient.handleResponseLogging("uploadUserPhoto", response)
+
+        return response
+    }
 
     ResponseWrapper accountPhotoApprove(String userId, String id) {
         // https://doc.origo.hidglobal.com/api/mobile-identities/#/Photo%20ID/put-customer-organization_id-users-user_id-photo-photo_id-status
-        makeAuthenticatedRequest {
-            ResponseWrapper response
 
-            String url = "$mobileIdentitiesApi/customer/$organizationId/users/${userId}/photo/${id}/status"
-            String serializedBody = new ObjectMapper().writeValueAsString([status: 'APPROVE'])
+        ResponseWrapper response
 
-            try {
-                response = new ResponseWrapper(unirestWrapper.put(url, requestHeaders, serializedBody))
+        String url = "$mobileIdentitiesApi/customer/$organizationId/users/$userId/photo/$id/status"
+        String serializedBody = new ObjectMapper().writeValueAsString([status: 'APPROVE'])
 
-            } catch (Exception e) {
-                response = new ResponseWrapper(e)
-            }
-
-            httpClient.handleResponseLogging("accountPhotoApprove", response)
-
-            return response
+        try {
+            response = new ResponseWrapper(unirestWrapper.put(url, requestHeaders, serializedBody))
+        } catch (Exception e) {
+            response = new ResponseWrapper(e)
         }
+
+        httpClient.handleResponseLogging("accountPhotoApprove", response)
+
+        return response
     }
 
     ResponseWrapper getUserDetails(String userId) {
         // https://doc.origo.hidglobal.com/api/mobile-identities/#/Users/get-customer-organization_id-users-user_id
-        makeAuthenticatedRequest {
+        if (!userId) throw new Exception("Missing Arguments.")
 
-            ResponseWrapper response
+        ResponseWrapper response
 
-            String url = "$mobileIdentitiesApi/customer/$organizationId/users/${userId}"
+        String url = "$mobileIdentitiesApi/customer/$organizationId/users/$userId"
 
-            try {
-                response = new ResponseWrapper(unirestWrapper.get(url, requestHeaders))
-            } catch (Exception e) {
-                response = new ResponseWrapper(e)
-            }
-
-            httpClient.handleResponseLogging("getUserDetails", response)
-
-            return response
+        try {
+            response = new ResponseWrapper(unirestWrapper.get(url, requestHeaders))
+        } catch (Exception e) {
+            response = new ResponseWrapper(e)
         }
+
+        httpClient.handleResponseLogging("getUserDetails", response)
+
+        return response
     }
 
     ResponseWrapper deletePhoto(String userId, String photoId) {
         // https://doc.origo.hidglobal.com/api/mobile-identities/#/Photo%20ID/delete-customer-organization_id-users-user_id-photo-photo_id
-        makeAuthenticatedRequest {
+        if (!userId || !photoId) throw new Exception("Missing Arguments.")
 
-            ResponseWrapper response
+        ResponseWrapper response
 
-            String url = "$mobileIdentitiesApi/customer/$organizationId/users/$userId/photo/$photoId"
+        String url = "$mobileIdentitiesApi/customer/$organizationId/users/$userId/photo/$photoId"
 
-            try {
-                response = new ResponseWrapper(unirestWrapper.delete(url, requestHeaders))
-            } catch (Exception e) {
-                response = new ResponseWrapper(e)
-            }
-
-            httpClient.handleResponseLogging("deletePhoto", response)
-
-            return response
+        try {
+            response = new ResponseWrapper(unirestWrapper.delete(url, requestHeaders))
+        } catch (Exception e) {
+            response = new ResponseWrapper(e)
         }
+
+        httpClient.handleResponseLogging("deletePhoto", response)
+
+        return response
     }
 }

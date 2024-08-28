@@ -27,7 +27,7 @@ class OrigoStorageService implements StorageService {
     @Autowired
     OrigoClient origoClient
 
-    @Value('${origo.overrideCurrentPhoto}')
+    @Value('${Origo.overrideCurrentPhoto}')
     boolean overrideCurrentPhoto
 
 
@@ -72,18 +72,18 @@ class OrigoStorageService implements StorageService {
         }
 
 
-        ResponseWrapper upload = origoClient.uploadUserPhoto(photo, fileType)
+        ResponseWrapper upload = origoClient.makeAuthenticatedRequest { origoClient.uploadUserPhoto(photo, fileType) }
 
         if (upload.status == 400 && overrideCurrentPhoto) {
             removeCurrentPhoto(photo)
-            upload = origoClient.uploadUserPhoto(photo, fileType)
+            upload = origoClient.makeAuthenticatedRequest { origoClient.uploadUserPhoto(photo, fileType) }
         }
         if (!upload.success) {
             log.error("Photo $photo.id for $photo.person.email failed to upload into Origo.")
             return null
         }
 
-        ResponseWrapper approved = origoClient.accountPhotoApprove(photo.person.identifier as String, upload.body?.id as String)
+        ResponseWrapper approved = origoClient.makeAuthenticatedRequest { origoClient.accountPhotoApprove(photo.person.identifier as String, upload.body?.id as String) }
 
         if (!approved.success) {
             log.error("Photo ${photo.id} for $photo.person.email was uploaded, but failed to be auto-approved.")
@@ -94,11 +94,11 @@ class OrigoStorageService implements StorageService {
     }
 
     void removeCurrentPhoto(Photo photo) {
-        ResponseWrapper details = origoClient.getUserDetails(photo.person.identifier)
+        ResponseWrapper details = origoClient.makeAuthenticatedRequest { origoClient.getUserDetails(photo.person.identifier) }
 
         if (details.success) {
             String photoId = details.body['urn:hid:scim:api:ma:2.2:User:Photo'].id[0]
-            ResponseWrapper delete = origoClient.deletePhoto(photo.person.identifier, photoId)
+            ResponseWrapper delete = origoClient.makeAuthenticatedRequest { origoClient.deletePhoto(photo.person.identifier, photoId) }
             if (!delete.success) log.error("Photo $photoId for $photo.person.email could not be deleted.")
         } else {
             log.error("Could not fetch details for $photo.person.email to remove existing photo.")

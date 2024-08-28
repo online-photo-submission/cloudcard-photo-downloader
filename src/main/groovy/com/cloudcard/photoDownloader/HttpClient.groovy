@@ -18,17 +18,17 @@ class HttpClient {
 
     String handleResponseLogging(String methodName, ResponseWrapper response, String customErrorMessage = "") {
         String standardResponseString = "$source - $methodName() Response status: $response.status"
-        String result
+        String message
 
         if (response.success) {
-            result = "$standardResponseString success"
-            log.info(result)
+            message = "$standardResponseString success"
+            log.info(message)
         } else {
-            result = "$standardResponseString, ${customErrorMessage ?: response.body}"
+            message = "$standardResponseString, ${customErrorMessage ?: response.body}"
 
-            log.error(result)
+            log.error(message)
         }
 
-        return result
+        return message
     }
 }

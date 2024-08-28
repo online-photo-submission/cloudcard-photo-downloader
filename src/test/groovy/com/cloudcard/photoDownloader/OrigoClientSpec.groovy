@@ -1,9 +1,13 @@
 package com.cloudcard.photoDownloader
 
+import com.mashape.unirest.http.HttpResponse
 import spock.lang.Specification
+import spock.lang.Unroll
 
 class OrigoClientSpec extends Specification {
     OrigoClient origoClient
+
+    String accessToken = "this-is-the-original-access-token"
 
     def setup() {
         HttpClient httpClient = Mock()
@@ -20,8 +24,6 @@ class OrigoClientSpec extends Specification {
         origoClient.applicationId = "ORIGO-APPLICATION"
         origoClient.clientId = "67890"
         origoClient.clientSecret = "Password1234"
-        origoClient.authorizeRequests "this-is-the-original-access-token"
-
     }
 
     def "Should be initialized"() {
@@ -39,86 +41,352 @@ class OrigoClientSpec extends Specification {
         origoClient.httpClient != null
     }
 
+    @Unroll
+    def "requestAccessToken should properly handle different Http responses - status: #status, body: #body"() {
+        given:
+        HttpClient httpClient = Mock()
+
+        HttpResponse<String> httpResponse = Mock()
+        httpResponse.getStatus() >> status
+        httpResponse.getBody() >> body
+
+        UnirestWrapper unirestWrapper = Mock()
+        unirestWrapper.post(_, _, _) >> httpResponse
+
+        origoClient.httpClient = httpClient
+        origoClient.unirestWrapper = unirestWrapper
+
+        when:
+        ResponseWrapper response = origoClient.requestAccessToken()
+
+        then:
+        response.status == status
+        response.body == ResponseWrapper.parseBody(body)
+        1 * httpClient.handleResponseLogging(_, _, _)
+
+        where:
+
+        status | body
+        200    | "{'access_token': 'some-access-token'"
+        400    | '{"body" : "BADREQUEST"}'
+        401    | '{"body" : "UNAUTHORIZED"}'
+        500    | '{"body" : "SERVERERROR"}'
+        0      | null
+    }
+
     def "Should fail to authenticate with bad request"() {
         given:
-        origoClient.metaClass.requestAccessToken = { -> new ResponseWrapper(400) }
+        origoClient = Spy(OrigoClient) {
+            it.requestAccessToken() >> new ResponseWrapper(400)
+        }
 
-        expect:
-        !origoClient.authenticate()
-        origoClient.accessToken == "this-is-the-original-access-token"
+        when:
+        origoClient.authenticate(origoClient.requestAccessToken())
 
-        cleanup:
-        origoClient.metaClass = null
+        then:
+        !origoClient.isAuthenticated
+        origoClient.accessToken == null
     }
 
     def "Should authenticate with good request"() {
         given:
         Object responseBody = '{"access_token" : "this-is-your-mock-access-token"}'
 
-        origoClient.metaClass.requestAccessToken = { -> new ResponseWrapper(200, responseBody) }
+        origoClient = Spy(OrigoClient) {
+            it.requestAccessToken() >> new ResponseWrapper(200, responseBody)
+        }
 
-        expect:
-        origoClient.authenticate()
+        when:
+        origoClient.authenticate(origoClient.requestAccessToken())
+
+        then:
+        origoClient.isAuthenticated
         origoClient.accessToken == "this-is-your-mock-access-token"
-
-        cleanup:
-        origoClient.metaClass = null
     }
 
-    def "uploadUserPhoto should upload user photo."() {
+    def "makeAuthenticatedRequest should authenticate if !isAuthenticated"() {
         given:
-        Object responseBody = '{"id" : "new-photo-id"}'
+        Object responseBody = '{"access_token" : "this-is-your-mock-access-token"}'
+        ResponseWrapper responseWithToken = new ResponseWrapper(200, responseBody)
+
+        origoClient = Spy(OrigoClient) {
+            it.isAuthenticated = false
+            it.requestAccessToken() >> responseWithToken
+            it.authenticate(it.requestAccessToken()) >> {
+                origoClient.isAuthenticated = true
+                return true
+            }
+
+        }
+
+        when:
+        origoClient.makeAuthenticatedRequest { new ResponseWrapper(200, "Some information") }
+
+        then:
+        1 * origoClient.authenticate(responseWithToken)
+        origoClient.isAuthenticated
+
+    }
+
+    def "makeAuthenticatedRequest should skip authentication if isAuthenticated == true"() {
+        given:
+        Object responseBody = '{"access_token" : "this-is-your-mock-access-token"}'
+        ResponseWrapper responseWithToken = new ResponseWrapper(200, responseBody)
+
+        origoClient = Spy(OrigoClient) {
+            it.isAuthenticated = true
+        }
+        origoClient.requestAccessToken() >> responseWithToken
+
+        when:
+        origoClient.makeAuthenticatedRequest { new ResponseWrapper(200, "Some info") }
+
+        then:
+        0 * origoClient.authenticate(_)
+        origoClient.isAuthenticated
+    }
+
+    def "makeAuthenticatedRequest should return response with AuthException if authentication fails"() {
+        given:
+        ResponseWrapper responseWithToken = new ResponseWrapper(400, "Bad Request")
+
+        origoClient = Spy(OrigoClient) {
+            it.isAuthenticated = false
+            it.requestAccessToken() >> responseWithToken
+        }
+
+        when:
+        ResponseWrapper response = origoClient.makeAuthenticatedRequest { new ResponseWrapper(200, "Some info") }
+
+        then:
+        1 * origoClient.authenticate(_)
+        !origoClient.isAuthenticated
+        response.exception != null
+        !response.success
+
+    }
+
+    @Unroll
+    def "uploadUserPhoto should throw exception if missing args"() {
+        when:
+        origoClient.uploadUserPhoto(arg1, arg2)
+
+        then:
+        thrown(Exception)
+
+        where:
+        arg1                                                                               | arg2
+        null                                                                               | null
+        new Photo(id: 1, person: new Person(identifier: "person-1"), bytes: new byte[]{1}) | null
+        null                                                                               | 'jpg'
+    }
+
+    @Unroll
+    def "uploadUserPhoto should properly handle different Http responses. - body: #body status: #status"() {
+        given:
 
         Photo photo = new Photo(id: 1, person: new Person(identifier: "person-1"), bytes: new byte[]{1})
 
-        httpClient.makeRequest(_, _, _, _, _) >> new ResponseWrapper(200, responseBody)
+        HttpClient httpClient = Mock()
+
+        HttpResponse<String> httpResponse = Mock()
+        httpResponse.getStatus() >> status
+        httpResponse.getBody() >> body
+
+        UnirestWrapper unirestWrapper = Mock()
+        unirestWrapper.post(_, _, _) >> httpResponse
+
+        origoClient.httpClient = httpClient
+        origoClient.unirestWrapper = unirestWrapper
+        origoClient.requestHeaders = [
+                'Authorization'      : "Bearer $accessToken" as String,
+                'Content-Type'       : origoClient.contentType,
+                'Application-Version': origoClient.applicationVersion,
+                'Application-ID'     : origoClient.applicationId
+        ]
 
         when:
         ResponseWrapper response = origoClient.uploadUserPhoto(photo, "jpg")
 
         then:
-        response.success
-        response.status == 200
-        response.body.id == "new-photo-id"
+        response.status == status
+        response.body == ResponseWrapper.parseBody(body)
+        1 * httpClient.handleResponseLogging(_, _)
+
+        where:
+
+        status | body
+        200    | '{"id" : "new-photo-id"}'
+        400    | '{"body" : "BADREQUEST"}'
+        401    | '{"body" : "UNAUTHORIZED"}'
+        500    | '{"body" : "SERVERERROR"}'
+        0      | null
+
     }
 
-    def "accountPhotoApprove should approve user photo in mock API"() {
+    @Unroll
+    def "accountPhotoApprove should throw exception if missing args"() {
+        when:
+        origoClient.accountPhotoApprove()
+
+        then:
+        thrown(Exception)
+    }
+
+    @Unroll
+    def "accountPhotoApprove should properly handle different Http responses. - body: #body status: #status"() {
         given:
+
         Photo photo = new Photo(id: 1, person: new Person(identifier: "person-1"), bytes: new byte[]{1})
 
-        httpClient.makeRequest(_, _, _, _) >> new ResponseWrapper(200)
+        HttpClient httpClient = Mock()
+
+        HttpResponse<String> httpResponse = Mock()
+        httpResponse.getStatus() >> status
+        httpResponse.getBody() >> body
+
+        UnirestWrapper unirestWrapper = Mock()
+        unirestWrapper.put(_, _, _) >> httpResponse
+
+        origoClient.httpClient = httpClient
+        origoClient.unirestWrapper = unirestWrapper
+        origoClient.requestHeaders = [
+                'Authorization'      : "Bearer $accessToken" as String,
+                'Content-Type'       : origoClient.contentType,
+                'Application-Version': origoClient.applicationVersion,
+                'Application-ID'     : origoClient.applicationId
+        ]
 
         when:
-        ResponseWrapper response = origoClient.accountPhotoApprove(photo.person.identifier, "1")
+        ResponseWrapper response = origoClient.accountPhotoApprove(photo.person.identifier, "12345")
 
         then:
-        response.success
-        response.status == 200
+        response.status == status
+        response.body == ResponseWrapper.parseBody(body)
+        1 * httpClient.handleResponseLogging(_, _)
+
+        where:
+
+        status | body
+        200    | '{"body" : "Photo approved"}'
+        400    | '{"body" : "BADREQUEST"}'
+        401    | '{"body" : "UNAUTHORIZED"}'
+        500    | '{"body" : "SERVERERROR"}'
+        0      | null
+
     }
 
-    def "authorize requests should set up headers with accessToken"() {
+    def "getUserDetails should throw exception if missing args"() {
+        when:
+        origoClient.getUserDetails()
+
+        then:
+        thrown(Exception)
+    }
+
+    @Unroll
+    def "getUserDetails should properly handle different Http responses. - body: #body status: #status"() {
         given:
-        String accessToken = "0123456789abcdefghijklmnopqrstuvwxyz"
-        origoClient = Spy(OrigoClient) {
-            it.contentType = "application/vnd.assaabloy.ma.credential-management-2.2+json"
-            it.applicationVersion = "2.2"
-            it.applicationId = "ORIGO-APPLICATION"
+
+        Photo photo = new Photo(id: 1, person: new Person(identifier: "person-1"), bytes: new byte[]{1})
+
+        HttpClient httpClient = Mock()
+
+        HttpResponse<String> httpResponse = Mock()
+        httpResponse.getStatus() >> status
+        httpResponse.getBody() >> body
+
+        UnirestWrapper unirestWrapper = Mock()
+        unirestWrapper.get(_, _) >> httpResponse
+
+        origoClient.httpClient = httpClient
+        origoClient.unirestWrapper = unirestWrapper
+        origoClient.requestHeaders = [
+                'Authorization'      : "Bearer $accessToken" as String,
+                'Content-Type'       : origoClient.contentType,
+                'Application-Version': origoClient.applicationVersion,
+                'Application-ID'     : origoClient.applicationId
+        ]
+
+        when:
+        ResponseWrapper response = origoClient.getUserDetails("12345")
+
+        then:
+        response.status == status
+        response.body == ResponseWrapper.parseBody(body)
+        1 * httpClient.handleResponseLogging(_, _)
+
+        where:
+
+        status | body
+        200    | '{"body" : "some user details"}'
+        400    | '{"body" : "BADREQUEST"}'
+        401    | '{"body" : "UNAUTHORIZED"}'
+        500    | '{"body" : "SERVERERROR"}'
+        0      | null
+
+    }
+
+    @Unroll
+    def "deletePhoto should throw exception if missing args"() {
+        when:
+        origoClient.deletePhoto(arg1, arg2)
+
+        then:
+        thrown(Exception)
+
+        where:
+        arg1  | arg2
+        null  | null
+        "123" | null
+        null  | "123"
+    }
+
+    @Unroll
+    def "deletePhoto should properly handle different Http responses. - body: #body status: #status"() {
+        given:
+        HttpClient httpClient = Mock()
+
+        HttpResponse<String> httpResponse = Mock()
+        httpResponse.getStatus() >> status
+        httpResponse.getBody() >> body
+
+        UnirestWrapper unirestWrapper = Mock()
+        unirestWrapper.delete(_, _) >> httpResponse
+
+        origoClient.httpClient = httpClient
+        origoClient.unirestWrapper = unirestWrapper
+        origoClient.requestHeaders = [
+                'Authorization'      : "Bearer $accessToken" as String,
+                'Content-Type'       : origoClient.contentType,
+                'Application-Version': origoClient.applicationVersion,
+                'Application-ID'     : origoClient.applicationId
+        ]
+
+        when:
+        ResponseWrapper response = origoClient.deletePhoto("12345", "6789")
+
+        then:
+        response.status == status
+        response.body == ResponseWrapper.parseBody(body)
+        1 * httpClient.handleResponseLogging(_, _)
+
+        where:
+
+        status | body
+        204    | ''
+        400    | '{"body" : "BADREQUEST"}'
+        401    | '{"body" : "UNAUTHORIZED"}'
+        500    | '{"body" : "SERVERERROR"}'
+        0      | null
+
+    }
+
+    class ClosureWrapper {
+        ClosureWrapper(Closure c) {
+            closure = c
         }
 
-        when:
-        boolean result = origoClient.authorizeRequests accessToken
-
-        then:
-        result
-        origoClient.accessToken == "0123456789abcdefghijklmnopqrstuvwxyz"
-        origoClient.isAuthenticated
-        origoClient.requestHeaders == [
-                'Authorization'      : "Bearer 0123456789abcdefghijklmnopqrstuvwxyz" as String,
-                'Content-Type'       : 'application/vnd.assaabloy.ma.credential-management-2.2+json',
-                'Application-Version': '2.2',
-                'Application-ID'     : 'ORIGO-APPLICATION'
-        ]
-        1 * origoClient.setRequestHeaders(_)
+        Closure closure
     }
-
 }
