@@ -5,11 +5,11 @@ import spock.lang.Specification
 class OrigoClientSpec extends Specification {
     OrigoClient origoClient
 
-    HttpClient httpClient
-
     def setup() {
-        httpClient = Mock(HttpClient)
-        origoClient = new OrigoClient(httpClient: httpClient)
+        HttpClient httpClient = Mock()
+        UnirestWrapper unirestWrapper = Mock()
+
+        origoClient = new OrigoClient(httpClient: httpClient, unirestWrapper: unirestWrapper)
 
         origoClient.eventManagementApi = "https://api.mock-event-management.com"
         origoClient.mobileIdentitiesApi = "https://api.mock-mobile-identities.com"
@@ -27,6 +27,16 @@ class OrigoClientSpec extends Specification {
     def "Should be initialized"() {
         expect:
         origoClient != null
+    }
+
+    def "should instantiate unirest wrapper"() {
+        expect:
+        origoClient.unirestWrapper != null
+    }
+
+    def "should instantiate http client"() {
+        expect:
+        origoClient.httpClient != null
     }
 
     def "Should fail to authenticate with bad request"() {

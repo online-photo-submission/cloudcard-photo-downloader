@@ -1,5 +1,6 @@
 package com.cloudcard.photoDownloader
 
+import org.springframework.beans.factory.annotation.Value
 
 import javax.annotation.PostConstruct
 
@@ -10,6 +11,7 @@ import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty
 import org.springframework.stereotype.Service
 
+import static com.cloudcard.photoDownloader.ApplicationPropertiesValidator.throwIfBlank
 import static com.cloudcard.photoDownloader.ApplicationPropertiesValidator.throwIfTrue
 
 @Service
@@ -25,13 +27,19 @@ class OrigoStorageService implements StorageService {
     @Autowired
     OrigoClient origoClient
 
+    @Value('${origo.overrideCurrentPhoto}')
+    boolean overrideCurrentPhoto
+
+
     @PostConstruct
     void init() {
         throwIfTrue(fileNameResolver == null, "The File Name Resolver must be specified.")
         throwIfTrue(origoClient == null, "The Origo Client must be specified.")
+        throwIfBlank("$overrideCurrentPhoto", "OverrideCurrentPhoto must be specified.")
 
-        log.info("   File Name Resolver : $fileNameResolver.class.simpleName")
-        log.info("         Origo Client : $origoClient.class.simpleName")
+        log.info("    File Name Resolver : $fileNameResolver.class.simpleName")
+        log.info("          Origo Client : $origoClient.class.simpleName")
+        log.info("Override current photo : ${overrideCurrentPhoto ? "True" : "False"}")
     }
 
     List<PhotoFile> save(Collection<Photo> photos) {
@@ -41,12 +49,6 @@ class OrigoStorageService implements StorageService {
         }
 
         log.info("Uploading Photos to Origo")
-
-        if (!origoClient.isAuthenticated) {
-            if (!origoClient.authenticate()) {
-                return []
-            }
-        }
 
         List<PhotoFile> photoFiles = photos.findResults { save(it) }
 
@@ -69,10 +71,14 @@ class OrigoStorageService implements StorageService {
             return null
         }
 
+
         ResponseWrapper upload = origoClient.uploadUserPhoto(photo, fileType)
 
+        if (upload.status == 400 && overrideCurrentPhoto) {
+            removeCurrentPhoto(photo)
+            upload = origoClient.uploadUserPhoto(photo, fileType)
+        }
         if (!upload.success) {
-            if (upload.status == 401) origoClient.isAuthenticated = false
             log.error("Photo $photo.id for $photo.person.email failed to upload into Origo.")
             return null
         }
@@ -80,12 +86,23 @@ class OrigoStorageService implements StorageService {
         ResponseWrapper approved = origoClient.accountPhotoApprove(photo.person.identifier as String, upload.body?.id as String)
 
         if (!approved.success) {
-            if (upload.status == 401) origoClient.isAuthenticated = false
             log.error("Photo ${photo.id} for $photo.person.email was uploaded, but failed to be auto-approved.")
         }
 
         return new PhotoFile(accountId, null, photo.id)
 
+    }
+
+    void removeCurrentPhoto(Photo photo) {
+        ResponseWrapper details = origoClient.getUserDetails(photo.person.identifier)
+
+        if (details.success) {
+            String photoId = details.body['urn:hid:scim:api:ma:2.2:User:Photo'].id[0]
+            ResponseWrapper delete = origoClient.deletePhoto(photo.person.identifier, photoId)
+            if (!delete.success) log.error("Photo $photoId for $photo.person.email could not be deleted.")
+        } else {
+            log.error("Could not fetch details for $photo.person.email to remove existing photo.")
+        }
     }
 
     String resolveFileType(Photo photo) {

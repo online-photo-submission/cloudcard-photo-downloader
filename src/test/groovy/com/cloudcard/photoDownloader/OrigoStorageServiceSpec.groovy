@@ -294,4 +294,40 @@ class OrigoStorageServiceSpec extends Specification {
 
     }
 
+    def "should call removeCurrentPhoto() if upload returns 400 status and overridecurrentPhoto == true"() {
+        given:
+        def origoStorageService = Spy(OrigoStorageService) {
+            resolveAccountId(_) >> "123"
+            resolveFileType(_) >> "jpg"
+            it.overrideCurrentPhoto = true
+        }
+
+        Photo photo = new Photo(id: 1, person: new Person(identifier: "person-1", email: "hello1@mail.com"), bytes: new byte[]{1})
+
+        OrigoClient _origoClient = Mock()
+        _origoClient.uploadUserPhoto(_, _) >> new ResponseWrapper(400)
+        _origoClient.authenticate() >> true
+        origoStorageService.origoClient = _origoClient
+
+        when:
+        origoStorageService.save(photo)
+
+        then:
+        1 * origoStorageService.removeCurrentPhoto(_)
+    }
+
+    def "replacePhoto should call getUserDetails"() {
+        given:
+        Photo photo = new Photo(id: 1, person: new Person(identifier: "person-1", email: "hello1@mail.com"), bytes: new byte[]{1})
+
+        OrigoClient _origoClient = Mock()
+        origoStorageService.origoClient = _origoClient
+
+        when:
+        origoStorageService.removeCurrentPhoto(photo)
+
+        then:
+        1 * origoStorageService.origoClient.getUserDetails(photo.person.identifier) >> new ResponseWrapper(200)
+    }
+
 }

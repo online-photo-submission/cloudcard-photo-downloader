@@ -1,6 +1,5 @@
 package com.cloudcard.photoDownloader
 
-
 import jakarta.annotation.PostConstruct
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
@@ -9,7 +8,6 @@ import org.springframework.beans.factory.annotation.Value
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty
 import org.springframework.stereotype.Component
 import com.fasterxml.jackson.databind.ObjectMapper
-import org.springframework.stereotype.Service
 
 import static com.cloudcard.photoDownloader.ApplicationPropertiesValidator.throwIfBlank
 
@@ -22,6 +20,9 @@ class OrigoClient {
 
     @Autowired
     HttpClient httpClient
+
+    @Autowired
+    UnirestWrapper unirestWrapper
 
     @Value('${Origo.eventManagementApi}')
     String eventManagementApi
@@ -56,29 +57,6 @@ class OrigoClient {
 
     Map requestHeaders
 
-    boolean authorizeRequests(String token) {
-        boolean result = false
-
-        accessToken = token
-        isAuthenticated = true
-        Map headers = setRequestHeaders(token)
-
-        if (accessToken == token
-                && isAuthenticated
-                && headers == requestHeaders) result = true
-
-        return result
-    }
-
-    Map setRequestHeaders(String token) {
-        return requestHeaders = [
-                'Authorization'      : "Bearer $token" as String,
-                'Content-Type'       : contentType,
-                'Application-Version': applicationVersion,
-                'Application-ID'     : applicationId
-        ]
-    }
-
     @PostConstruct
     init() {
         throwIfBlank(eventManagementApi, "The Origo Event Management API URL must be specified.")
@@ -107,16 +85,36 @@ class OrigoClient {
 
         ResponseWrapper response = requestAccessToken()
         String token = ""
-        boolean result = false
 
         if (response.success) {
             token = response.body.access_token
-            result = authorizeRequests(token)
+            accessToken = token
+            requestHeaders = [
+                    'Authorization'      : "Bearer $token" as String,
+                    'Content-Type'       : contentType,
+                    'Application-Version': applicationVersion,
+                    'Application-ID'     : applicationId
+            ]
+            isAuthenticated = true
         } else {
+            log.error("Error while authenticating with Origo.")
             isAuthenticated = false
         }
 
-        return result
+        return isAuthenticated
+    }
+
+    ResponseWrapper makeAuthenticatedRequest(Closure request) {
+
+        ResponseWrapper response
+
+        if (!isAuthenticated && authenticate() || isAuthenticated) {
+            response = request()
+        } else {
+            response = new ResponseWrapper(new AuthException())
+        }
+
+        response
     }
 
     ResponseWrapper requestAccessToken() {
@@ -126,41 +124,98 @@ class OrigoClient {
         Map<String, String> headers = ["Content-Type": "application/x-www-form-urlencoded"]
         String body = "client_id=${clientId}&client_secret=${clientSecret}&grant_type=client_credentials"
 
-        ResponseWrapper response = httpClient.makeRequest(Actions.POST.value, url, headers, body)
-
+        ResponseWrapper response
+        try {
+            response = new ResponseWrapper(unirestWrapper.post(url, headers, body))
+        } catch (Exception e) {
+            response = new ResponseWrapper(e)
+        }
         httpClient.handleResponseLogging("requestAccessToken", response, "Error while authenticating with Origo.")
 
         return response
+
     }
 
     ResponseWrapper uploadUserPhoto(Photo photo, String fileType) {
         // https://doc.origo.hidglobal.com/api/mobile-identities/#/Photo%20ID/post-customer-organization_id-users-user_id-photo
+        makeAuthenticatedRequest {
+            ResponseWrapper response
 
-        String url = "$mobileIdentitiesApi/customer/$organizationId/users/${photo.person.identifier}/photo"
+            String url = "$mobileIdentitiesApi/customer/$organizationId/users/${photo.person.identifier}/photo"
+            Map headers = requestHeaders.clone() as Map
+            headers['Content-Type'] = "application/vnd.assaabloy.ma.credential-management-2.2+$fileType" as String
 
-        Map headers = requestHeaders.clone() as Map
-        headers['Content-Type'] = "application/vnd.assaabloy.ma.credential-management-2.2+$fileType" as String
+            try {
+                response = new ResponseWrapper(unirestWrapper.post(url, headers, photo.bytes))
+            } catch (Exception e) {
+                response = new ResponseWrapper(e)
+            }
 
-        ResponseWrapper response = httpClient.makeRequest(Actions.POST.value, url, headers, null, photo.bytes)
+            httpClient.handleResponseLogging("uploadUserPhoto", response)
 
-        httpClient.handleResponseLogging("uploadUserPhoto", response)
-
-        return response
+            return response
+        }
     }
 
 
     ResponseWrapper accountPhotoApprove(String userId, String id) {
         // https://doc.origo.hidglobal.com/api/mobile-identities/#/Photo%20ID/put-customer-organization_id-users-user_id-photo-photo_id-status
+        makeAuthenticatedRequest {
+            ResponseWrapper response
 
-        String url = "$mobileIdentitiesApi/customer/$organizationId/users/${userId}/photo/${id}/status"
-        String serializedBody = new ObjectMapper().writeValueAsString([
-                status: 'APPROVE'
-        ])
+            String url = "$mobileIdentitiesApi/customer/$organizationId/users/${userId}/photo/${id}/status"
+            String serializedBody = new ObjectMapper().writeValueAsString([status: 'APPROVE'])
 
-        ResponseWrapper response = httpClient.makeRequest(Actions.PUT.value, url, requestHeaders, serializedBody)
+            try {
+                response = new ResponseWrapper(unirestWrapper.put(url, requestHeaders, serializedBody))
 
-        httpClient.handleResponseLogging("accountPhotoApprove", response)
+            } catch (Exception e) {
+                response = new ResponseWrapper(e)
+            }
 
-        return response
+            httpClient.handleResponseLogging("accountPhotoApprove", response)
+
+            return response
+        }
+    }
+
+    ResponseWrapper getUserDetails(String userId) {
+        // https://doc.origo.hidglobal.com/api/mobile-identities/#/Users/get-customer-organization_id-users-user_id
+        makeAuthenticatedRequest {
+
+            ResponseWrapper response
+
+            String url = "$mobileIdentitiesApi/customer/$organizationId/users/${userId}"
+
+            try {
+                response = new ResponseWrapper(unirestWrapper.get(url, requestHeaders))
+            } catch (Exception e) {
+                response = new ResponseWrapper(e)
+            }
+
+            httpClient.handleResponseLogging("getUserDetails", response)
+
+            return response
+        }
+    }
+
+    ResponseWrapper deletePhoto(String userId, String photoId) {
+        // https://doc.origo.hidglobal.com/api/mobile-identities/#/Photo%20ID/delete-customer-organization_id-users-user_id-photo-photo_id
+        makeAuthenticatedRequest {
+
+            ResponseWrapper response
+
+            String url = "$mobileIdentitiesApi/customer/$organizationId/users/$userId/photo/$photoId"
+
+            try {
+                response = new ResponseWrapper(unirestWrapper.delete(url, requestHeaders))
+            } catch (Exception e) {
+                response = new ResponseWrapper(e)
+            }
+
+            httpClient.handleResponseLogging("deletePhoto", response)
+
+            return response
+        }
     }
 }
