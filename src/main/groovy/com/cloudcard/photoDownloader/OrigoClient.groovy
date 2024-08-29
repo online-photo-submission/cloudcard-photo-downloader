@@ -19,10 +19,10 @@ class OrigoClient {
     private static final Logger log = LoggerFactory.getLogger(OrigoClient.class)
 
     @Autowired
-    HttpClient httpClient
+    UnirestWrapper unirestWrapper
 
     @Autowired
-    UnirestWrapper unirestWrapper
+    SimpleResponseLogger simpleResponseLogger
 
     @Value('${Origo.eventManagementApi}')
     String eventManagementApi
@@ -76,7 +76,7 @@ class OrigoClient {
         log.info("               Origo application version : $applicationVersion")
         log.info("                    Origo application ID : $applicationId")
 
-        httpClient.source = this.class.name
+        simpleResponseLogger.source = this.class.simpleName
 
     }
 
@@ -129,7 +129,7 @@ class OrigoClient {
         } catch (Exception e) {
             response = new ResponseWrapper(e)
         }
-        httpClient.handleResponseLogging("requestAccessToken", response, "Error while authenticating with Origo.")
+        simpleResponseLogger.log("requestAccessToken", response, "Error while authenticating with Origo.")
 
         return response
 
@@ -149,7 +149,7 @@ class OrigoClient {
             response = new ResponseWrapper(e)
         }
 
-        httpClient.handleResponseLogging("uploadUserPhoto", response)
+        simpleResponseLogger.log("uploadUserPhoto", response)
 
         return response
     }
@@ -168,7 +168,7 @@ class OrigoClient {
             response = new ResponseWrapper(e)
         }
 
-        httpClient.handleResponseLogging("accountPhotoApprove", response)
+        simpleResponseLogger.log("accountPhotoApprove", response)
 
         return response
     }
@@ -186,7 +186,7 @@ class OrigoClient {
             response = new ResponseWrapper(e)
         }
 
-        httpClient.handleResponseLogging("getUserDetails", response)
+        simpleResponseLogger.log("getUserDetails", response)
 
         return response
     }
@@ -204,7 +204,7 @@ class OrigoClient {
             response = new ResponseWrapper(e)
         }
 
-        httpClient.handleResponseLogging("deletePhoto", response)
+        simpleResponseLogger.log("deletePhoto", response)
 
         return response
     }

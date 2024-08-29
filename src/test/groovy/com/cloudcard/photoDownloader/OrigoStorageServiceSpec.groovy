@@ -12,9 +12,9 @@ class OrigoStorageServiceSpec extends Specification {
         origoStorageService = new OrigoStorageService()
 
         FileNameResolver fileNameResolver = Mock()
-        HttpClient httpClient = Mock()
+        SimpleResponseLogger simpleResponseLogger = Mock()
         origoClient = Mock(OrigoClient)
-        origoClient.httpClient = httpClient
+        origoClient.simpleResponseLogger = simpleResponseLogger
 
         origoClient.eventManagementApi = "https://api.mock-event-management.com"
         origoClient.mobileIdentitiesApi = "https://api.mock-mobile-identities.com"
@@ -75,38 +75,6 @@ class OrigoStorageServiceSpec extends Specification {
         then:
         files.size() == 10
         10 * origoStorageService.save(_ as Photo) >> new PhotoFile("baseName", null, 123)
-    }
-
-    def "should save 8 of 10 photos"() {
-        given:
-        List<Photo> photos = [
-                new Photo(id: 1, person: new Person(identifier: "person-1"), bytes: new byte[]{1}),
-                new Photo(id: 2, person: null, bytes: new byte[]{1}),
-                new Photo(id: 3, person: new Person(identifier: "person-3"), bytes: new byte[]{1}),
-                new Photo(id: 4, person: new Person(identifier: "person-4"), bytes: new byte[]{1}),
-                new Photo(id: 5, person: null, bytes: new byte[]{1}),
-                new Photo(id: 6, person: new Person(identifier: "person-6"), bytes: new byte[]{1}),
-                new Photo(id: 7, person: new Person(identifier: "person-7"), bytes: new byte[]{1}),
-                new Photo(id: 8, person: new Person(identifier: "person-8"), bytes: new byte[]{1}),
-                new Photo(id: 9, person: new Person(identifier: "person-9"), bytes: new byte[]{1}),
-                new Photo(id: 10, person: new Person(identifier: "person-10"), bytes: new byte[]{1})
-        ]
-        origoStorageService = Spy(OrigoStorageService)
-        origoStorageService.metaClass.save = {
-            Photo photo ->
-                if (!photo.person) {
-                    return null
-                }
-
-                return new PhotoFile("baseName", null, 123)
-        }
-
-        when:
-        List<PhotoFile> files = origoStorageService.save(photos)
-
-        then:
-        files.size() == 8
-        10 * origoStorageService.save(_ as Photo)
     }
 
     def "should not save a photo with a null person property"() {

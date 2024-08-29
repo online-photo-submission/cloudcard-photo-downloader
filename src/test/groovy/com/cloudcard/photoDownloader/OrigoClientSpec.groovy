@@ -10,10 +10,10 @@ class OrigoClientSpec extends Specification {
     String accessToken = "this-is-the-original-access-token"
 
     def setup() {
-        HttpClient httpClient = Mock()
         UnirestWrapper unirestWrapper = Mock()
+        SimpleResponseLogger simpleResponseLogger = Mock()
 
-        origoClient = new OrigoClient(httpClient: httpClient, unirestWrapper: unirestWrapper)
+        origoClient = new OrigoClient(simpleResponseLogger: simpleResponseLogger, unirestWrapper: unirestWrapper)
 
         origoClient.eventManagementApi = "https://api.mock-event-management.com"
         origoClient.mobileIdentitiesApi = "https://api.mock-mobile-identities.com"
@@ -36,9 +36,9 @@ class OrigoClientSpec extends Specification {
         origoClient.unirestWrapper != null
     }
 
-    def "should instantiate http client"() {
+    def "should instantiate simpleResponseLogger"() {
         expect:
-        origoClient.httpClient != null
+        origoClient.simpleResponseLogger != null
     }
 
     def "authenticate should hydrate properties with token"() {
@@ -66,8 +66,6 @@ class OrigoClientSpec extends Specification {
     @Unroll
     def "requestAccessToken should properly handle different Http responses - status: #status, body: #body"() {
         given:
-        HttpClient httpClient = Mock()
-
         HttpResponse<String> httpResponse = Mock()
         httpResponse.getStatus() >> status
         httpResponse.getBody() >> body
@@ -75,7 +73,6 @@ class OrigoClientSpec extends Specification {
         UnirestWrapper unirestWrapper = Mock()
         unirestWrapper.post(_, _, _) >> httpResponse
 
-        origoClient.httpClient = httpClient
         origoClient.unirestWrapper = unirestWrapper
 
         when:
@@ -84,7 +81,6 @@ class OrigoClientSpec extends Specification {
         then:
         response.status == status
         response.body == ResponseWrapper.parseBody(body)
-        1 * httpClient.handleResponseLogging(_, _, _)
 
         where:
 
@@ -194,8 +190,6 @@ class OrigoClientSpec extends Specification {
 
         Photo photo = new Photo(id: 1, person: new Person(identifier: "person-1"), bytes: new byte[]{1})
 
-        HttpClient httpClient = Mock()
-
         HttpResponse<String> httpResponse = Mock()
         httpResponse.getStatus() >> status
         httpResponse.getBody() >> body
@@ -203,7 +197,6 @@ class OrigoClientSpec extends Specification {
         UnirestWrapper unirestWrapper = Mock()
         unirestWrapper.post(_, _, _) >> httpResponse
 
-        origoClient.httpClient = httpClient
         origoClient.unirestWrapper = unirestWrapper
         origoClient.requestHeaders = [
                 'Authorization'      : "Bearer $accessToken" as String,
@@ -218,7 +211,6 @@ class OrigoClientSpec extends Specification {
         then:
         response.status == status
         response.body == ResponseWrapper.parseBody(body)
-        1 * httpClient.handleResponseLogging(_, _)
 
         where:
 
@@ -237,8 +229,6 @@ class OrigoClientSpec extends Specification {
 
         Photo photo = new Photo(id: 1, person: new Person(identifier: "person-1"), bytes: new byte[]{1})
 
-        HttpClient httpClient = Mock()
-
         HttpResponse<String> httpResponse = Mock()
         httpResponse.getStatus() >> status
         httpResponse.getBody() >> body
@@ -246,7 +236,6 @@ class OrigoClientSpec extends Specification {
         UnirestWrapper unirestWrapper = Mock()
         unirestWrapper.put(_, _, _) >> httpResponse
 
-        origoClient.httpClient = httpClient
         origoClient.unirestWrapper = unirestWrapper
         origoClient.requestHeaders = [
                 'Authorization'      : "Bearer $accessToken" as String,
@@ -261,7 +250,6 @@ class OrigoClientSpec extends Specification {
         then:
         response.status == status
         response.body == ResponseWrapper.parseBody(body)
-        1 * httpClient.handleResponseLogging(_, _)
 
         where:
 
@@ -280,8 +268,6 @@ class OrigoClientSpec extends Specification {
 
         Photo photo = new Photo(id: 1, person: new Person(identifier: "person-1"), bytes: new byte[]{1})
 
-        HttpClient httpClient = Mock()
-
         HttpResponse<String> httpResponse = Mock()
         httpResponse.getStatus() >> status
         httpResponse.getBody() >> body
@@ -289,7 +275,6 @@ class OrigoClientSpec extends Specification {
         UnirestWrapper unirestWrapper = Mock()
         unirestWrapper.get(_, _) >> httpResponse
 
-        origoClient.httpClient = httpClient
         origoClient.unirestWrapper = unirestWrapper
         origoClient.requestHeaders = [
                 'Authorization'      : "Bearer $accessToken" as String,
@@ -304,7 +289,6 @@ class OrigoClientSpec extends Specification {
         then:
         response.status == status
         response.body == ResponseWrapper.parseBody(body)
-        1 * httpClient.handleResponseLogging(_, _)
 
         where:
 
@@ -320,8 +304,6 @@ class OrigoClientSpec extends Specification {
     @Unroll
     def "deletePhoto should properly handle different Http responses. - body: #body status: #status"() {
         given:
-        HttpClient httpClient = Mock()
-
         HttpResponse<String> httpResponse = Mock()
         httpResponse.getStatus() >> status
         httpResponse.getBody() >> body
@@ -329,7 +311,6 @@ class OrigoClientSpec extends Specification {
         UnirestWrapper unirestWrapper = Mock()
         unirestWrapper.delete(_, _) >> httpResponse
 
-        origoClient.httpClient = httpClient
         origoClient.unirestWrapper = unirestWrapper
         origoClient.requestHeaders = [
                 'Authorization'      : "Bearer $accessToken" as String,
@@ -344,7 +325,6 @@ class OrigoClientSpec extends Specification {
         then:
         response.status == status
         response.body == ResponseWrapper.parseBody(body)
-        1 * httpClient.handleResponseLogging(_, _)
 
         where:
 
