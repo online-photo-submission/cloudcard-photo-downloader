@@ -82,7 +82,9 @@ class OrigoClient {
         throwIfBlank(applicationVersion, "The Origo application version must be specified.")
         throwIfBlank(applicationId, "Your organization's Origo Application ID must be specified.")
         throwIfBlank(usePkiAuth.toString(), "Authentication Preference must be specified.")
-        throwIfBlank((usePkiAuth && tokenUrl).toString(), "Token URL must be specified.")
+        if (usePkiAuth) {
+            throwIfBlank((tokenUrl).toString(), "Token URL must be specified.")
+        }
 
         log.info('=================== Initializing Origo Client ===================')
         log.info("          Origo Event Management API URL : $eventManagementApi")
