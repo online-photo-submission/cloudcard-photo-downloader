@@ -263,6 +263,45 @@ The downloader supports going through a proxy when using the CloudCardPhotoServi
 - `TouchNetClient.originId`
     - provided by CloudCard
 
+#### Origo Storage Service Settings
+*Note: `downloader.storageService` must be set to `OrigoStorageService` for these to have any effect.*
+*Note: This integration does NOT YET support PKI authentication for Origo's production APIs.*
+*Visit Origo's Mobile Access documentation for more information https://doc.origo.hidglobal.com/api/*
+
+- `Origo.eventManagementApi`
+    - URI for accessing events in Mobile Access, such as user creation events.
+- `Origo.mobileIdentitiesApi`
+    - URI for user and photo related requests.
+- `Origo.certIdpApi`
+    - URI for Authentication requests.
+- `Origo.organizationId`
+    - Provided by origo. First half of clientId.
+- `Origo.accessToken`
+    - Temporary token obtained through authentication request. Only needs to be specified in certain development situations.
+- `Origo.clientSecret`
+    - System account password or PKI token. 
+    - Required for authentication.
+- `Origo.clientId`
+    - Provided by Origo.
+    - Available in Origo Management Portal.
+- `Origo.contentType`
+    - Used for request headers - see documentation.
+- `Origo.applicationVersion`
+    - Origo API version (2.2 as of Aug 2024).
+    - Used for request headers.
+- `Origo.applicationId`
+    - Used for request headers.
+    - Provided by Origo.
+- `Origo.replaceExistingPhotos`
+    - Set to true to automatically replace existing Photo ID.
+    - NOTE: Default is true if left unspecified. 
+- `Origo.usePkiAuth`
+    - PKI Auth is recommended for Production applications.
+    - This application accepts an unencrypted RSA / PEM-encoded PKCS#8 Private key.
+    - Service Account with certificate must be created in HID Origo Management Studio.
+- `Origo.tokenUrl`
+    - Token URL is generated from HID Origo Management Studio when a PKI-authenticated service account is created. 
+
 ### File Name Resolver Settings
 
 - downloader.fileNameResolver
