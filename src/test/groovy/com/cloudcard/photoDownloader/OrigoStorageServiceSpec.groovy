@@ -12,8 +12,10 @@ class OrigoStorageServiceSpec extends Specification {
         origoStorageService = new OrigoStorageService()
 
         FileNameResolver fileNameResolver = Mock()
-        SimpleResponseLogger simpleResponseLogger = Mock()
+        origoStorageService.fileNameResolver = fileNameResolver
+
         origoClient = Mock(OrigoClient)
+        SimpleResponseLogger simpleResponseLogger = Mock()
         origoClient.simpleResponseLogger = simpleResponseLogger
 
         origoClient.eventManagementApi = "https://api.mock-event-management.com"
@@ -27,7 +29,6 @@ class OrigoStorageServiceSpec extends Specification {
         origoClient.clientSecret = "Password1234"
 
         origoStorageService.origoClient = origoClient
-        origoStorageService.fileNameResolver = fileNameResolver
     }
 
     def "should be initialized"() {
@@ -115,12 +116,12 @@ class OrigoStorageServiceSpec extends Specification {
         "docx"    | "\"docx\" - failed to save." | 6          || null
     }
 
-    def "should not save a photo if upload fails and overrideCurrentPhoto is false"() {
+    def "should not save a photo if upload fails and replaceExistingPhotos is false"() {
         given:
         def origoStorageService = Spy(OrigoStorageService) {
             resolveAccountId(_) >> "123"
             resolveFileType(_) >> "jpg"
-            it.overrideCurrentPhoto >> false
+            it.replaceExistingPhotos >> false
         }
 
         Photo photo = new Photo(id: 1, person: new Person(identifier: "person-1", email: "hello1@mail.com"), bytes: new byte[]{1})
@@ -136,13 +137,12 @@ class OrigoStorageServiceSpec extends Specification {
         photoFile == null
     }
 
-
-    def "should removeCurrentPhoto and save if upload fails but overrideCurrentPhoto is true"() {
+    def "should removeCurrentPhoto and save if upload fails but replaceExistingPhotos is true"() {
         given:
         def origoStorageService = Spy(OrigoStorageService) {
             resolveAccountId(_) >> "123"
             resolveFileType(_) >> "jpg"
-            it.overrideCurrentPhoto = true
+            it.replaceExistingPhotos = true
         }
 
         Photo photo = new Photo(id: 1, person: new Person(identifier: "person-1", email: "hello1@mail.com"), bytes: new byte[]{1})
@@ -163,7 +163,7 @@ class OrigoStorageServiceSpec extends Specification {
         def origoStorageService = Spy(OrigoStorageService) {
             resolveAccountId(_) >> "123"
             resolveFileType(_) >> "jpg"
-            it.overrideCurrentPhoto = true
+            it.replaceExistingPhotos = true
         }
 
         Photo photo = new Photo(id: 1, person: new Person(identifier: "person-1", email: "hello1@mail.com"), bytes: new byte[]{1})
@@ -179,13 +179,12 @@ class OrigoStorageServiceSpec extends Specification {
         photoFile == null
     }
 
-
     def "should return photofile if photo approval succeeds"() {
         given:
         def origoStorageService = Spy(OrigoStorageService) {
             resolveAccountId(_) >> "123"
             resolveFileType(_) >> "jpg"
-            it.overrideCurrentPhoto = true
+            it.replaceExistingPhotos = true
         }
 
         Photo photo = new Photo(id: 1, person: new Person(identifier: "person-1", email: "hello1@mail.com"), bytes: new byte[]{1})
@@ -201,13 +200,12 @@ class OrigoStorageServiceSpec extends Specification {
         photoFile != null
     }
 
-
     def "should return null if photo approval fails"() {
         given:
         def origoStorageService = Spy(OrigoStorageService) {
             resolveAccountId(_) >> "123"
             resolveFileType(_) >> "jpg"
-            it.overrideCurrentPhoto = true
+            it.replaceExistingPhotos = true
         }
 
         Photo photo = new Photo(id: 1, person: new Person(identifier: "person-1", email: "hello1@mail.com"), bytes: new byte[]{1})

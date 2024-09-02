@@ -292,6 +292,15 @@ The downloader supports going through a proxy when using the CloudCardPhotoServi
 - `Origo.applicationId`
     - Used for request headers.
     - Provided by Origo.
+- `Origo.replaceExistingPhotos`
+    - Set to true to automatically replace existing Photo ID.
+    - NOTE: Default is true if left unspecified. 
+- `Origo.usePkiAuth`
+    - PKI Auth is recommended for Production applications.
+    - This application accepts an unencrypted RSA / PEM-encoded PKCS#8 Private key.
+    - Service Account with certificate must be created in HID Origo Management Studio.
+- `Origo.tokenUrl`
+    - Token URL is generated from HID Origo Management Studio when a PKI-authenticated service account is created. 
 
 ### File Name Resolver Settings
 
