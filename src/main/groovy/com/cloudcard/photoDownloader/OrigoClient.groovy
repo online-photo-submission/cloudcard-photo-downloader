@@ -91,7 +91,7 @@ class OrigoClient {
         log.info("               Origo content type header : $contentType")
         log.info("               Origo application version : $applicationVersion")
         log.info("                    Origo application ID : $applicationId")
-        log.info("               Authentication Preference : $usePkiAuth")
+        log.info("               Authentication Preference : ${usePkiAuth ? "PKI" : "Password"}")
 
         simpleResponseLogger.source = this.class.simpleName
 
