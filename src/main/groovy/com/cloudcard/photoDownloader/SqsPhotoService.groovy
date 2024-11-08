@@ -33,6 +33,9 @@ class SqsPhotoService implements PhotoService {
     @Value('${sqsPhotoService.pollingDurationSeconds:20}')
     int pollingDurationSeconds
 
+    @Value('${aws.sqs.region:ca-central-1}') // Default to Canada Central
+    String region
+
     SqsClient sqsClient
 
     @Autowired
@@ -51,9 +54,16 @@ class SqsPhotoService implements PhotoService {
         log.info("              SQS URL : " + queueUrl)
         log.info("        Pre-Processor : " + preProcessor.getClass().getSimpleName())
 
-        sqsClient = SqsClient.builder()
-                .region(Region.CA_CENTRAL_1)
+
+        try {
+            Region validateRegion = Region.of(region)   //validate region
+            sqsClient = SqsClient.builder()
+                .region(validateRegion) //uses application properties specified region (default to ca-central-1)
                 .build()
+        } catch (IllegalArgumentException e) {
+            throw new IllegalArgumentException("Invalid AWS region specified: " + region, e)
+        }
+        
     }
 
     @Override
