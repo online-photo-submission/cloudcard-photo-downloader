@@ -92,11 +92,11 @@ class TouchNetClient {
 
     String operatorLogin() {
         Map request = [
-            OperatorId: operatorId,
-            PIN: operatorPassword,
-            TerminalID: terminalId,
-            OriginID: originId,
-            TerminalType: terminalType
+                OperatorId: operatorId,
+                PIN: operatorPassword,
+                TerminalID: terminalId,
+                OriginID: originId,
+                TerminalType: terminalType
         ]
 
         TouchNetResponse response = doApiRequest("Operator Login", "operator/login", request)
@@ -106,8 +106,8 @@ class TouchNetClient {
 
     boolean operatorLogout(String sessionId) {
         Map request = [
-            SessionID: sessionId,
-            OperatorId: operatorId
+                SessionID: sessionId,
+                OperatorId: operatorId
         ]
 
         TouchNetResponse response = doApiRequest("Operator Logout", "operator/logout", request)
@@ -117,10 +117,10 @@ class TouchNetClient {
 
     boolean accountPhotoApprove(String sessionId, String accountId, String photoBase64) {
         Map request = [
-            SessionID: sessionId,
-            AccountID: accountId,
-            PhotoBase64: photoBase64,
-            ForcePrintedFlag: false
+                SessionID: sessionId,
+                AccountID: accountId,
+                PhotoBase64: photoBase64,
+                ForcePrintedFlag: false
         ]
 
         TouchNetResponse response = doApiRequest("Account Photo Approve", "account/photo/approve", request)
