@@ -15,6 +15,12 @@ public class AdditionalPhotoType {
     @JsonIgnore
     private Map<String, Object> additionalProperties = new HashMap<String, Object>();
 
+    AdditionalPhotoType() {}
+
+    AdditionalPhotoType(String name) {
+        this.name = name;
+    }
+
 
     @JsonProperty("name")
     public String getName() {

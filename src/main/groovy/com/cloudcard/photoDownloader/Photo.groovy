@@ -8,10 +8,6 @@ import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import software.amazon.awssdk.services.sqs.model.Message
 
-import java.sql.Timestamp
-import java.time.LocalDateTime
-import java.time.format.DateTimeFormatter
-
 import static groovy.json.JsonOutput.prettyPrint
 
 @EqualsAndHashCode(includes = ["publicKey"])
@@ -69,18 +65,6 @@ class Photo {
             log.error("message body follows:\n${prettyPrint(message.body())}")
             return null
         }
-    }
-
-    static Date parseDate(def dateString) {
-        try {
-            String dateStringWithoutOffset = (dateString as String).take(19)
-            LocalDateTime localDateTime = LocalDateTime.parse(dateStringWithoutOffset, DateTimeFormatter.ISO_LOCAL_DATE_TIME)
-            return Timestamp.valueOf(localDateTime)
-        } catch (Exception e) {
-            log.error(e.message)
-        }
-
-        return null
     }
 
     @JsonProperty("aspectRatio")
