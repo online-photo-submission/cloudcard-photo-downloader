@@ -1,7 +1,8 @@
 package com.cloudcard.photoDownloader
 
 import com.fasterxml.jackson.annotation.*
-import groovy.json.JsonSlurper
+import com.fasterxml.jackson.core.type.TypeReference
+import com.fasterxml.jackson.databind.ObjectMapper
 import groovy.transform.EqualsAndHashCode
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
@@ -12,7 +13,6 @@ import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
 
 import static groovy.json.JsonOutput.prettyPrint
-import static groovy.json.JsonOutput.toJson
 
 @EqualsAndHashCode(includes = ["publicKey"])
 @JsonInclude(JsonInclude.Include.NON_NULL)
@@ -49,7 +49,6 @@ class Photo {
     @JsonIgnore
     Map<String, Object> additionalProperties = new HashMap<String, Object>()
     Boolean manuallyEdited
-    String dateCreatedString
     Date dateCreated
     Integer version
     Boolean backgroundReplaced
@@ -62,18 +61,12 @@ class Photo {
     }
 
     static Photo fromSqsMessage(Message message) {
-        Map map = new JsonSlurper().parseText(message.body()) as Map
-        map.person = new Person(map.person as Map)
-        map.links = new Links(map.links as Map)
-        map.dateCreatedString = map.dateCreated
-        map.dateCreated = parseDate(map.dateCreatedString)
         try {
-            return new Photo(map)
+            return new ObjectMapper().readValue(message.body(), new TypeReference<Photo>() { }) as Photo
         } catch (Exception e) {
             log.error("Error deserializing message ${message?.receiptHandle()}")
             log.error(e.message)
             log.error("message body follows:\n${prettyPrint(message.body())}")
-            log.error("mapped values follow:\n${prettyPrint(toJson(map))}")
             return null
         }
     }
