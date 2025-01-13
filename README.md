@@ -452,6 +452,7 @@ The `CSVManifestFileService` is responsible for generating a CSV file containing
 - `headerAndColumnMap`
     - Description: A map defining the CSV file headers and the corresponding object properties to use for their values. Values available are derived from the [Photo class](https://github.com/online-photo-submission/cloudcard-photo-downloader/blob/master/src/main/groovy/com/cloudcard/photoDownloader/Photo.groovy)
     - Default Value: `{'Cardholder_ID':'person.identifier','Photo_Status': 'status','Photo_Date_Submitted':'dateCreated'}`
+        - In order to pass custom field values in, use `'person.customFields.full_custom_field_name'` (i.e. `'person.customFields.First Name'`)
         - Optional: You can specify a static field in this map by prefixing the value with `static_`.
         - Example: `'Source':'static_CloudCard'` 
         - Optional: You can specify the photo file name with the value `photo_fileName` OR the full photo file path with `photo_fullFilePath`.
