@@ -6,7 +6,7 @@ import com.mashape.unirest.http.HttpResponse;
 import com.mashape.unirest.http.Unirest
 import groovy.json.JsonSlurper;
 
-import javax.annotation.PostConstruct
+import jakarta.annotation.PostConstruct
 
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory

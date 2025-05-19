@@ -13,7 +13,7 @@ import software.amazon.awssdk.services.sqs.model.Message
 import software.amazon.awssdk.services.sqs.model.ReceiveMessageRequest
 import software.amazon.awssdk.services.sqs.model.SqsException
 
-import javax.annotation.PostConstruct
+import jakarta.annotation.PostConstruct
 
 import static com.cloudcard.photoDownloader.ApplicationPropertiesValidator.throwIfBlank
 
