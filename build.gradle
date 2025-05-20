@@ -2,7 +2,8 @@ plugins {
     id 'java'
     id 'groovy'
     id 'eclipse'
-    id 'org.springframework.boot' version '3.3.11'
+    id 'application'
+    id 'org.springframework.boot' version '3.4.5'
     id 'io.spring.dependency-management' version '1.1.7'
 }
 
@@ -18,17 +19,15 @@ repositories {
 }
 
 dependencies {
-    implementation 'org.springframework.boot:spring-boot-starter:3.3.11'
-    implementation 'org.springframework.boot:spring-boot-starter-jdbc:3.3.11'
+    implementation 'org.springframework.boot:spring-boot-starter'
+    implementation 'org.springframework.boot:spring-boot-starter-jdbc'
 
     implementation 'org.apache.groovy:groovy'
     implementation 'org.apache.groovy:groovy-json'
 //    TODO: We probably need to upgrade this jawn to the kongHQ one.
     implementation 'com.mashape.unirest:unirest-java:1.4.9' //unirest java core (https://mvnrepository.com/artifact/com.konghq/unirest-java-core)
-    implementation 'com.fasterxml.jackson.core:jackson-databind:2.18.4'
-    implementation 'org.springframework:spring-jdbc:6.2.6'
+    implementation 'com.fasterxml.jackson.core:jackson-databind:2.19.0'
     implementation 'org.apache.commons:commons-lang3:3.17.0'
-//    TODO: There are a lot of javax imports still in the codebase. These should be changed to jakarta so that it uses the updated dependencies.
     implementation 'jakarta.annotation:jakarta.annotation-api:2.1.1'
     implementation 'org.apache.groovy:groovy-json:4.0.26'
     implementation 'org.apache.commons:commons-csv:1.14.0'
@@ -46,7 +45,7 @@ dependencies {
 
     //jdbc drivers
     implementation 'com.mysql:mysql-connector-j:9.3.0'
-    implementation 'com.microsoft.sqlserver:mssql-jdbc:7.2.1.jre8'
+    implementation 'com.microsoft.sqlserver:mssql-jdbc:12.10.0.jre8'
     implementation files('lib/ojdbc8.jar')
 
     /* *** OVERRIDDEN VULNERABLE TRANSITIVE DEPENDENCIES *** */
