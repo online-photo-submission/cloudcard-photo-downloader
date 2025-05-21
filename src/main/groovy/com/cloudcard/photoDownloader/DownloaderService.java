@@ -1,14 +1,13 @@
 package com.cloudcard.photoDownloader;
 
-import com.mashape.unirest.http.Unirest;
-import org.apache.http.HttpHost;
+import jakarta.annotation.PostConstruct;
+import kong.unirest.core.Unirest;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
-import jakarta.annotation.PostConstruct;
 
 import java.util.List;
 
@@ -70,7 +69,7 @@ public class DownloaderService {
 
         if (proxyHost != null && proxyPort > 0) {
             log.info("          Using Proxy : " + proxyHost + ":" + proxyPort);
-            Unirest.setProxy(new HttpHost(proxyHost, proxyPort));
+            Unirest.config().proxy(proxyHost, proxyPort);
         }
     }
 

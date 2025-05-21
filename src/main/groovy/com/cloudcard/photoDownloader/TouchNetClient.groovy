@@ -1,21 +1,17 @@
-package com.cloudcard.photoDownloader;
+package com.cloudcard.photoDownloader
 
-import com.fasterxml.jackson.databind.ObjectMapper;
-
-import com.mashape.unirest.http.HttpResponse;
-import com.mashape.unirest.http.Unirest
-import groovy.json.JsonSlurper;
-
+import com.fasterxml.jackson.databind.ObjectMapper
+import groovy.json.JsonSlurper
 import jakarta.annotation.PostConstruct
-
+import kong.unirest.core.HttpResponse
+import kong.unirest.core.Unirest
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
-
-import org.springframework.stereotype.Component
 import org.springframework.beans.factory.annotation.Value
-import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty
+import org.springframework.stereotype.Component
 
-import static com.cloudcard.photoDownloader.ApplicationPropertiesValidator.throwIfBlank;
+import static com.cloudcard.photoDownloader.ApplicationPropertiesValidator.throwIfBlank
 
 @Component
 @ConditionalOnProperty(value = "downloader.storageService", havingValue = "TouchNetStorageService")
