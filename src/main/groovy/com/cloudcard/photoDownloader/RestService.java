@@ -30,19 +30,4 @@ public class RestService {
 
         return response.getBody();
     }
-//
-//    /**
-//     * Gets the bytes from the response body
-//     *
-//     * @param response
-//     * @return binary from response body
-//     * @throws IOException
-//     */
-//    private static byte[] getBytes(HttpResponse<String> response) throws IOException {
-//
-//        InputStream rawBody = response.getRawBody();
-//        byte[] bytes = new byte[ rawBody.available() ];
-//        rawBody.read(bytes);
-//        return bytes;
-//    }
 }
