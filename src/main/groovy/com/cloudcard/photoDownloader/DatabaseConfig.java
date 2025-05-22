@@ -25,7 +25,7 @@ public class DatabaseConfig {
     String schemaName;
 
     @Bean
-    public DataSource dataSource() {
+    public DataSource getDataSource() {
 
         DriverManagerDataSource dataSource = new DriverManagerDataSource();
         dataSource.setDriverClassName(driverClassName);
