@@ -21,7 +21,10 @@ public class RestService {
 
     private static byte[] fetchBytes(String externalURL) throws Exception {
 
-        HttpResponse<byte[]> response = Unirest.get(externalURL).header("accept", "image/jpeg;charset=utf-8").header("Content-Type", "image/jpeg;charset=utf-8").asObject(RawResponse::getContentAsBytes);
+        HttpResponse<byte[]> response = Unirest.get(externalURL)
+                                               .header("accept", "image/jpeg;charset=utf-8")
+                                               .header("Content-Type", "image/jpeg;charset=utf-8")
+                                               .asObject(RawResponse::getContentAsBytes);
 
         if (response.getStatus() != 200) {
             log.error("Status " + response.getStatus() + "returned from CloudCard API when retrieving photos bytes.");
