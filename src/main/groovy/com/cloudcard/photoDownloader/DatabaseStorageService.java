@@ -34,7 +34,6 @@ public class DatabaseStorageService implements StorageService {
     @Value("${db.photoUpdates.enabled:true}")
     Boolean updateExistingPhoto;
 
-//    TODO: Determine if this is still necessary
     @Autowired
     DataSource dataSource;
 
