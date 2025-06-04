@@ -89,7 +89,8 @@ class CSVManifestFileService implements ManifestFileService {
             if (photoFiles.collect { it.photoId }.contains(photo.id)) {
 
 //              As referenced in the README, this specifically gets the photoFiles in the first photoDirectory (only relevant if outputting fullFilePath AND multiple directories are specified)
-                PhotoFile file = photoFiles.find {it.photoId == photo.id && it.fileName.contains(photoDirectories[0])}
+//                TODO: We also should consider a better way to do this, since we may not have a photo directory (i.e. db storage service)
+                PhotoFile file = photoFiles.find {it.photoId == photo.id && it.fileName?.contains(photoDirectories[0])}
 
                 List record = headerAndColumnMap.values().collect { column -> resolveValue(column, photo, file) }
 
@@ -109,11 +110,11 @@ class CSVManifestFileService implements ManifestFileService {
     def resolveValue(String column, Photo photo, PhotoFile file) {
         if (column.startsWith('static_')) { return column.split('_', 2)[1] }
 
-        if (column == 'photo_fullFilePath') { return file.fileName }
+        if (column == 'photo_fullFilePath') { return file?.fileName }
 
-        if (column == 'photo_fileName') { return "${file.baseName}.jpg" }
+        if (column == 'photo_fileName') { return "${file?.baseName}.jpg" }
 
-        if (column == 'photo_customFilePath') { return "${customFilePath}${file.baseName}.jpg" }
+        if (column == 'photo_customFilePath') { return "${customFilePath}${file?.baseName}.jpg" }
 
         def currentObject = photo
 
