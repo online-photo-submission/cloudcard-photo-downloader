@@ -27,6 +27,9 @@ class SqsPhotoService implements PhotoService {
     @Value('${sqsPhotoService.queueUrl}')
     String queueUrl
 
+    @Value('${sqsPhotoService.region}')
+    String region
+
     @Value('${sqsPhotoService.pollingIntervalSeconds:0}')
     int pollingIntervalSeconds
 
@@ -46,13 +49,13 @@ class SqsPhotoService implements PhotoService {
     @PostConstruct
     void init() {
 
-        throwIfBlank(queueUrl, "The CloudCard API URL must be specified.")
+        throwIfBlank(queueUrl, "The SQS Queue URL must be specified.")
 
         log.info("              SQS URL : " + queueUrl)
         log.info("        Pre-Processor : " + preProcessor.getClass().getSimpleName())
 
         sqsClient = SqsClient.builder()
-                .region(Region.CA_CENTRAL_1)
+                .region(Region.of(region))
                 .build()
     }
 
