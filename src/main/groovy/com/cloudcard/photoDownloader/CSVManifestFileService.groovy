@@ -9,7 +9,7 @@ import org.springframework.beans.factory.annotation.Value
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty
 import org.springframework.stereotype.Service
 
-import javax.annotation.PostConstruct
+import jakarta.annotation.PostConstruct
 import java.text.SimpleDateFormat
 
 @Service

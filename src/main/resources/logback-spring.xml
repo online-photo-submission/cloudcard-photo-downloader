@@ -1,4 +1,8 @@
 <configuration>
+    <springProperty scope="context" name="identity" source="cloudcard.logging.identity" />
+    <springProperty scope="context" name="host" source="cloudcard.logging.host" />
+    <springProperty scope="context" name="port" source="cloudcard.logging.port" />
+    <springProperty scope="context" name="level" source="logging.appender.papertrail.level" />
 
     <appender name="STDOUT" class="ch.qos.logback.core.ConsoleAppender">
         <!-- encoders are assigned the type ch.qos.logback.classic.encoder.PatternLayoutEncoder by default -->
@@ -7,30 +11,35 @@
         </encoder>
     </appender>
 
+    <if condition='isDefined("host")'>
+        <then>
 
-    <springProperty name="cloudcard.logging.identity" source="cloudcard.logging.identity" />
-    <springProperty name="cloudcard.logging.host" source="cloudcard.logging.host" />
-    <springProperty name="cloudcard.logging.port" source="cloudcard.logging.port" />
-    <springProperty name="logging.appender.papertrail.level" source="logging.appender.papertrail.level" />
+            <appender name="PAPERTRAIL" class="com.papertrailapp.logback.Syslog4jAppender">
+                <filter class="ch.qos.logback.classic.filter.ThresholdFilter">
+                    <level>${level:-OFF}</level>
+                </filter>
 
-    <appender name="PAPERTRAIL" class="com.papertrailapp.logback.Syslog4jAppender">
-        <filter class="ch.qos.logback.classic.filter.ThresholdFilter">
-            <level>${logging.appender.papertrail.level:-OFF}</level>
-        </filter>
-        
-        <layout class="ch.qos.logback.classic.PatternLayout">
-            <pattern>%-5level %logger{35}: %m%n%xEx</pattern>
-        </layout>
-        <syslogConfig class="org.productivity.java.syslog4j.impl.net.tcp.ssl.SSLTCPNetSyslogConfig">
-            <host>${cloudcard.logging.host}</host>
-            <port>${cloudcard.logging.port}</port>
-            <ident>${cloudcard.logging.identity}</ident>
-            <maxMessageLength>128000</maxMessageLength>
-        </syslogConfig>
-    </appender>
+                <layout class="ch.qos.logback.classic.PatternLayout">
+                    <pattern>%-5level %logger{35}: %m%n%xEx</pattern>
+                </layout>
+                <syslogConfig class="org.productivity.java.syslog4j.impl.net.tcp.ssl.SSLTCPNetSyslogConfig">
+                    <host>${host}</host>
+                    <port>${port}</port>
+                    <ident>${identity}</ident>
+                    <maxMessageLength>128000</maxMessageLength>
+                </syslogConfig>
+            </appender>
 
-    <root level="INFO">
-        <appender-ref ref="PAPERTRAIL"/>
-        <appender-ref ref="STDOUT"/>
-    </root>
+            <root level="INFO">
+                <appender-ref ref="PAPERTRAIL"/>
+                <appender-ref ref="STDOUT"/>
+            </root>
+        </then>
+
+        <else>
+            <root level="INFO">
+                <appender-ref ref="STDOUT"/>
+            </root>
+        </else>
+    </if>
 </configuration>

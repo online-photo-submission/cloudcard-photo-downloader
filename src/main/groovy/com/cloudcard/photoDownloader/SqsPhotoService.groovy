@@ -6,7 +6,6 @@ import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty
 import org.springframework.stereotype.Service
-import software.amazon.awssdk.auth.credentials.ProfileCredentialsProvider
 import software.amazon.awssdk.regions.Region
 import software.amazon.awssdk.services.sqs.SqsClient
 import software.amazon.awssdk.services.sqs.model.DeleteMessageRequest
@@ -14,7 +13,7 @@ import software.amazon.awssdk.services.sqs.model.Message
 import software.amazon.awssdk.services.sqs.model.ReceiveMessageRequest
 import software.amazon.awssdk.services.sqs.model.SqsException
 
-import javax.annotation.PostConstruct
+import jakarta.annotation.PostConstruct
 
 import static com.cloudcard.photoDownloader.ApplicationPropertiesValidator.throwIfBlank
 
@@ -27,14 +26,14 @@ class SqsPhotoService implements PhotoService {
     @Value('${sqsPhotoService.queueUrl}')
     String queueUrl
 
-    @Value('${sqsPhotoService.region}')
-    String region
-
     @Value('${sqsPhotoService.pollingIntervalSeconds:0}')
     int pollingIntervalSeconds
 
     @Value('${sqsPhotoService.pollingDurationSeconds:20}')
     int pollingDurationSeconds
+
+    @Value('${aws.sqs.region:ca-central-1}')
+    String region
 
     SqsClient sqsClient
 
@@ -52,11 +51,16 @@ class SqsPhotoService implements PhotoService {
         throwIfBlank(queueUrl, "The SQS Queue URL must be specified.")
 
         log.info("              SQS URL : " + queueUrl)
+        log.info("           AWS Region : " + region)
         log.info("        Pre-Processor : " + preProcessor.getClass().getSimpleName())
 
-        sqsClient = SqsClient.builder()
+        try {
+            sqsClient = SqsClient.builder()
                 .region(Region.of(region))
                 .build()
+        } catch(IllegalArgumentException e) {
+            throw new IllegalArgumentException("Invalid AWS region specified: " + region, e)
+        }
     }
 
     @Override

@@ -135,7 +135,7 @@ Below are descriptions of each option:
 - sqsPhotoService.queueUrl
     - default: none
     - note: This will be provided by support once configured upon request. 
-- sqsPhotoService.region
+- aws.sqs.region
     - default: `ca-central-1`
     - description: the AWS region in which the SQS queue is located. This will be provided by support once configured upon request.
 - sqsPhotoService.pollingIntervalSeconds
