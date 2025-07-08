@@ -4,7 +4,7 @@ import org.w3c.dom.Document
 import org.w3c.dom.Node
 import org.w3c.dom.NodeList;
 
-import javax.annotation.PostConstruct
+import jakarta.annotation.PostConstruct
 
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
@@ -113,6 +113,8 @@ class WorkdayClient {
         return new WorkdayResponse(postResponse, documentBuilder.parse(new ByteArrayInputStream(postResponse.body().bytes)))
     }
 
+    //TODO I don't think we need this; if we do, getWorker requires Get Access to Worker Data: Public Worker Reports.
+    /*
     Node getWorker(String workerId) {
         WorkdayResponse getWorkerResponse = doWorkdayRequest("getWorker", """
             <bsvc:Get_Workers_Request xmlns:bsvc="urn:com.workday/bsvc">
@@ -141,6 +143,7 @@ class WorkdayClient {
         //TODO convert this to a worker object.
         return workers.item(0)
     }
+     */
 
     void putWorkerPhoto(String workerId, String photoBase64) {
         WorkdayResponse putWorkerPhotoResponse = doWorkdayRequest("putWorkerPhoto", """

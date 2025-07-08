@@ -35,9 +35,12 @@ class WorkdayClientSpec extends Specification {
      */
     void "test all requests"() {
         expect:
-        client.getWorker("21001")
-        //todo - currently do not have permissions for PutWorkerPhoto
         client.putWorkerPhoto("21001", base64Photo)
+
+
+        //todo getWorker requires Get Access to Worker Data: Public Worker Reports.
+        // I don't think we need it.
+        // client.getWorker("21001")
     }
 
 }
