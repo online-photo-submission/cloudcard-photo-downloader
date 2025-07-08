@@ -14,8 +14,8 @@ import org.springframework.stereotype.Component
 import static com.cloudcard.photoDownloader.ApplicationPropertiesValidator.throwIfBlank
 
 @Component
-@ConditionalOnProperty(value = "downloader.storageService", havingValue = "TouchNetStorageService")
-class TouchNetClient {
+@ConditionalOnProperty(value = "HttpStorageService.httpStorageClient", havingValue = "TouchNetClient")
+class TouchNetClient implements HttpStorageClient {
 
     static final Logger log = LoggerFactory.getLogger(TouchNetClient.class);
 
@@ -40,6 +40,8 @@ class TouchNetClient {
     @Value('${TouchNetClient.originId}')
     int originId
 
+    String sessionId
+
     @PostConstruct
     void init() {
 
@@ -56,13 +58,6 @@ class TouchNetClient {
         log.info("TouchNet Operator Password : ${operatorPassword.length() > 0 ? "......" : ""}")
         log.info("      TouchNet Terminal ID : $terminalId")
         log.info("        TouchNet Origin ID : $originId")
-    }
-
-    boolean apiOnline() {
-        log.trace("Checking if $apiUrl is online...")
-        HttpResponse<String> response = Unirest.get("$apiUrl/").asString();
-        log.trace("API Online Response: $response.status $response.body")
-        return response.status == 200
     }
 
     TouchNetResponse doApiRequest(String name, String endpoint, Map body) {
@@ -111,7 +106,7 @@ class TouchNetClient {
         return response.success
     }
 
-    boolean accountPhotoApprove(String sessionId, String accountId, String photoBase64) {
+    TouchNetResponse accountPhotoApprove(String sessionId, String accountId, String photoBase64) {
         Map request = [
             SessionID: sessionId,
             AccountID: accountId,
@@ -119,9 +114,42 @@ class TouchNetClient {
             ForcePrintedFlag: false
         ]
 
-        TouchNetResponse response = doApiRequest("Account Photo Approve", "account/photo/approve", request)
+        doApiRequest("Account Photo Approve", "account/photo/approve", request)
+    }
 
-        return response.success
+    @Override
+    String getSystemName() {
+        return "TouchNet"
+    }
+
+    @Override
+    void putPhoto(String accountId, String photoBase64) {
+        TouchNetResponse response = accountPhotoApprove(getSession(), accountId, photoBase64)
+
+        if (!response.success) {
+            throw new RuntimeException("Failed to upload photo for account $accountId: ${response.json}")
+        }
+    }
+
+    @Override
+    void close() {
+        if (!sessionId) {
+            return
+        }
+
+        if (!operatorLogout(sessionId)) {
+            log.warn("Failed to logout of the TouchNet API")
+        }
+
+        sessionId = null
+    }
+
+    String getSession() {
+        if (!sessionId) {
+            sessionId = operatorLogin()
+        }
+
+        return sessionId
     }
 }
 
