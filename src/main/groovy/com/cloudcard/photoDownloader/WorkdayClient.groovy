@@ -1,9 +1,6 @@
 package com.cloudcard.photoDownloader
 
 import org.w3c.dom.Document
-import org.w3c.dom.Node
-import org.w3c.dom.NodeList;
-
 import jakarta.annotation.PostConstruct
 
 import org.slf4j.Logger
@@ -17,7 +14,6 @@ import javax.xml.namespace.NamespaceContext
 import javax.xml.parsers.DocumentBuilder
 import javax.xml.parsers.DocumentBuilderFactory
 import javax.xml.xpath.XPath
-import javax.xml.xpath.XPathConstants
 import javax.xml.xpath.XPathFactory
 import java.net.http.HttpClient
 import java.net.http.HttpRequest
@@ -37,8 +33,6 @@ class WorkdayClient {
     @Value('${WorkdayClient.tenantName}')
     String tenantName
 
-    //TODO currently I am reusing the ISU credentials that we had for the Person importer.
-    // We need to validate an ISU with just permissions to the Personal Data: Personal Photo domain, make sure that works.
     @Value('${WorkdayClient.isu.username}')
     String username
 
@@ -52,7 +46,6 @@ class WorkdayClient {
     DocumentBuilder documentBuilder
     XPath xPath
     NamespaceContextUtil namespaceContextUtil
-
 
     @PostConstruct
     void init() {
@@ -86,19 +79,11 @@ class WorkdayClient {
         HttpRequest postRequest = HttpRequest.newBuilder()
             .uri(new URI(humanResourcesApi))
             .header("Content-Type", "application/xml")
-            .header("Authorization", getBasicAuthenticationHeader(username, password))
             .POST(
-                //TODO replace "bogus" nonce with a real one.
                 HttpRequest.BodyPublishers.ofString("""\
                     <soapenv:Envelope xmlns:soapenv=\"http://schemas.xmlsoap.org/soap/envelope/\" xmlns:bsvc=\"urn:com.workday/bsvc\">
                         <soapenv:Header>
-                            <wsse:Security soapenv:mustUnderstand=\"1\" xmlns:wsse=\"http://docs.oasis-open.org/wss/2004/01/oasis-200401-wss-wssecurity-secext-1.0.xsd\" xmlns:wsu=\"http://docs.oasis-open.org/wss/2004/01/oasis-200401-wss-wssecurity-utility-1.0.xsd\">
-                                <wsse:UsernameToken wsu:Id=\"bogus\">
-                                    <wsse:Username>$username@$tenantName</wsse:Username>
-                                    <wsse:Password Type=\"http://docs.oasis-open.org/wss/2004/01/oasis-200401-wss-username-token-profile-1.0#PasswordText\">$password</wsse:Password>
-                                    <wsse:Nonce EncodingType=\"http://docs.oasis-open.org/wss/2004/01/oasis-200401-wss-soap-message-security-1.0#Base64Binary\">bogus</wsse:Nonce>
-                                </wsse:UsernameToken>
-                            </wsse:Security>
+                            ${generateSecurityHeader()}
                         </soapenv:Header>
                         <soapenv:Body>
                             $soapBody
@@ -106,44 +91,13 @@ class WorkdayClient {
                     </soapenv:Envelope>""".stripIndent()
                 )
             ).build()
+
         log.debug("$requestName request: $postRequest")
         HttpResponse<String> postResponse = client.send(postRequest, HttpResponse.BodyHandlers.ofString())
         log.debug("$requestName status: ${postResponse.statusCode()}")
 
         return new WorkdayResponse(postResponse, documentBuilder.parse(new ByteArrayInputStream(postResponse.body().bytes)))
     }
-
-    //TODO I don't think we need this; if we do, getWorker requires Get Access to Worker Data: Public Worker Reports.
-    /*
-    Node getWorker(String workerId) {
-        WorkdayResponse getWorkerResponse = doWorkdayRequest("getWorker", """
-            <bsvc:Get_Workers_Request xmlns:bsvc="urn:com.workday/bsvc">
-                <bsvc:Request_References bsvc:Skip_Non_Existing_Instances="false">
-                    <bsvc:Worker_Reference>
-                        <bsvc:ID bsvc:type="Employee_ID">$workerId</bsvc:ID>
-                    </bsvc:Worker_Reference>
-                </bsvc:Request_References>
-                <bsvc:Response_Group>
-                    <bsvc:Include_Photo>true</bsvc:Include_Photo>
-                </bsvc:Response_Group>
-            </bsvc:Get_Workers_Request>
-        """)
-
-        if (getWorkerResponse.statusCode != 200) {
-            throw new RuntimeException("Failed to get worker $workerId: ${getWorkerResponse.statusCode}")
-        }
-
-        //TODO confirm that this is the correct Path to the worker node.
-        NodeList workers = xPath.evaluate("/env:Envelope/env:Body/wd:Get_Workers_Response/wd:Response_Data/wd:Worker", getWorkerResponse.body, XPathConstants.NODESET) as NodeList
-
-        if (workers.length == 0) {
-            throw new RuntimeException("Worker with ID $workerId not found")
-        }
-
-        //TODO convert this to a worker object.
-        return workers.item(0)
-    }
-     */
 
     void putWorkerPhoto(String workerId, String photoBase64) {
         WorkdayResponse putWorkerPhotoResponse = doWorkdayRequest("putWorkerPhoto", """
@@ -162,13 +116,17 @@ class WorkdayClient {
             log.error(putWorkerPhotoResponse.response.body())
             throw new RuntimeException("Failed to put worker photo for $workerId: ${putWorkerPhotoResponse.statusCode}")
         }
-
-        //todo - figure out if we need to assert anything about the response body.
     }
 
-    static final String getBasicAuthenticationHeader(String username, String password) {
-        String valueToEncode = username + ":" + password;
-        return "Basic " + Base64.getEncoder().encodeToString(valueToEncode.getBytes());
+    String generateSecurityHeader() {
+        """
+            <wsse:Security soapenv:mustUnderstand=\"1\" xmlns:wsse=\"http://docs.oasis-open.org/wss/2004/01/oasis-200401-wss-wssecurity-secext-1.0.xsd\" xmlns:wsu=\"http://docs.oasis-open.org/wss/2004/01/oasis-200401-wss-wssecurity-utility-1.0.xsd\">
+                <wsse:UsernameToken>
+                    <wsse:Username>$username@$tenantName</wsse:Username>
+                    <wsse:Password Type=\"http://docs.oasis-open.org/wss/2004/01/oasis-200401-wss-username-token-profile-1.0#PasswordText\">$password</wsse:Password>
+                </wsse:UsernameToken>
+            </wsse:Security>
+        """
     }
 }
 
