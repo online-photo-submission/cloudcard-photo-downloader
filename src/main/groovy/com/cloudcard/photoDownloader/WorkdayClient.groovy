@@ -129,6 +129,13 @@ class WorkdayClient implements HttpStorageClient {
         // WorkdayClient does not maintain any resources that need to be closed.
     }
 
+    /**
+     * Generates wsse security header for Workday API requests.
+     * Documentation for the security header can be found here:
+     *     https://docs.oasis-open.org/wss/v1.1/wss-v1.1-spec-pr-UsernameTokenProfile-01.htm#_Toc104276211
+     *
+     * @return String containing the wsse:Security header XML.
+     */
     String generateSecurityHeader() {
         """
             <wsse:Security soapenv:mustUnderstand=\"1\" xmlns:wsse=\"http://docs.oasis-open.org/wss/2004/01/oasis-200401-wss-wssecurity-secext-1.0.xsd\" xmlns:wsu=\"http://docs.oasis-open.org/wss/2004/01/oasis-200401-wss-wssecurity-utility-1.0.xsd\">
