@@ -19,6 +19,8 @@ class TouchNetClient implements HttpStorageClient {
 
     static final Logger log = LoggerFactory.getLogger(TouchNetClient.class);
 
+    static final String AUTHENTICATION_FAILED_ERROR_CODE = "-2102"
+
     @Value('${TouchNetClient.apiUrl}')
     String apiUrl
 
@@ -44,7 +46,6 @@ class TouchNetClient implements HttpStorageClient {
 
     @PostConstruct
     void init() {
-
         throwIfBlank(apiUrl, "The TouchNet API URL must be specified.")
         throwIfBlank(developerKey, "The TouchNet developer key must be specified.")
         throwIfBlank(operatorId, "The TouchNet operator id must be specified")
@@ -58,6 +59,20 @@ class TouchNetClient implements HttpStorageClient {
         log.info("TouchNet Operator Password : ${operatorPassword.length() > 0 ? "......" : ""}")
         log.info("      TouchNet Terminal ID : $terminalId")
         log.info("        TouchNet Origin ID : $originId")
+    }
+
+    TouchNetResponse doApiRequestWithReauthentication(String name, String endpoint, Map body) {
+        body["SessionID"] = findOrCreateSession()
+
+        TouchNetResponse response = doApiRequest(name, endpoint, body)
+
+        if (!response.success && response.json?.ResponseStatus?.ErrorCode == AUTHENTICATION_FAILED_ERROR_CODE) {
+            log.warn("$name failed with authentication error. Attempting to reauthenticate.")
+            body["SessionID"] = createSession()
+            response = doApiRequest(name, endpoint, body)
+        }
+
+        return response
     }
 
     TouchNetResponse doApiRequest(String name, String endpoint, Map body) {
@@ -95,7 +110,7 @@ class TouchNetClient implements HttpStorageClient {
         return response.success ? response.json.Result : null
     }
 
-    boolean operatorLogout(String sessionId) {
+    boolean operatorLogout() {
         Map request = [
             SessionID: sessionId,
             OperatorId: operatorId
@@ -106,15 +121,14 @@ class TouchNetClient implements HttpStorageClient {
         return response.success
     }
 
-    TouchNetResponse accountPhotoApprove(String sessionId, String accountId, String photoBase64) {
+    TouchNetResponse accountPhotoApprove(String accountId, String photoBase64) {
         Map request = [
-            SessionID: sessionId,
             AccountID: accountId,
             PhotoBase64: photoBase64,
             ForcePrintedFlag: false
         ]
 
-        doApiRequest("Account Photo Approve", "account/photo/approve", request)
+        doApiRequestWithReauthentication("Account Photo Approve", "account/photo/approve", request)
     }
 
     @Override
@@ -124,7 +138,7 @@ class TouchNetClient implements HttpStorageClient {
 
     @Override
     void putPhoto(String accountId, String photoBase64) {
-        TouchNetResponse response = accountPhotoApprove(getSession(), accountId, photoBase64)
+        TouchNetResponse response = accountPhotoApprove(accountId, photoBase64)
 
         if (!response.success) {
             throw new RuntimeException("Failed to upload photo for account $accountId: ${response.json}")
@@ -137,17 +151,19 @@ class TouchNetClient implements HttpStorageClient {
             return
         }
 
-        if (!operatorLogout(sessionId)) {
+        if (!operatorLogout()) {
             log.warn("Failed to logout of the TouchNet API")
         }
 
         sessionId = null
     }
 
-    String getSession() {
-        if (!sessionId) {
-            sessionId = operatorLogin()
-        }
+    String findOrCreateSession() {
+        sessionId ?: createSession()
+    }
+
+    String createSession() {
+        sessionId = operatorLogin()
 
         return sessionId
     }
