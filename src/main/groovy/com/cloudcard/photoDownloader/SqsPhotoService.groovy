@@ -48,7 +48,7 @@ class SqsPhotoService implements PhotoService {
     @PostConstruct
     void init() {
 
-        throwIfBlank(queueUrl, "The CloudCard API URL must be specified.")
+        throwIfBlank(queueUrl, "The SQS Queue URL must be specified.")
 
         log.info("              SQS URL : " + queueUrl)
         log.info("           AWS Region : " + region)

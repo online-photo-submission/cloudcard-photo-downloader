@@ -135,6 +135,9 @@ Below are descriptions of each option:
 - sqsPhotoService.queueUrl
     - default: none
     - note: This will be provided by support once configured upon request. 
+- aws.sqs.region
+    - default: `ca-central-1`
+    - description: the AWS region in which the SQS queue is located. This will be provided by support once configured upon request.
 - sqsPhotoService.pollingIntervalSeconds
     - default: 0
     - description: how long to wait between SQS requests for new messages
@@ -262,6 +265,25 @@ The downloader supports going through a proxy when using the CloudCardPhotoServi
     - provided by CloudCard
 - `TouchNetClient.originId`
     - provided by CloudCard
+
+#### Workday Storage Service Settings
+
+*Note: `downloader.storageService` must be set to `WorkdayStorageService` for these to have any effect.*
+
+- `WorkdayClient.apiUrl`
+    - URL, including TLD, but no other path, where the Workday API is located.
+    - Obtain by running the Public Web Services report. From related actions of Human Resources (public), select Web Service -> View WSDL.
+      - At the bottom of the WSDL, you will see an xml tag that looks like this: 
+        ```xml
+        <soapbind:address location="https://impl-services1.wd12.myworkday.com/ccx/service/tenant_name/Human_Resources/v45.0"/>
+        ```
+    - Example: `https://impl-services1.wd12.myworkday.com`
+- `WorkdayClient.tenantName`
+    - tenant name, which is the value after `service/` in the WSDL URL.
+- `WorkdayClient.isu.username`
+    - username of an Integration System User account that has, at minimum, `Put` permissions on the `Personal Data: Personal Photo` domain.
+- `WorkdayClient.isu.password`
+    - password of the account identified by `WorkdayClient.isu.username`
 
 ### File Name Resolver Settings
 
