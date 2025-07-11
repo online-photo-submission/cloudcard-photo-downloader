@@ -8,7 +8,7 @@ plugins {
 }
 
 group = 'com.onlinephotosubmission'
-version = '25.05.22.1001'
+version = '25.07.11.1635'
 
 java {
     sourceCompatibility = '17'
