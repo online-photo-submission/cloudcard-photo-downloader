@@ -1,11 +1,8 @@
 package com.cloudcard.photoDownloader
 
-
 import jakarta.annotation.PostConstruct
-
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
-
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty
 import org.springframework.stereotype.Service
@@ -13,23 +10,25 @@ import org.springframework.stereotype.Service
 import static com.cloudcard.photoDownloader.ApplicationPropertiesValidator.throwIfTrue
 
 @Service
-@ConditionalOnProperty(value = "downloader.storageService", havingValue = "TouchNetStorageService")
-class TouchNetStorageService implements StorageService {
+@ConditionalOnProperty(value = "downloader.storageService", havingValue = "HttpStorageService")
+class HttpStorageService implements StorageService {
 
-    static final Logger log = LoggerFactory.getLogger(TouchNetStorageService.class);
+    static final Logger log = LoggerFactory.getLogger(HttpStorageService.class);
 
     @Autowired
     @SuppressWarnings("SpringJavaInjectionPointsAutowiringInspection")
     FileNameResolver fileNameResolver;
 
     @Autowired
-    TouchNetClient touchNetClient
+    HttpStorageClient httpStorageClient
 
     @PostConstruct
     void init() {
-        throwIfTrue(fileNameResolver == null, "The File Name Resolver must be specified.");
+        throwIfTrue(fileNameResolver == null, "The File Name Resolver must be specified.")
+        throwIfTrue(httpStorageClient == null, "The HTTP Storage Client must be specified.")
 
         log.info("   File Name Resolver : $fileNameResolver.class.simpleName")
+        log.info("  HTTP Storage Client : $httpStorageClient.class.simpleName")
     }
 
     List<PhotoFile> save(Collection<Photo> photos) {
@@ -38,31 +37,22 @@ class TouchNetStorageService implements StorageService {
             return []
         }
 
-        log.info("Uploading Photos to TouchNet")
+        log.info("Uploading Photos to ${httpStorageClient.systemName}")
 
-        String sessionId = touchNetClient.operatorLogin()
+        List<PhotoFile> photoFiles = photos.findResults { save(it) }
 
-        if (!sessionId) {
-            log.error("Failed to login to the TouchNet API")
-            return []
-        }
-
-        List<PhotoFile> photoFiles = photos.findResults { save(it, sessionId) }
-
-        if (!touchNetClient.operatorLogout(sessionId)) {
-            log.warn("Failed to logout of the TouchNet API")
-        }
+        httpStorageClient.close()
 
         return photoFiles
     }
 
-    PhotoFile save(Photo photo, String sessionId) {
+    PhotoFile save(Photo photo) {
         if (!photo.person) {
-            log.error("Person does not exist for photo $photo.id and it cannot be uploaded to TouchNet.")
+            log.error("Person does not exist for photo $photo.id and it cannot be uploaded to ${httpStorageClient.systemName}.")
             return null
         }
 
-        log.info("Uploading to TouchNet: $photo.id for person: $photo.person.email")
+        log.info("Uploading to ${httpStorageClient.systemName}: $photo.id for person: $photo.person.email")
 
         String accountId = resolveAccountId(photo)
         String photoBase64 = getBytesBase64(photo)
@@ -71,8 +61,10 @@ class TouchNetStorageService implements StorageService {
             return null
         }
 
-        if (!touchNetClient.accountPhotoApprove(sessionId, accountId, photoBase64)) {
-            log.error("Photo $photo.id for $photo.person.email failed to upload into TouchNet.")
+        try {
+            httpStorageClient.putPhoto(accountId, photoBase64)
+        } catch (Exception e) {
+            log.error("Photo $photo.id for $photo.person.email failed to upload into ${httpStorageClient.systemName}.")
             return null
         }
 
@@ -83,7 +75,7 @@ class TouchNetStorageService implements StorageService {
         String accountId = fileNameResolver.getBaseName(photo);
 
         if (!accountId) {
-            log.error("We could not resolve the accountId for '$photo.person.email' with ID number '$photo.person.identifier', so photo $photo.id cannot be uploaded to TouchNet.")
+            log.error("We could not resolve the accountId for '$photo.person.email' with ID number '$photo.person.identifier', so photo $photo.id cannot be uploaded to ${httpStorageClient.systemName}.")
             return null
         }
 
@@ -92,7 +84,7 @@ class TouchNetStorageService implements StorageService {
 
     String getBytesBase64(Photo photo) {
         if (!photo.bytes) {
-            log.error("Photo $photo.id for $photo.person.email is missing binary data, so it cannot be uploaded to TouchNet.")
+            log.error("Photo $photo.id for $photo.person.email is missing binary data, so it cannot be uploaded to ${httpStorageClient.systemName}.")
             return null
         }
 

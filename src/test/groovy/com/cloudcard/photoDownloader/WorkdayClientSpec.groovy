@@ -6,7 +6,7 @@ import spock.lang.*
  * This test actually calls out to the Workday API.
  * It is really an integration test, should only be turned on when integration with this api needs to be tested directly.
  */
-@Ignore
+//@Ignore
 class WorkdayClientSpec extends Specification {
 
     WorkdayClient client
@@ -36,8 +36,8 @@ class WorkdayClientSpec extends Specification {
      */
     void "test all requests"() {
         expect:
-        client.putWorkerPhoto("21001", base64Photo)
-//        client.putWorkerPhoto("21001", base64Photo2)
+        client.putPhoto("21001", base64Photo)
+//        client.putPhoto("21001", base64Photo2)
     }
 
 }

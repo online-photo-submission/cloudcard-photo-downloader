@@ -28,6 +28,8 @@ class TouchNetClientSpec extends Specification {
                 terminalType: appProps.getProperty("TouchNetClient.terminalType"),
                 originId: Integer.parseInt(appProps.getProperty("TouchNetClient.originId"))
         ])
+
+        client.init()
     }
 
     /**
@@ -36,11 +38,9 @@ class TouchNetClientSpec extends Specification {
      */
     void "test all requests"() {
         expect:
-        String sessionId = client.operatorLogin()
-        assert sessionId
-        assert client.accountPhotoApprove(sessionId, "100044616", base64Photo)
-        assert client.accountPhotoApprove(sessionId, "100044617", base64Photo)
-        assert client.operatorLogout(sessionId)
+        client.putPhoto("100044616", base64Photo)
+        client.putPhoto("100044617", base64Photo)
+        client.close()
     }
 
 }
