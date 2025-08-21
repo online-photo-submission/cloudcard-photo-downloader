@@ -43,6 +43,9 @@ class SqsPhotoService implements PhotoService {
     @Autowired
     PreProcessor preProcessor
 
+    @Autowired
+    CloudCardClient cloudCardClient;
+
     Map<Integer, Message> messageHistory = [:]
 
     @PostConstruct
@@ -92,6 +95,7 @@ class SqsPhotoService implements PhotoService {
      */
     @Override
     Photo markAsDownloaded(Photo photo) {
+        cloudCardClient.updateStatus(photo, 'DOWNLOADED')
         deleteMessages(sqsClient, queueUrl, messageHistory[photo.id])
         return photo
     }
@@ -136,7 +140,7 @@ class SqsPhotoService implements PhotoService {
             messages = receiveMessages(sqsClient, queueUrl)
         }
         println("!")
-        log.info("Recived ${messages.size()} messages.")
+        log.info("Received ${messages.size()} messages.")
         return messages
     }
 }
