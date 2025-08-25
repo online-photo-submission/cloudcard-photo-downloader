@@ -28,6 +28,9 @@ class TouchNetStorageService implements StorageService {
     @Autowired
     CloudCardClient cloudCardClient
 
+    String onHold = 'ON_HOLD'
+    String message = 'Photo failed to save. Check if the user exists in TouchNet with the right identifier.'
+
     @PostConstruct
     void init() {
         throwIfTrue(fileNameResolver == null, "The File Name Resolver must be specified.");
@@ -76,7 +79,7 @@ class TouchNetStorageService implements StorageService {
 
         if (!touchNetClient.accountPhotoApprove(sessionId, accountId, photoBase64)) {
             log.error("Photo $photo.id for $photo.person.email failed to upload into TouchNet.")
-            cloudCardClient.updateStatus(photo, "ON_HOLD")
+            cloudCardClient.updateStatus(photo, onHold, message)
             return null
         }
 

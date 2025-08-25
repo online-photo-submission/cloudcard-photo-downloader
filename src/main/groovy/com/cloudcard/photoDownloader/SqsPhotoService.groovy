@@ -35,6 +35,9 @@ class SqsPhotoService implements PhotoService {
     @Value('${aws.sqs.region:ca-central-1}')
     String region
 
+    @Value('${sqsPhotoService.updateStatus}')
+    String status
+
     SqsClient sqsClient
 
     @Autowired
@@ -95,7 +98,9 @@ class SqsPhotoService implements PhotoService {
      */
     @Override
     Photo markAsDownloaded(Photo photo) {
-        cloudCardClient.updateStatus(photo, 'DOWNLOADED')
+        if (status) {
+            cloudCardClient.updateStatus(photo, status)
+        }
         deleteMessages(sqsClient, queueUrl, messageHistory[photo.id])
         return photo
     }
@@ -108,12 +113,30 @@ class SqsPhotoService implements PhotoService {
      */
 
     private List<Message> receiveMessages(SqsClient sqsClient, String queueUrl) {
-        ReceiveMessageRequest receiveMessageRequest = ReceiveMessageRequest.builder()
-                .queueUrl(queueUrl)
-                .maxNumberOfMessages(10)
-                .waitTimeSeconds(pollingDurationSeconds)
-                .build() as ReceiveMessageRequest
-        return sqsClient.receiveMessage(receiveMessageRequest).messages()
+        final int TARGET = 10
+        List<Message> out = []
+        int remaining = TARGET
+
+        while (remaining > 0) {
+
+            int wait = out.isEmpty() ? pollingDurationSeconds : 0
+
+            ReceiveMessageRequest req = ReceiveMessageRequest.builder()
+                    .queueUrl(queueUrl)
+                    .maxNumberOfMessages(Math.min(remaining, 10))
+                    .waitTimeSeconds(wait)
+                    .build() as ReceiveMessageRequest
+
+            List<Message> batch = sqsClient.receiveMessage(req).messages()
+            if (!batch || batch.isEmpty()) {
+                break
+            }
+
+            out.addAll(batch)
+            remaining = TARGET - out.size()
+        }
+
+        return out
     }
 
     static void deleteMessages(SqsClient sqsClient, String queueUrl, Message message) {
