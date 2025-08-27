@@ -36,7 +36,7 @@ class SqsPhotoService implements PhotoService {
     String region
 
     @Value('${sqsPhotoService.updateStatus}')
-    String status
+    String updateStatus
 
     SqsClient sqsClient
 
@@ -97,9 +97,10 @@ class SqsPhotoService implements PhotoService {
      * @return photo
      */
     @Override
-    Photo markAsDownloaded(Photo photo) {
-        if (status) {
-            cloudCardClient.updateStatus(photo, status)
+    Photo markAsDownloaded(PhotoFile photoFile) {
+        Photo photo = new Photo(photoFile.getPhotoId());
+        if (updateStatus && photoFile.isDownloaded()) {
+            cloudCardClient.updateStatus(photo, updateStatus)
         }
         deleteMessages(sqsClient, queueUrl, messageHistory[photo.id])
         return photo

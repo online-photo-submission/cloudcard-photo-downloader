@@ -100,8 +100,8 @@ public class DownloaderService {
             shellCommandService.preDownload(photosToDownload);
             List<PhotoFile> downloadedPhotoFiles = storageService.save(photosToDownload);
             for (PhotoFile photoFile : downloadedPhotoFiles) {
-                Photo downloadedPhoto = new Photo(photoFile.getPhotoId());
-                photoService.markAsDownloaded(downloadedPhoto);
+                //Photo downloadedPhoto = new Photo(photoFile.getPhotoId());
+                photoService.markAsDownloaded(photoFile);
             }
             manifestFileService.createManifestFile(photosToDownload, downloadedPhotoFiles);
             summaryService.createSummary(photosToDownload, downloadedPhotoFiles);

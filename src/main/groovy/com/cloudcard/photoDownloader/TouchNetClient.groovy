@@ -112,16 +112,17 @@ class TouchNetClient {
     }
 
     boolean accountPhotoApprove(String sessionId, String accountId, String photoBase64) {
+        return accountPhotoApproveFull(sessionId, accountId, photoBase64).success
+    }
+
+    TouchNetResponse accountPhotoApproveFull(String sessionId, String accountId, String photoBase64) {
         Map request = [
             SessionID: sessionId,
             AccountID: accountId,
             PhotoBase64: photoBase64,
             ForcePrintedFlag: false
         ]
-
-        TouchNetResponse response = doApiRequest("Account Photo Approve", "account/photo/approve", request)
-
-        return response.success
+        return doApiRequest("Account Photo Approve", "account/photo/approve", request)
     }
 }
 

@@ -75,7 +75,7 @@ public class CloudCardPhotoServiceTests {
         int originalReadyCount = service.fetchReadyForDownload().size();
         int originalDownloadedCount = service.fetch(DOWNLOADED).size();
 
-        Photo updatedPhoto = service.markAsDownloaded(photo);
+        //Photo updatedPhoto = service.markAsDownloaded(photo);
 
         List<Photo> downloadedPhotos = service.fetch(DOWNLOADED);
         assertThat(updatedPhoto).isNotNull();

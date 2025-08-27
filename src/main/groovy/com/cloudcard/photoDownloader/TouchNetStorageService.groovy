@@ -1,15 +1,18 @@
 package com.cloudcard.photoDownloader
 
-
+import groovy.json.JsonSlurper
 import jakarta.annotation.PostConstruct
 
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 
+import groovy.json.JsonOutput
+
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty
 import org.springframework.stereotype.Service
 
+import java.util.concurrent.ConcurrentHashMap
 import static com.cloudcard.photoDownloader.ApplicationPropertiesValidator.throwIfTrue
 
 @Service
@@ -29,7 +32,9 @@ class TouchNetStorageService implements StorageService {
     CloudCardClient cloudCardClient
 
     String onHold = 'ON_HOLD'
-    String message = 'Photo failed to save. Check if the user exists in TouchNet with the right identifier.'
+    String backupMessage = 'Photo failed to save. Check if the user exists in TouchNet with the right identifier.'
+    private static final int MAX_TRIES = 3
+    private final ConcurrentHashMap<String, Integer> sessionAttempts = new ConcurrentHashMap<>()
 
     @PostConstruct
     void init() {
@@ -77,12 +82,24 @@ class TouchNetStorageService implements StorageService {
             return null
         }
 
-        if (!touchNetClient.accountPhotoApprove(sessionId, accountId, photoBase64)) {
+        TouchNetResponse response = touchNetClient.accountPhotoApproveFull(sessionId, accountId, photoBase64)
+        String messageJson = JsonOutput.toJson(response)
+
+        if (!response.success) {
             log.error("Photo $photo.id for $photo.person.email failed to upload into TouchNet.")
-            cloudCardClient.updateStatus(photo, onHold, message)
+
+            int attempts = sessionAttempts.merge(sessionId, 1) { oldVal, one -> oldVal + one }
+
+            if (attempts >= MAX_TRIES) {
+                String message = extractMessage(messageJson) ?: backupMessage
+                cloudCardClient.updateStatus(photo, onHold, message)
+                sessionAttempts.remove(sessionId)
+                //TODO: this might be jank. consider a refactor - jonny hoff
+                return new PhotoFile(accountId, null, photo.id, false)
+            }
             return null
         }
-
+        sessionAttempts.remove(sessionId)
         return new PhotoFile(accountId, null, photo.id)
     }
 
@@ -105,5 +122,11 @@ class TouchNetStorageService implements StorageService {
 
         return Base64.getEncoder().encodeToString(photo.bytes)
     }
+
+    static String extractMessage(String jsonResponse) {
+        def parsed = new JsonSlurper().parseText(jsonResponse)
+        return parsed.json?.ResponseStatus?.Message?.toString()
+    }
+
 
 }

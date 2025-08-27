@@ -108,14 +108,16 @@ public class CloudCardPhotoService implements PhotoService {
         return new ObjectMapper().readValue(response.getBody(), new TypeReference<List<Photo>>() {
         });
     }
-
+    //TODO:Refactor to use cloudcardClient where it makes sense
     @Override
-    public Photo markAsDownloaded(Photo photo) throws Exception {
+    public Photo markAsDownloaded(PhotoFile photo) throws Exception {
 
         return updateStatus(photo, putStatus);
     }
 
-    public Photo updateStatus(Photo photo, String status) throws Exception {
+    public Photo updateStatus(PhotoFile photoFile, String status) throws Exception {
+
+        Photo photo = new Photo(photoFile.getPhotoId());
 
         HttpResponse<String> response = Unirest.put(apiUrl + "/photos/" + photo.getId()).headers(standardHeaders()).body("{ \"status\": \"" + status + "\" }").asString();
 
