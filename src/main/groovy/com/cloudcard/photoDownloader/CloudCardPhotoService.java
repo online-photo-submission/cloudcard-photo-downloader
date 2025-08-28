@@ -39,13 +39,13 @@ public class CloudCardPhotoService implements PhotoService {
     private String[] fetchStatuses;
 
     @Autowired
-    RestService restService;
-
-    @Autowired
     PreProcessor preProcessor;
 
     @Autowired
     TokenService tokenService;
+
+    @Autowired
+    CloudCardClient cloudCardClient;
 
     public CloudCardPhotoService() {
 
@@ -74,40 +74,11 @@ public class CloudCardPhotoService implements PhotoService {
 
     @Override
     public List<Photo> fetchReadyForDownload() throws Exception {
-
-        List<Photo> photos = fetch(fetchStatuses);
-        for (Photo photo : photos) {
-            Photo processedPhoto = preProcessor.process(photo);
-            restService.fetchBytes(processedPhoto);
-        }
-        return photos;
+        cloudCardClient.fetchReadyForDownload(fetchStatuses);
+        return null;
     }
 
-    public List<Photo> fetch(String[] statuses) throws Exception {
 
-        List<Photo> photoList = new ArrayList<>();
-
-        for (String status : statuses) {
-            List<Photo> photos = fetch(status);
-            photoList.addAll(photos);
-        }
-
-        return photoList;
-    }
-
-    public List<Photo> fetch(String status) throws Exception {
-
-        String url = apiUrl + "/trucredential/" + tokenService.getAuthToken() + "/photos?status=" + status + "&base64EncodedImage=false&max=1000&additionalPhotos=true";
-        HttpResponse<String> response = Unirest.get(url).headers(standardHeaders()).asString();
-
-        if (response.getStatus() != 200) {
-            log.error("Status " + response.getStatus() + " returned from CloudCard API when retrieving photo list to download.");
-            return new ArrayList<>();
-        }
-
-        return new ObjectMapper().readValue(response.getBody(), new TypeReference<List<Photo>>() {
-        });
-    }
     //TODO:Refactor to use cloudcardClient where it makes sense
     @Override
     public Photo markAsDownloaded(PhotoFile photo) throws Exception {

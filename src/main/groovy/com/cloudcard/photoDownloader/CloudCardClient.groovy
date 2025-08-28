@@ -26,6 +26,12 @@ class CloudCardClient{
     @Autowired
     TokenService tokenService
 
+    @Autowired
+    RestService restService
+
+    @Autowired
+    PreProcessor preProcessor
+
     Photo updateStatus(Photo photo, String status, String message = null) throws Exception {
 
         String url = "${apiUrl}/photos/${photo.id}"
@@ -47,6 +53,42 @@ class CloudCardClient{
         }
 
         return new ObjectMapper().readValue(response.body, new TypeReference<Photo>() {})
+    }
+
+    List<Photo> fetchReadyForDownload(String[] fetchStatuses) throws Exception {
+
+        List<Photo> photos = fetch(fetchStatuses)
+        for (Photo photo : photos) {
+            Photo processedPhoto = preProcessor.process(photo)
+            restService.fetchBytes(processedPhoto)
+        }
+        return photos
+    }
+
+    List<Photo> fetch(String[] statuses) throws Exception {
+
+        List<Photo> photoList = new ArrayList<>()
+
+        for (String status : statuses) {
+            List<Photo> photos = fetch(status)
+            photoList.addAll(photos)
+        }
+
+        return photoList
+    }
+
+    List<Photo> fetch(String status) throws Exception {
+
+        String url = apiUrl + "/trucredential/" + tokenService.getAuthToken() + "/photos?status=" + status + "&base64EncodedImage=false&max=1000&additionalPhotos=true"
+        HttpResponse<String> response = Unirest.get(url).headers(standardHeaders()).asString()
+
+        if (response.getStatus() != 200) {
+            log.error("Status " + response.getStatus() + " returned from CloudCard API when retrieving photo list to download.")
+            return new ArrayList<>()
+        }
+
+        return new ObjectMapper().readValue(response.getBody(), new TypeReference<List<Photo>>() {
+        })
     }
 
     private Map<String, String> standardHeaders() {
