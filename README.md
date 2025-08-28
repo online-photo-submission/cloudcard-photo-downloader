@@ -138,6 +138,9 @@ Below are descriptions of each option:
 - aws.sqs.region
     - default: `ca-central-1`
     - description: the AWS region in which the SQS queue is located. This will be provided by support once configured upon request.
+- sqsPhotoService.updateStatus
+    - default: none
+    - description: determines what status the photo is set to after downloading. This will require 'cloudcard.api.url' & 'cloudcard.api.accessToken' to be set.
 - sqsPhotoService.pollingIntervalSeconds
     - default: 0
     - description: how long to wait between SQS requests for new messages
