@@ -7,22 +7,12 @@ public class PhotoFile {
     private String baseName;
     private String fileName;
     private Integer photoId;
-    private Boolean downloaded;
-
-    public PhotoFile(String baseName, String fileName, Integer photoId, Boolean downloaded) {
-
-        this.baseName = baseName;
-        this.fileName = fileName;
-        this.photoId = photoId;
-        this.downloaded = downloaded;
-    }
 
     public PhotoFile(String baseName, String fileName, Integer photoId) {
 
         this.baseName = baseName;
         this.fileName = fileName;
         this.photoId = photoId;
-        this.downloaded = true;
     }
 
     public String getBaseName() {
@@ -38,11 +28,6 @@ public class PhotoFile {
     public Integer getPhotoId() {
 
         return photoId;
-    }
-
-    public Boolean isDownloaded() {
-
-        return downloaded;
     }
 
     @Override

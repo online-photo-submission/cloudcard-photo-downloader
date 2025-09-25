@@ -35,8 +35,8 @@ class SqsPhotoService implements PhotoService {
     @Value('${aws.sqs.region:ca-central-1}')
     String region
 
-    @Value('${sqsPhotoService.updateStatus}')
-    String updateStatus
+    @Value('${sqsPhotoService.putStatus}')
+    String putStatus
 
     SqsClient sqsClient
 
@@ -75,6 +75,11 @@ class SqsPhotoService implements PhotoService {
     }
 
     @Override
+    void markAsError(FailedPhotoFile failedPhotoFile) {
+        //TODO: implement this
+    }
+
+    @Override
     List<Photo> fetchReadyForDownload() {
         List<Photo> photos = []
         List<Message> messages = waitForMessages()
@@ -97,10 +102,9 @@ class SqsPhotoService implements PhotoService {
      * @return photo
      */
     @Override
-    Photo markAsDownloaded(PhotoFile photoFile) {
-        Photo photo = new Photo(photoFile.getPhotoId());
-        if (updateStatus && photoFile.isDownloaded()) {
-            cloudCardClient.updateStatus(photo, updateStatus)
+    Photo markAsDownloaded(Photo photo) {
+        if (putStatus) {
+            cloudCardClient.updateStatus(photo, putStatus)
         }
         deleteMessages(sqsClient, queueUrl, messageHistory[photo.id])
         return photo

@@ -8,11 +8,17 @@ import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Value
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty
 import org.springframework.stereotype.Component
 import java.nio.charset.StandardCharsets
 
+import jakarta.annotation.PostConstruct
+
+import static com.cloudcard.photoDownloader.ApplicationPropertiesValidator.throwIfBlank
+
 
 @Component
+@ConditionalOnProperty(value = "downloader.CloudCardClient", havingValue = "CloudCardClient")
 class CloudCardClient{
 
     private static final Logger log = LoggerFactory.getLogger(CloudCardClient.class)
@@ -31,6 +37,15 @@ class CloudCardClient{
 
     @Autowired
     PreProcessor preProcessor
+
+    @PostConstruct
+    void init() {
+
+        throwIfBlank(apiUrl, "The CloudCard API URL must be specified.");
+
+        log.info("              API URL : " + apiUrl);
+        log.info("        Pre-Processor : " + preProcessor.getClass().getSimpleName());
+    }
 
     Photo updateStatus(Photo photo, String status, String message = null) throws Exception {
 
@@ -52,10 +67,10 @@ class CloudCardClient{
             return null
         }
 
-        return new ObjectMapper().readValue(response.body, new TypeReference<Photo>() {})
+    return new ObjectMapper().readValue(response.body, new TypeReference<Photo>() {})
     }
 
-    List<Photo> fetchReadyForDownload(String[] fetchStatuses) throws Exception {
+    List<Photo> fetchWithBytes(String[] fetchStatuses) throws Exception {
 
         List<Photo> photos = fetch(fetchStatuses)
         for (Photo photo : photos) {
@@ -68,7 +83,6 @@ class CloudCardClient{
     List<Photo> fetch(String[] statuses) throws Exception {
 
         List<Photo> photoList = new ArrayList<>()
-
         for (String status : statuses) {
             List<Photo> photos = fetch(status)
             photoList.addAll(photos)

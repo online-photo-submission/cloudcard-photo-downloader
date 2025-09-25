@@ -1,10 +1,6 @@
 package com.cloudcard.photoDownloader;
 
-import com.fasterxml.jackson.core.type.TypeReference;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.annotation.PostConstruct;
-import kong.unirest.core.HttpResponse;
-import kong.unirest.core.Unirest;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -13,7 +9,6 @@ import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.stereotype.Service;
 
 import javax.management.timer.Timer;
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -74,32 +69,22 @@ public class CloudCardPhotoService implements PhotoService {
 
     @Override
     public List<Photo> fetchReadyForDownload() throws Exception {
-        cloudCardClient.fetchReadyForDownload(fetchStatuses);
-        return null;
+        return cloudCardClient.fetchWithBytes(fetchStatuses);
     }
 
-
-    //TODO:Refactor to use cloudcardClient where it makes sense
     @Override
-    public Photo markAsDownloaded(PhotoFile photo) throws Exception {
+    public Photo markAsDownloaded(Photo photo) throws Exception {
 
         return updateStatus(photo, putStatus);
     }
 
-    public Photo updateStatus(PhotoFile photoFile, String status) throws Exception {
+    public Photo updateStatus(Photo photo, String status) throws Exception {
+            return cloudCardClient.updateStatus(photo, status);
+    }
 
-        Photo photo = new Photo(photoFile.getPhotoId());
-
-        HttpResponse<String> response = Unirest.put(apiUrl + "/photos/" + photo.getId()).headers(standardHeaders()).body("{ \"status\": \"" + status + "\" }").asString();
-
-        if (response.getStatus() != 200) {
-            log.error("Status " + response.getStatus() + " returned from CloudCard API when updating photo: " + photo.getId());
-            log.error("\t" + response.getBody());
-            return null;
-        }
-
-        return new ObjectMapper().readValue(response.getBody(), new TypeReference<Photo>() {
-        });
+    @Override
+    public void markAsError(FailedPhotoFile failedPhotoFile) {
+        //TODO: implement this
     }
 
     private Map<String, String> standardHeaders() {

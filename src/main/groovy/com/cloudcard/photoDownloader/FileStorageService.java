@@ -49,8 +49,7 @@ public class FileStorageService implements StorageService {
     }
 
     @Override
-    public List<PhotoFile> save(Collection<Photo> photos) throws Exception {
-
+    public StorageResults save(Collection<Photo> photos) throws Exception {
         List<PhotoFile> photoFiles = new ArrayList<>();
         for (Photo photo : photos) {
             log.info("Saving: " + photo.getId() + " for person: " + photo.getPerson().getEmail());
@@ -60,7 +59,7 @@ public class FileStorageService implements StorageService {
             }
         }
 
-        return photoFiles;
+        return new StorageResults(photoFiles);
     }
 
     protected PhotoFile save(Photo photo, String photoDirectory) throws Exception {

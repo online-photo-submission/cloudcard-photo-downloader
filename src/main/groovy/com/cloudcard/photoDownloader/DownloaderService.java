@@ -98,16 +98,19 @@ public class DownloaderService {
             shellCommandService.preExecute();
             List<Photo> photosToDownload = photoService.fetchReadyForDownload();
             shellCommandService.preDownload(photosToDownload);
-            List<PhotoFile> downloadedPhotoFiles = storageService.save(photosToDownload);
-            for (PhotoFile photoFile : downloadedPhotoFiles) {
-                //Photo downloadedPhoto = new Photo(photoFile.getPhotoId());
-                photoService.markAsDownloaded(photoFile);
+            StorageResults storageResults = storageService.save(photosToDownload);
+            for (PhotoFile photoFile : storageResults.downloadedPhotoFiles) {
+                Photo downloadedPhoto = new Photo(photoFile.getPhotoId());
+                photoService.markAsDownloaded(downloadedPhoto);
             }
-            manifestFileService.createManifestFile(photosToDownload, downloadedPhotoFiles);
-            summaryService.createSummary(photosToDownload, downloadedPhotoFiles);
-            shellCommandService.postDownload(downloadedPhotoFiles);
+            for (FailedPhotoFile failedPhotoFile : storageResults.failedPhotoFiles) {
+                photoService.markAsError(failedPhotoFile);
+            }
+            manifestFileService.createManifestFile(photosToDownload, storageResults.downloadedPhotoFiles);
+            summaryService.createSummary(photosToDownload, storageResults.downloadedPhotoFiles);
+            shellCommandService.postDownload(storageResults.downloadedPhotoFiles);
             shellCommandService.postExecute();
-            log.info("Completed downloading " + downloadedPhotoFiles.size() + " photos.");
+            log.info("Completed downloading " + storageResults.downloadedPhotoFiles.size() + " photos.");
             tokenService.logout();
 
         } catch (Exception e) {
