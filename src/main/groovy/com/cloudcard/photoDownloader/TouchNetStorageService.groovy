@@ -118,8 +118,7 @@ class TouchNetStorageService implements StorageService {
                 String message = extractMessage(messageJson) ?: backupMessage
                 cloudCardClient.updateStatus(photo, onHold, message)
                 sessionAttempts.remove(sessionId)
-                //TODO: this might be jank. consider a refactor - jonny hoff
-                return new FailedPhotoFile()
+                return null
             }
             return null
         }

@@ -47,7 +47,7 @@ class SqsPhotoService implements PhotoService {
     PreProcessor preProcessor
 
     @Autowired
-    CloudCardClient cloudCardClient;
+    CloudCardClient cloudCardClient
 
     Map<Integer, Message> messageHistory = [:]
 
