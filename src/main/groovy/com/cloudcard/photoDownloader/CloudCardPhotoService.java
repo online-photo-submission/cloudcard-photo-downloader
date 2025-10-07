@@ -79,12 +79,17 @@ public class CloudCardPhotoService implements PhotoService {
     }
 
     public Photo updateStatus(Photo photo, String status) throws Exception {
-            return cloudCardClient.updateStatus(photo, status);
+        return cloudCardClient.updateStatus(photo, status);
     }
 
     @Override
-    public void markAsError(FailedPhotoFile failedPhotoFile) {
-        //TODO: implement this
+    public void markAsError(FailedPhotoFile failedPhotoFile) throws Exception {
+        //TODO: Determine if we want to keep this
+        if (failedPhotoFile != null && failedPhotoFile.getPhotoId() != null){
+            Photo photo = new Photo(failedPhotoFile.getPhotoId());
+            String message = failedPhotoFile.getErrorMessage();
+            cloudCardClient.updateStatus(photo, "ON_HOLD", message);
+        }
     }
 
     private Map<String, String> standardHeaders() {

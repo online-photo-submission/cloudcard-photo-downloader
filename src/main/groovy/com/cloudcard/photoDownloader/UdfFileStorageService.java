@@ -59,12 +59,13 @@ public class UdfFileStorageService extends FileStorageService implements Storage
 
     @Override
     public StorageResults save(Collection<Photo> photos) throws Exception {
+        StorageResults results = super.save(photos);
 
-        List<PhotoFile> photoFiles = super.save(photos);
+        List<PhotoFile> photoFiles = results.downloadedPhotoFiles;
 
         createUdfFile(photoFiles);
 
-        return new StorageResults(photoFiles) ;
+        return results;
     }
 
     private void createUdfFile(List<PhotoFile> photoFiles) throws IOException {

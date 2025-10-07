@@ -28,10 +28,6 @@ class TouchNetStorageService implements StorageService {
     @Autowired
     TouchNetClient touchNetClient
 
-    @Autowired
-    CloudCardClient cloudCardClient
-
-    String onHold = 'ON_HOLD'
     String backupMessage = 'Photo failed to save. Check if the user exists in TouchNet with the right identifier.'
     private static final int MAX_TRIES = 3
     private final ConcurrentHashMap<String, Integer> sessionAttempts = new ConcurrentHashMap<>()
@@ -116,9 +112,8 @@ class TouchNetStorageService implements StorageService {
 
             if (attempts >= MAX_TRIES) {
                 String message = extractMessage(messageJson) ?: backupMessage
-                cloudCardClient.updateStatus(photo, onHold, message)
                 sessionAttempts.remove(sessionId)
-                return null
+                return new FailedPhotoFile(null, null, photo.id, message)
             }
             return null
         }

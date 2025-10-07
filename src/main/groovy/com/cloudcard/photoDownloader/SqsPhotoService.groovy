@@ -76,7 +76,15 @@ class SqsPhotoService implements PhotoService {
 
     @Override
     void markAsError(FailedPhotoFile failedPhotoFile) {
-        //TODO: implement this
+        if (failedPhotoFile?.photoId){
+            Photo photo = new Photo(id: failedPhotoFile.photoId)
+            String message = failedPhotoFile.errorMessage
+            //if updateStatus fails then we don't delete the message
+            if(cloudCardClient.updateStatus(photo, "ON_HOLD", message)) {
+                return
+            }
+            deleteMessages(sqsClient, queueUrl, messageHistory[failedPhotoFile.photoId])
+        }
     }
 
     @Override

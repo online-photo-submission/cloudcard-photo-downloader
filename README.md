@@ -107,8 +107,10 @@ Below are descriptions of each option:
     - options:
         - `FileStorageService` - stores images as jpeg files on the local or network file system
         - `DatabaseStorageService` - stores the jpeg encoded images as `BLOBs` in a relational database
-        - `TouchNetStorageService` - sends images to a TouchNet API.
-        - `WorkdayStorageService` - sends images to a Workday API.
+        - `HttpStorageService` - sends images to an API (must specify which HttpStorageService below)
+- HttpStorageService.httpClient
+    - `TouchNetClient` - Sends images to TouchNet API
+    - `WorkdayClient` - Sends images to Workday API
 - downloader.repeat
     - default: `true`
     - description: This setting determines if the downloader will run once and exit, `downloader.repeat=false`, or if

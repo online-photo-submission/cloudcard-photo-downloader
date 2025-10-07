@@ -9,5 +9,5 @@ public interface PhotoService {
 
     long minDownloaderDelay();
 
-    void markAsError(FailedPhotoFile failedPhotoFile);
+    void markAsError(FailedPhotoFile failedPhotoFile) throws Exception;
 }

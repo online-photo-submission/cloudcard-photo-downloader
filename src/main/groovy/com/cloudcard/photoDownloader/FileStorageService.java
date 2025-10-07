@@ -51,6 +51,7 @@ public class FileStorageService implements StorageService {
     @Override
     public StorageResults save(Collection<Photo> photos) throws Exception {
         List<PhotoFile> photoFiles = new ArrayList<>();
+        //TODO: Implement returning failed photos to this loop
         for (Photo photo : photos) {
             log.info("Saving: " + photo.getId() + " for person: " + photo.getPerson().getEmail());
             for (String photoDirectory : photoDirectories) {

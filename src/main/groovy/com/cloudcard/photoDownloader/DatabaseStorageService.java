@@ -60,7 +60,7 @@ public class DatabaseStorageService implements StorageService {
     @Override
     public StorageResults save(Collection<Photo> photos) {
         List<PhotoFile> photoFiles = new ArrayList<>();
-
+        //TODO: Implement returning failed photos to this loop
         for (Photo photo : photos) {
             PhotoFile photoFile = save(photo);
             if (photoFile != null) photoFiles.add(photoFile);

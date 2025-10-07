@@ -18,7 +18,8 @@ import static com.cloudcard.photoDownloader.ApplicationPropertiesValidator.throw
 
 
 @Component
-@ConditionalOnProperty(value = "downloader.CloudCardClient", havingValue = "CloudCardClient")
+//TODO:Not sure if we want the CloucCardClient bean to always be created or not?
+@ConditionalOnProperty(value = "downloader.CloudCardClient", havingValue = "CloudCardClient", matchIfMissing = true)
 class CloudCardClient{
 
     private static final Logger log = LoggerFactory.getLogger(CloudCardClient.class)
