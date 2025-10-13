@@ -103,8 +103,8 @@ public class DownloaderService {
                 Photo downloadedPhoto = new Photo(photoFile.getPhotoId());
                 photoService.markAsDownloaded(downloadedPhoto);
             }
-            for (FailedPhotoFile failedPhotoFile : storageResults.failedPhotoFiles) {
-                photoService.markAsError(failedPhotoFile);
+            for (UnsavablePhotoFile unsavablePhotoFile : storageResults.unsavablePhotoFiles) {
+                photoService.markAsError(unsavablePhotoFile);
             }
             manifestFileService.createManifestFile(photosToDownload, storageResults.downloadedPhotoFiles);
             summaryService.createSummary(photosToDownload, storageResults.downloadedPhotoFiles);

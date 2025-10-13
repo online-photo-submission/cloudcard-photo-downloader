@@ -64,11 +64,10 @@ class CloudCardClient{
 
         if (response.status != 200) {
             log.error("Status ${response.status} returned from CloudCard API when updating photo: ${photo.id}")
-            log.error("\t${response.body}")
             return null
         }
 
-    return new ObjectMapper().readValue(response.body, new TypeReference<Photo>() {})
+        return new ObjectMapper().readValue(response.body, new TypeReference<Photo>() {})
     }
 
     List<Photo> fetchWithBytes(String[] fetchStatuses) throws Exception {

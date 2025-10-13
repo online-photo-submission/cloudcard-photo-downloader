@@ -55,7 +55,7 @@ class TouchNetStorageService implements StorageService {
         }
 
         List<PhotoFile> photoFiles = []
-        List<FailedPhotoFile> failedPhotoFiles = []
+        List<UnsavablePhotoFile> unsavablePhotoFiles = []
 
         photos.each { photo ->
             try {
@@ -63,7 +63,7 @@ class TouchNetStorageService implements StorageService {
                 if (saved != null) {
                     photoFiles << saved
                 } else {
-                    failedPhotoFiles << new FailedPhotoFile(
+                    unsavablePhotoFiles << new UnsavablePhotoFile(
                             null,
                             null,
                             photo.id,
@@ -71,7 +71,7 @@ class TouchNetStorageService implements StorageService {
                     )
                 }
             } catch (Exception e) {
-                failedPhotoFiles << new FailedPhotoFile(
+                unsavablePhotoFiles << new UnsavablePhotoFile(
                         null,
                         null,
                         photo.id,
@@ -84,7 +84,7 @@ class TouchNetStorageService implements StorageService {
             log.warn("Failed to logout of the TouchNet API")
         }
 
-        return new StorageResults(photoFiles, failedPhotoFiles)
+        return new StorageResults(photoFiles, unsavablePhotoFiles)
     }
 
     PhotoFile save(Photo photo, String sessionId) {
@@ -113,7 +113,7 @@ class TouchNetStorageService implements StorageService {
             if (attempts >= MAX_TRIES) {
                 String message = extractMessage(messageJson) ?: backupMessage
                 sessionAttempts.remove(sessionId)
-                return new FailedPhotoFile(null, null, photo.id, message)
+                return new UnsavablePhotoFile(null, null, photo.id, message)
             }
             return null
         }

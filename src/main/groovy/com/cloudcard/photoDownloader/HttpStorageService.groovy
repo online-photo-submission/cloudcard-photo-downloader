@@ -4,7 +4,6 @@ import jakarta.annotation.PostConstruct
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.beans.factory.annotation.Qualifier
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty
 import org.springframework.stereotype.Service
 
@@ -41,12 +40,12 @@ class HttpStorageService implements StorageService {
         log.info("Uploading Photos to ${httpStorageClient.systemName}")
 
         List<PhotoFile> photoFiles = []
-        List<FailedPhotoFile> failedPhotoFiles = []
+        List<UnsavablePhotoFile> unsavablePhotoFiles = []
 
         photos.each { photo ->
             def result = save(photo)
-            if (result instanceof FailedPhotoFile) {
-                failedPhotoFiles << result
+            if (result instanceof UnsavablePhotoFile) {
+                unsavablePhotoFiles << result
             } else if (result instanceof PhotoFile) {
                 photoFiles << result
             }
@@ -54,14 +53,14 @@ class HttpStorageService implements StorageService {
 
         httpStorageClient.close()
 
-        return new StorageResults(photoFiles, failedPhotoFiles)
+        return new StorageResults(photoFiles, unsavablePhotoFiles)
     }
 
     PhotoFile save(Photo photo) {
         if (!photo.person) {
             String msg = "Person does not exist for photo $photo.id and it cannot be uploaded to ${httpStorageClient.systemName}."
             log.error(msg)
-            return new FailedPhotoFile(null, null, photo.id, msg)
+            return new UnsavablePhotoFile(null, null, photo.id, msg)
         }
 
         String accountId = resolveAccountId(photo)
@@ -69,7 +68,7 @@ class HttpStorageService implements StorageService {
 
         if (!accountId || !photoBase64) {
             String msg = "Invalid accountId or photo data for $photo.id (${photo.person?.email})"
-            return new FailedPhotoFile(accountId, null, photo.id, msg)
+            return new UnsavablePhotoFile(accountId, null, photo.id, msg)
         }
 
         try {
@@ -79,7 +78,7 @@ class HttpStorageService implements StorageService {
         } catch (Exception e) {
             String msg = "Photo $photo.id for $photo.person.email failed to upload into ${httpStorageClient.systemName}: ${e.message}"
             log.error(msg, e)
-            return new FailedPhotoFile(accountId, null, photo.id, e.message)
+            return new UnsavablePhotoFile(accountId, null, photo.id, e.message)
         }
     }
 

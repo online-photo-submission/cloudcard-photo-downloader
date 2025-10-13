@@ -6,16 +6,16 @@ class StorageResults {
     /**
      *  This list is intended to show what files are not to be retried without human intervention
      */
-    public List<FailedPhotoFile> failedPhotoFiles
+    public List<UnsavablePhotoFile> unsavablePhotoFiles
 
     StorageResults(List<PhotoFile> downloadedPhotoFiles){
         this.downloadedPhotoFiles = downloadedPhotoFiles
-        this.failedPhotoFiles = []
+        this.unsavablePhotoFiles = []
     }
 
-    StorageResults(List<PhotoFile> downloadedPhotoFiles, List<FailedPhotoFile> failedPhotoFiles){
+    StorageResults(List<PhotoFile> downloadedPhotoFiles, List<UnsavablePhotoFile> unsavablePhotoFiles){
         this.downloadedPhotoFiles = downloadedPhotoFiles
-        this.failedPhotoFiles = failedPhotoFiles
+        this.unsavablePhotoFiles = unsavablePhotoFiles
     }
 
     static StorageResults empty() { return new StorageResults([]) }

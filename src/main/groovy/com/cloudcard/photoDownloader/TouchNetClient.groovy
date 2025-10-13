@@ -43,7 +43,7 @@ class TouchNetClient implements HttpStorageClient {
     private String sessionId
     private static final int MAX_TRIES = 3
     private int attemptCount = 0
-    private int RETRY_DELAY_MS = 10000
+    private int RETRY_DELAY_MS = 2000
 
     @PostConstruct
     void init() {
@@ -81,21 +81,21 @@ class TouchNetClient implements HttpStorageClient {
 
         TouchNetResponse response = doApiRequest("Account Photo Approve", "account/photo/approve", request)
         if (!response.success) {
-            String errorCode = response.json?.ResponseStatus?.ErrorCode
-            String message   = extractMessage(response.json) ?: "Unknown TouchNet error"
+            String message = response.getErrorMessage() ?: "Unknown TouchNet error"
 
-            if (isRateLimitError(errorCode, message)) {
-                // Retry loop inside TouchNetClient
+            if (isRateLimitError(message)) {
                 for (int i = 1; i <= MAX_TRIES; i++) {
+                    RETRY_DELAY_MS * i
                     log.warn("Rate limit hit, retrying in ${RETRY_DELAY_MS}ms (attempt $i/$MAX_TRIES)")
                     Thread.sleep(RETRY_DELAY_MS)
                     response = doApiRequest("Account Photo Approve", "account/photo/approve", request)
                     if (response.success) return
                 }
-                throw new RuntimeException("Rate limit exceeded after $MAX_TRIES attempts: $message")
+                String updatedMessage = response.getErrorMessage()
+                throw new RuntimeException("Rate limit exceeded after $MAX_TRIES attempts: $updatedMessage")
             }
             else {
-                // Bubble up so HttpStorageService marks as FailedPhotoFile
+                // Bubble up so HttpStorageService marks as UnsavablePhotoFile
                 // Persistent errors and unknown/random failures
                 throw new RuntimeException(message)
             }
@@ -182,28 +182,38 @@ class TouchNetClient implements HttpStorageClient {
         return response.success
     }
 
-    static String extractMessage(Object jsonResponse) {
-        try {
-            def parsed = (jsonResponse instanceof String) ?
-                    new JsonSlurper().parseText(jsonResponse) :
-                    jsonResponse
-            return parsed?.ResponseStatus?.Message?.toString()
-        } catch (Exception e) {
-            return null
-        }
-    }
+    private static boolean isRateLimitError(String message) {
+        if (!message) return false
 
-    private static boolean isRateLimitError(String code, String message) {
-        return code == "-1100" || message?.toLowerCase()?.contains("rate limit")
+        def lower = message.toLowerCase()
+
+        return lower.contains("api calls") || lower.contains("quota exceeded") || lower.contains("maximum admitted")
     }
 }
 
 class TouchNetResponse {
     boolean success
-    Map json
+    Object json
+    String rawBody
 
     TouchNetResponse(HttpResponse<String> response) {
-        json = new JsonSlurper().parseText(response.body) as Map
-        success = json.Status == "OK"
+        this.rawBody = response.body
+
+        try {
+            this.json = new JsonSlurper().parseText(response.body)
+            this.success = json.Status == "OK"
+        } catch (Exception e) {
+            // Not JSON → treat raw text as error
+            this.json = null
+            this.success = false
+        }
+    }
+
+    String getErrorMessage() {
+        if (json) {
+            return json?.ResponseStatus?.Message?.toString()
+        } else {
+            return rawBody // fallback to plain text
+        }
     }
 }

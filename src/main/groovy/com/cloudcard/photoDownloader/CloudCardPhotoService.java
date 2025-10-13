@@ -83,11 +83,11 @@ public class CloudCardPhotoService implements PhotoService {
     }
 
     @Override
-    public void markAsError(FailedPhotoFile failedPhotoFile) throws Exception {
-        //TODO: Determine if we want to keep this
-        if (failedPhotoFile != null && failedPhotoFile.getPhotoId() != null){
-            Photo photo = new Photo(failedPhotoFile.getPhotoId());
-            String message = failedPhotoFile.getErrorMessage();
+    public void markAsError(UnsavablePhotoFile unsavablePhotoFile) throws Exception {
+        //TODO: Will not work until FileStorageService returns UnsavablePhotoFile
+        if (unsavablePhotoFile != null && unsavablePhotoFile.getPhotoId() != null){
+            Photo photo = new Photo(unsavablePhotoFile.getPhotoId());
+            String message = unsavablePhotoFile.getErrorMessage();
             cloudCardClient.updateStatus(photo, "ON_HOLD", message);
         }
     }
