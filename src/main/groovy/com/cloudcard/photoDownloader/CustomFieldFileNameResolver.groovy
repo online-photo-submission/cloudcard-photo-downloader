@@ -11,6 +11,7 @@ import java.text.SimpleDateFormat
 
 import static com.cloudcard.photoDownloader.ApplicationPropertiesValidator.throwIfTrue
 
+//TODO: This class handles more than custom fields and will be deprecated/replaced by a more robust solution in a future release
 @Service
 @ConditionalOnProperty(value = "downloader.fileNameResolver", havingValue = "CustomFieldFileNameResolver")
 class CustomFieldFileNameResolver implements FileNameResolver {
