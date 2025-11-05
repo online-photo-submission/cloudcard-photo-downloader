@@ -11,30 +11,26 @@ import java.text.SimpleDateFormat
 
 import static com.cloudcard.photoDownloader.ApplicationPropertiesValidator.throwIfTrue
 
-//TODO: This class handles more than custom fields and will be deprecated/replaced by a more robust solution in a future release
 @Service
-@ConditionalOnProperty(value = "downloader.fileNameResolver", havingValue = "CustomFieldFileNameResolver")
-class CustomFieldFileNameResolver implements FileNameResolver {
+@ConditionalOnProperty(value = "downloader.fileNameResolver", havingValue = "DynamicFileNameResolver")
+class DynamicFileNameResolver implements FileNameResolver {
 
-    private static final Logger log = LoggerFactory.getLogger(CustomFieldFileNameResolver.class)
+    private static final Logger log = LoggerFactory.getLogger(DynamicFileNameResolver.class)
 
-    @Value('${downloader.minPhotoIdLength}')
-    private Integer minPhotoIdLength
-
-    @Value('${CustomFieldFileNameResolver.include}')
+    @Value('${DynamicFileNameResolver.include}')
     String[] include
 
-    @Value('${CustomFieldFileNameResolver.delimiter}')
+    @Value('${DynamicFileNameResolver.delimiter}')
     String delimiter
 
-    @Value('${CustomFieldFileNameResolver.fileNameDateFormat:YYYY-MM-DD_HH-MM-SS}')
-    String fileNameDateFormat
+    @Value('${DynamicFileNameResolver.dateFormat:YYYY-MM-DD_HH-MM-SS}')
+    String dateFormat
 
     @PostConstruct
     void init() {
-        throwIfTrue(include == null || include.length == 0, "The Custom Field(s) must be specified.")
-        log.info("Include Custom Fields : " + include.length + " " + (Arrays.toString(include)))
-        log.info("Custom Field Delimiter: '" + delimiter + "'")
+        throwIfTrue(include == null || include.length == 0, "The Field(s) for the DynamicFileNameResolver must be specified.")
+        log.info("Including Fields : " + include.length + " " + (Arrays.toString(include)))
+        log.info("DynamicFileNameResolver  Delimiter: '" + delimiter + "'")
     }
 
     @Override
@@ -47,7 +43,7 @@ class CustomFieldFileNameResolver implements FileNameResolver {
                 fileName = fileName + delimiter
             }
             if (i.equals("dateCreated")) {
-                fileName = fileName + new SimpleDateFormat(fileNameDateFormat).format(photo.dateCreated)
+                fileName = fileName + new SimpleDateFormat(dateFormat).format(photo.dateCreated)
             } else if (i.equals("identifier")) {
                 fileName = fileName + photo.getPerson().getIdentifier()
             } else {

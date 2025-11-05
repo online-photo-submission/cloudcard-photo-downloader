@@ -2,9 +2,9 @@ package com.cloudcard.photoDownloader
 
 import spock.lang.Specification
 
-class CustomFieldFileNameResolverSpec extends Specification {
+class DynamicFileNameResolverSpec extends Specification {
 
-    CustomFieldFileNameResolver resolver = new CustomFieldFileNameResolver()
+    DynamicFileNameResolver resolver = new DynamicFileNameResolver()
     Photo photo
 
     def setup() {
