@@ -293,6 +293,8 @@ The downloader supports going through a proxy when using the CloudCardPhotoServi
         - `SimpleFileNameResolver` - uses the cardholder's identifier value as the file name
         - `DatabaseFileNameResolver` - executes select query to determine the file name
         - `CustomFieldFileNameResolver` - uses custom field values as the file name
+        > **⚠️ DEPRECATED:** This resolver is deprecated. Use `DynamicFileNameResolver` instead, which supports more options.
+        - `DynamicFileNameResolver` - uses fields such as custom fields and identifier to create the file name
 
 #### DatabaseFileNameResolver Settings
 
@@ -305,19 +307,28 @@ The downloader supports going through a proxy when using the CloudCardPhotoServi
         - `SELECT TOP 1 student_id FROM my_table WHERE external_id = ? AND other_column LIKE 'abc%' ORDER BY date_created DESC`
         - Note: the cardholder's `identifier` will inserted into the query to replace the `?` symbol
 
-#### CustomFieldFileNameResolver Settings
+#### DynamicFileNameResolver Settings
 
-- CustomFieldFileNameResolver.include
+- DynamicFileNameResolver.include
     - default: none
-    - description: which custom field values should be used to name downloaded photos.
-    - example: `CustomFieldFileNameResolver.include=Full Name`
+    - description: which field values should be used to name downloaded photos.
+    - example: `DynamicFileNameResolver.include=identifier,Full Name`
         - Note: Separate multiple values by commas (no quotes needed).
+        - Options:
+            - any required custom field name in the user's organization (i.e. `First Name`, `Last Name`, etc.)
+            - `identifier` - the cardholder's identifier field within CloudCard
+            - `dateCreated` - the timestamp of when the photo was submitted
 
-- CustomFieldFileNameResolver.delimiter
+- DynamicFileNameResolver.delimiter
     - default: none
-    - description: option to specify a delimiter if you are using multiple custom fields (or at least one custom field
-      and the identifier)
-    - example: `CustomFieldFileNameResolver.delimiter=_`
+    - description: option to specify a delimiter if you are using multiple fields
+    - example: `DynamicFileNameResolver.delimiter=_`
+
+- DynamicFileNameResolver.dateFormat
+    - default: `yyyy-MM-dd_HH-mm-ss`
+    - description: Specifies the format to use for the `dateCreated` field when it is included in the file name.
+    - example: `DynamicFileNameResolver.dateFormat=yyyy-MM-dd_HH-mm-ss`
+        - Uses [Java DateTimeFormatter patterns](https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/time/format/DateTimeFormatter.html).
 
 ### Pre-Processor Settings
 
