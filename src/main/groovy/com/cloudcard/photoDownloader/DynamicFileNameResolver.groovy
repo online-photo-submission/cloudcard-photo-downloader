@@ -23,7 +23,7 @@ class DynamicFileNameResolver implements FileNameResolver {
     @Value('${DynamicFileNameResolver.delimiter}')
     String delimiter
 
-    @Value('${DynamicFileNameResolver.dateFormat:YYYY-MM-DD_HH-MM-SS}')
+    @Value('${DynamicFileNameResolver.dateFormat:yyyy-MM-dd_HH-mm-ss}')
     String dateFormat
 
     @PostConstruct

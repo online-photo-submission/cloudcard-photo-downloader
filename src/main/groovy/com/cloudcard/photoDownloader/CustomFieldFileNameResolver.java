@@ -12,7 +12,7 @@ import java.util.Map;
 
 import static com.cloudcard.photoDownloader.ApplicationPropertiesValidator.throwIfTrue;
 
-@Deprecated
+@Deprecated(since = "25.11.06") // Superseded by DynamicFieldFileNameResolver
 @Service
 @ConditionalOnProperty(value = "downloader.fileNameResolver", havingValue = "CustomFieldFileNameResolver")
 public class CustomFieldFileNameResolver implements FileNameResolver {

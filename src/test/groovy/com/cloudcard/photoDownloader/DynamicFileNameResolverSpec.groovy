@@ -10,7 +10,7 @@ class DynamicFileNameResolverSpec extends Specification {
     def setup() {
         resolver.delimiter = "_"
         resolver.include = ["John", "Mary", "Bob", "identifier"] as String[]
-        resolver.fileNameDateFormat = "yyyy-MM-dd_HH-mm-ss"
+        resolver.dateFormat = "yyyy-MM-dd_HH-mm-ss"
         photo = new Photo()
         photo.setPerson(new Person())
         photo.getPerson().setIdentifier("100")

@@ -289,12 +289,12 @@ The downloader supports going through a proxy when using the CloudCardPhotoServi
 
 - downloader.fileNameResolver
     - default: `SimpleFileNameResolver`
-      - options:
-          - `SimpleFileNameResolver` - uses the cardholder's identifier value as the file name
-          - `DatabaseFileNameResolver` - executes select query to determine the file name
-          - `CustomFieldFileNameResolver` - uses custom field values as the file name
-            > **⚠️ DEPRECATED:** This resolver is deprecated. Use `DynamicFileNameResolver` instead, which supports more options.
-          - `DynamicFileNameResolver` - uses fields such as custom fields and identifier to create the file name
+    - options:
+        - `SimpleFileNameResolver` - uses the cardholder's identifier value as the file name
+        - `DatabaseFileNameResolver` - executes select query to determine the file name
+        - `CustomFieldFileNameResolver` - uses custom field values as the file name
+        > **⚠️ DEPRECATED:** This resolver is deprecated. Use `DynamicFileNameResolver` instead, which supports more options.
+        - `DynamicFileNameResolver` - uses fields such as custom fields and identifier to create the file name
 
 #### DatabaseFileNameResolver Settings
 
@@ -323,6 +323,12 @@ The downloader supports going through a proxy when using the CloudCardPhotoServi
     - default: none
     - description: option to specify a delimiter if you are using multiple fields
     - example: `DynamicFileNameResolver.delimiter=_`
+
+- DynamicFileNameResolver.dateFormat
+    - default: `yyyy-MM-dd_HH-mm-ss`
+    - description: Specifies the format to use for the `dateCreated` field when it is included in the file name.
+    - example: `DynamicFileNameResolver.dateFormat=yyyy-MM-dd_HH-mm-ss`
+        - Uses [Java DateTimeFormatter patterns](https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/time/format/DateTimeFormatter.html).
 
 ### Pre-Processor Settings
 
