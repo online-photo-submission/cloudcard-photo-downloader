@@ -107,7 +107,10 @@ Below are descriptions of each option:
     - options:
         - `FileStorageService` - stores images as jpeg files on the local or network file system
         - `DatabaseStorageService` - stores the jpeg encoded images as `BLOBs` in a relational database
-        - `TouchNetStorageService` - sends images to a TouchNet API.
+        - `HttpStorageService` - sends images to an API (must specify which HttpStorageService below)
+- HttpStorageService.httpClient
+    - `TouchNetClient` - Sends images to TouchNet API
+    - `WorkdayClient` - Sends images to Workday API
 - downloader.repeat
     - default: `true`
     - description: This setting determines if the downloader will run once and exit, `downloader.repeat=false`, or if
@@ -138,6 +141,9 @@ Below are descriptions of each option:
 - aws.sqs.region
     - default: `ca-central-1`
     - description: the AWS region in which the SQS queue is located. This will be provided by support once configured upon request.
+- sqsPhotoService.updateStatus
+    - default: none
+    - description: determines what status the photo is set to after downloading. This will require 'cloudcard.api.url' & 'cloudcard.api.accessToken' to be set.
 - sqsPhotoService.pollingIntervalSeconds
     - default: 0
     - description: how long to wait between SQS requests for new messages

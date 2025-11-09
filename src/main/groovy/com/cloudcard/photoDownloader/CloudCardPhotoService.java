@@ -1,10 +1,6 @@
 package com.cloudcard.photoDownloader;
 
-import com.fasterxml.jackson.core.type.TypeReference;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.annotation.PostConstruct;
-import kong.unirest.core.HttpResponse;
-import kong.unirest.core.Unirest;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -13,7 +9,6 @@ import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.stereotype.Service;
 
 import javax.management.timer.Timer;
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -39,13 +34,13 @@ public class CloudCardPhotoService implements PhotoService {
     private String[] fetchStatuses;
 
     @Autowired
-    RestService restService;
-
-    @Autowired
     PreProcessor preProcessor;
 
     @Autowired
     TokenService tokenService;
+
+    @Autowired
+    CloudCardClient cloudCardClient;
 
     public CloudCardPhotoService() {
 
@@ -74,39 +69,7 @@ public class CloudCardPhotoService implements PhotoService {
 
     @Override
     public List<Photo> fetchReadyForDownload() throws Exception {
-
-        List<Photo> photos = fetch(fetchStatuses);
-        for (Photo photo : photos) {
-            Photo processedPhoto = preProcessor.process(photo);
-            restService.fetchBytes(processedPhoto);
-        }
-        return photos;
-    }
-
-    public List<Photo> fetch(String[] statuses) throws Exception {
-
-        List<Photo> photoList = new ArrayList<>();
-
-        for (String status : statuses) {
-            List<Photo> photos = fetch(status);
-            photoList.addAll(photos);
-        }
-
-        return photoList;
-    }
-
-    public List<Photo> fetch(String status) throws Exception {
-
-        String url = apiUrl + "/trucredential/" + tokenService.getAuthToken() + "/photos?status=" + status + "&base64EncodedImage=false&max=1000&additionalPhotos=true";
-        HttpResponse<String> response = Unirest.get(url).headers(standardHeaders()).asString();
-
-        if (response.getStatus() != 200) {
-            log.error("Status " + response.getStatus() + " returned from CloudCard API when retrieving photo list to download.");
-            return new ArrayList<>();
-        }
-
-        return new ObjectMapper().readValue(response.getBody(), new TypeReference<List<Photo>>() {
-        });
+        return cloudCardClient.fetchWithBytes(fetchStatuses);
     }
 
     @Override
@@ -116,17 +79,17 @@ public class CloudCardPhotoService implements PhotoService {
     }
 
     public Photo updateStatus(Photo photo, String status) throws Exception {
+        return cloudCardClient.updateStatus(photo, status);
+    }
 
-        HttpResponse<String> response = Unirest.put(apiUrl + "/photos/" + photo.getId()).headers(standardHeaders()).body("{ \"status\": \"" + status + "\" }").asString();
-
-        if (response.getStatus() != 200) {
-            log.error("Status " + response.getStatus() + " returned from CloudCard API when updating photo: " + photo.getId());
-            log.error("\t" + response.getBody());
-            return null;
+    @Override
+    public void markAsError(UnsavablePhotoFile unsavablePhotoFile) throws Exception {
+        //TODO: Will not work until FileStorageService returns UnsavablePhotoFile
+        if (unsavablePhotoFile != null && unsavablePhotoFile.getPhotoId() != null){
+            Photo photo = new Photo(unsavablePhotoFile.getPhotoId());
+            String message = unsavablePhotoFile.getErrorMessage();
+            cloudCardClient.updateStatus(photo, "ON_HOLD", message);
         }
-
-        return new ObjectMapper().readValue(response.getBody(), new TypeReference<Photo>() {
-        });
     }
 
     private Map<String, String> standardHeaders() {

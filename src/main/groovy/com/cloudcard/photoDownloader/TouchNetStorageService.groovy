@@ -1,15 +1,18 @@
 package com.cloudcard.photoDownloader
 
-
+import groovy.json.JsonSlurper
 import jakarta.annotation.PostConstruct
 
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 
+import groovy.json.JsonOutput
+
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty
 import org.springframework.stereotype.Service
 
+import java.util.concurrent.ConcurrentHashMap
 import static com.cloudcard.photoDownloader.ApplicationPropertiesValidator.throwIfTrue
 
 @Service
@@ -25,6 +28,10 @@ class TouchNetStorageService implements StorageService {
     @Autowired
     TouchNetClient touchNetClient
 
+    String backupMessage = 'Photo failed to save. Check if the user exists in TouchNet with the right identifier.'
+    private static final int MAX_TRIES = 3
+    private final ConcurrentHashMap<String, Integer> sessionAttempts = new ConcurrentHashMap<>()
+
     @PostConstruct
     void init() {
         throwIfTrue(fileNameResolver == null, "The File Name Resolver must be specified.");
@@ -32,28 +39,52 @@ class TouchNetStorageService implements StorageService {
         log.info("   File Name Resolver : $fileNameResolver.class.simpleName")
     }
 
-    List<PhotoFile> save(Collection<Photo> photos) {
+    @Override
+    StorageResults save(Collection<Photo> photos) {
         if (!photos) {
             log.info("No Photos to Upload")
-            return []
+            return StorageResults.empty()
         }
 
         log.info("Uploading Photos to TouchNet")
 
         String sessionId = touchNetClient.operatorLogin()
-
         if (!sessionId) {
             log.error("Failed to login to the TouchNet API")
-            return []
+            return StorageResults.empty()
         }
 
-        List<PhotoFile> photoFiles = photos.findResults { save(it, sessionId) }
+        List<PhotoFile> photoFiles = []
+        List<UnsavablePhotoFile> unsavablePhotoFiles = []
+
+        photos.each { photo ->
+            try {
+                PhotoFile saved = save(photo, sessionId)
+                if (saved != null) {
+                    photoFiles << saved
+                } else {
+                    unsavablePhotoFiles << new UnsavablePhotoFile(
+                            null,
+                            null,
+                            photo.id,
+                            "Failed to upload to TouchNet"
+                    )
+                }
+            } catch (Exception e) {
+                unsavablePhotoFiles << new UnsavablePhotoFile(
+                        null,
+                        null,
+                        photo.id,
+                        "Exception uploading to TouchNet: ${e.message}"
+                )
+            }
+        }
 
         if (!touchNetClient.operatorLogout(sessionId)) {
             log.warn("Failed to logout of the TouchNet API")
         }
 
-        return photoFiles
+        return new StorageResults(photoFiles, unsavablePhotoFiles)
     }
 
     PhotoFile save(Photo photo, String sessionId) {
@@ -71,11 +102,22 @@ class TouchNetStorageService implements StorageService {
             return null
         }
 
-        if (!touchNetClient.accountPhotoApprove(sessionId, accountId, photoBase64)) {
+        TouchNetResponse response = touchNetClient.accountPhotoApprove(sessionId, accountId, photoBase64)
+        String messageJson = JsonOutput.toJson(response)
+
+        if (!response.success) {
             log.error("Photo $photo.id for $photo.person.email failed to upload into TouchNet.")
+
+            int attempts = sessionAttempts.merge(sessionId, 1) { oldVal, one -> oldVal + one }
+
+            if (attempts >= MAX_TRIES) {
+                String message = extractMessage(messageJson) ?: backupMessage
+                sessionAttempts.remove(sessionId)
+                return new UnsavablePhotoFile(null, null, photo.id, message)
+            }
             return null
         }
-
+        sessionAttempts.remove(sessionId)
         return new PhotoFile(accountId, null, photo.id)
     }
 
@@ -98,5 +140,11 @@ class TouchNetStorageService implements StorageService {
 
         return Base64.getEncoder().encodeToString(photo.bytes)
     }
+
+    static String extractMessage(String jsonResponse) {
+        def parsed = new JsonSlurper().parseText(jsonResponse)
+        return parsed.json?.ResponseStatus?.Message?.toString()
+    }
+
 
 }

@@ -35,6 +35,9 @@ class SqsPhotoService implements PhotoService {
     @Value('${aws.sqs.region:ca-central-1}')
     String region
 
+    @Value('${sqsPhotoService.putStatus}')
+    String putStatus
+
     SqsClient sqsClient
 
     @Autowired
@@ -42,6 +45,9 @@ class SqsPhotoService implements PhotoService {
 
     @Autowired
     PreProcessor preProcessor
+
+    @Autowired
+    CloudCardClient cloudCardClient
 
     Map<Integer, Message> messageHistory = [:]
 
@@ -69,6 +75,25 @@ class SqsPhotoService implements PhotoService {
     }
 
     @Override
+    void markAsError(UnsavablePhotoFile unsavablePhotoFiles) {
+        if (unsavablePhotoFiles?.photoId) {
+            Photo photo = new Photo(id: unsavablePhotoFiles.photoId)
+            String message = unsavablePhotoFiles.errorMessage
+            try {
+                Photo updated = cloudCardClient.updateStatus(photo, "ON_HOLD", message)
+                if (updated == null) {
+                    log.error("CloudCard updateStatus failed for photo ${photo.id} with error: ${message}")
+                }
+            } catch (Exception e) {
+                log.error("Exception calling updateStatus for photo ${photo.id}: ${e.message}", e)
+            } finally {
+                log.info("Deleting photo: ${photo.id}. Please ensure PAT is valid.")
+                deleteMessages(sqsClient, queueUrl, messageHistory[unsavablePhotoFiles.photoId])
+            }
+        }
+    }
+
+    @Override
     List<Photo> fetchReadyForDownload() {
         List<Photo> photos = []
         List<Message> messages = waitForMessages()
@@ -92,6 +117,9 @@ class SqsPhotoService implements PhotoService {
      */
     @Override
     Photo markAsDownloaded(Photo photo) {
+        if (putStatus) {
+            cloudCardClient.updateStatus(photo, putStatus)
+        }
         deleteMessages(sqsClient, queueUrl, messageHistory[photo.id])
         return photo
     }
@@ -104,12 +132,30 @@ class SqsPhotoService implements PhotoService {
      */
 
     private List<Message> receiveMessages(SqsClient sqsClient, String queueUrl) {
-        ReceiveMessageRequest receiveMessageRequest = ReceiveMessageRequest.builder()
-                .queueUrl(queueUrl)
-                .maxNumberOfMessages(10)
-                .waitTimeSeconds(pollingDurationSeconds)
-                .build() as ReceiveMessageRequest
-        return sqsClient.receiveMessage(receiveMessageRequest).messages()
+        final int TARGET = 10
+        List<Message> out = []
+        int remaining = TARGET
+
+        while (remaining > 0) {
+
+            int wait = out.isEmpty() ? pollingDurationSeconds : 0
+
+            ReceiveMessageRequest req = ReceiveMessageRequest.builder()
+                    .queueUrl(queueUrl)
+                    .maxNumberOfMessages(Math.min(remaining, 10))
+                    .waitTimeSeconds(wait)
+                    .build() as ReceiveMessageRequest
+
+            List<Message> batch = sqsClient.receiveMessage(req).messages()
+            if (!batch || batch.isEmpty()) {
+                break
+            }
+
+            out.addAll(batch)
+            remaining = TARGET - out.size()
+        }
+
+        return out
     }
 
     static void deleteMessages(SqsClient sqsClient, String queueUrl, Message message) {
@@ -136,7 +182,7 @@ class SqsPhotoService implements PhotoService {
             messages = receiveMessages(sqsClient, queueUrl)
         }
         println("!")
-        log.info("Recived ${messages.size()} messages.")
+        log.info("Received ${messages.size()} messages.")
         return messages
     }
 }

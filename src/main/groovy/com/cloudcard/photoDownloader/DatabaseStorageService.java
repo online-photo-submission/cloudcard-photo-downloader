@@ -58,16 +58,15 @@ public class DatabaseStorageService implements StorageService {
 
 
     @Override
-    public List<PhotoFile> save(Collection<Photo> photos) {
-
+    public StorageResults save(Collection<Photo> photos) {
         List<PhotoFile> photoFiles = new ArrayList<>();
-
+        //TODO: Implement returning failed photos to this loop
         for (Photo photo : photos) {
             PhotoFile photoFile = save(photo);
             if (photoFile != null) photoFiles.add(photoFile);
         }
 
-        return photoFiles;
+        return new StorageResults(photoFiles);
     }
 
     private PhotoFile save(Photo photo) {

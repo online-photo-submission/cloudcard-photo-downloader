@@ -8,4 +8,6 @@ public interface PhotoService {
     Photo markAsDownloaded(Photo photo) throws Exception;
 
     long minDownloaderDelay();
+
+    void markAsError(UnsavablePhotoFile unsavablePhotoFile) throws Exception;
 }

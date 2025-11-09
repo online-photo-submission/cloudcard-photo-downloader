@@ -13,9 +13,9 @@ import org.springframework.stereotype.Component
 
 import static com.cloudcard.photoDownloader.ApplicationPropertiesValidator.throwIfBlank
 
-@Component
-@ConditionalOnProperty(value = "downloader.storageService", havingValue = "TouchNetStorageService")
-class TouchNetClient {
+@Component("TouchNetClient")
+@ConditionalOnProperty(value = "HttpStorageService.httpClient", havingValue = "TouchNetClient")
+class TouchNetClient implements HttpStorageClient {
 
     static final Logger log = LoggerFactory.getLogger(TouchNetClient.class);
 
@@ -40,6 +40,11 @@ class TouchNetClient {
     @Value('${TouchNetClient.originId}')
     int originId
 
+    private String sessionId
+    private static final int MAX_TRIES = 3
+    private int attemptCount = 0
+    private int RETRY_DELAY_MS = 2000
+
     @PostConstruct
     void init() {
 
@@ -56,6 +61,72 @@ class TouchNetClient {
         log.info("TouchNet Operator Password : ${operatorPassword.length() > 0 ? "......" : ""}")
         log.info("      TouchNet Terminal ID : $terminalId")
         log.info("        TouchNet Origin ID : $originId")
+    }
+
+    @Override
+    String getSystemName() {
+        return "TouchNet"
+    }
+
+    @Override
+    void putPhoto(String accountId, String photoBase64) {
+        ensureSession()
+
+        Map request = [
+                SessionID: sessionId,
+                AccountID: accountId,
+                PhotoBase64: photoBase64,
+                ForcePrintedFlag: false
+        ]
+
+        TouchNetResponse response = doApiRequest("Account Photo Approve", "account/photo/approve", request)
+        if (!response.success) {
+            String message = response.getErrorMessage() ?: "Unknown TouchNet error"
+
+            if (isRateLimitError(message)) {
+                for (int i = 1; i <= MAX_TRIES; i++) {
+                    RETRY_DELAY_MS * i
+                    log.warn("Rate limit hit, retrying in ${RETRY_DELAY_MS}ms (attempt $i/$MAX_TRIES)")
+                    Thread.sleep(RETRY_DELAY_MS)
+                    response = doApiRequest("Account Photo Approve", "account/photo/approve", request)
+                    if (response.success) return
+                }
+                String updatedMessage = response.getErrorMessage()
+                throw new RuntimeException("Rate limit exceeded after $MAX_TRIES attempts: $updatedMessage")
+            }
+            else {
+                // Bubble up so HttpStorageService marks as UnsavablePhotoFile
+                // Persistent errors and unknown/random failures
+                throw new RuntimeException(message)
+            }
+        }
+
+        attemptCount = 0
+    }
+
+    @Override
+    void close() {
+        if (sessionId) {
+            log.info("Closing TouchNet session")
+            try {
+                if (!operatorLogout(sessionId)) {
+                    log.warn("Failed to logout of TouchNet API session $sessionId")
+                }
+            } catch (Exception e) {
+                log.error("Error while logging out of TouchNet API session $sessionId", e)
+            } finally {
+                sessionId = null
+            }
+        }
+    }
+
+    private void ensureSession() {
+        if (!sessionId) {
+            sessionId = operatorLogin()
+            if (!sessionId) {
+                throw new RuntimeException("Failed to login to TouchNet API")
+            }
+        }
     }
 
     boolean apiOnline() {
@@ -111,26 +182,38 @@ class TouchNetClient {
         return response.success
     }
 
-    boolean accountPhotoApprove(String sessionId, String accountId, String photoBase64) {
-        Map request = [
-            SessionID: sessionId,
-            AccountID: accountId,
-            PhotoBase64: photoBase64,
-            ForcePrintedFlag: false
-        ]
+    private static boolean isRateLimitError(String message) {
+        if (!message) return false
 
-        TouchNetResponse response = doApiRequest("Account Photo Approve", "account/photo/approve", request)
+        def lower = message.toLowerCase()
 
-        return response.success
+        return lower.contains("api calls") || lower.contains("quota exceeded") || lower.contains("maximum admitted")
     }
 }
 
 class TouchNetResponse {
     boolean success
     Object json
+    String rawBody
 
     TouchNetResponse(HttpResponse<String> response) {
-        json = new JsonSlurper().parseText(response.body)
-        success = json.Status == "OK"
+        this.rawBody = response.body
+
+        try {
+            this.json = new JsonSlurper().parseText(response.body)
+            this.success = json.Status == "OK"
+        } catch (Exception e) {
+            // Not JSON → treat raw text as error
+            this.json = null
+            this.success = false
+        }
+    }
+
+    String getErrorMessage() {
+        if (json) {
+            return json?.ResponseStatus?.Message?.toString()
+        } else {
+            return rawBody // fallback to plain text
+        }
     }
 }

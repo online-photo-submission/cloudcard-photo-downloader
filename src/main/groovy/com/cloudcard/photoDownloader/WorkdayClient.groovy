@@ -21,9 +21,9 @@ import java.net.http.HttpResponse;
 
 import static com.cloudcard.photoDownloader.ApplicationPropertiesValidator.throwIfBlank;
 
-@Component
-@ConditionalOnProperty(value = "downloader.storageService", havingValue = "WorkdayStorageService")
-class WorkdayClient {
+@Component("WorkdayClient")
+@ConditionalOnProperty(value = "HttpStorageService.httpClient", havingValue = "WorkdayClient")
+class WorkdayClient implements HttpStorageClient {
 
     static final Logger log = LoggerFactory.getLogger(WorkdayClient.class);
 
@@ -75,6 +75,36 @@ class WorkdayClient {
         ]))
     }
 
+    @Override
+    String getSystemName() {
+        return "Workday"
+    }
+
+    @Override
+    void putPhoto(String accountId, String photoBase64) {
+        WorkdayResponse response = doWorkdayRequest("putWorkerPhoto", """
+            <bsvc:Put_Worker_Photo_Request xmlns:bsvc="urn:com.workday/bsvc">
+                <bsvc:Worker_Reference>
+                    <bsvc:ID bsvc:type="Employee_ID">$accountId</bsvc:ID>
+                </bsvc:Worker_Reference>
+                <bsvc:Worker_Photo_Data>
+                    <bsvc:Filename>${accountId}.jpg</bsvc:Filename>
+                    <bsvc:File>$photoBase64</bsvc:File>
+                </bsvc:Worker_Photo_Data>
+            </bsvc:Put_Worker_Photo_Request>"""
+        )
+
+        if (response.statusCode != 200) {
+            log.error(response.response.body())
+            throw new RuntimeException("Failed to put worker photo for $accountId: ${response.statusCode}")
+        }
+    }
+
+    @Override
+    void close() {
+        // Workday has no persistent session to close
+    }
+
     WorkdayResponse doWorkdayRequest(String requestName, String soapBody) {
         HttpRequest postRequest = HttpRequest.newBuilder()
             .uri(new URI(humanResourcesApi))
@@ -97,25 +127,6 @@ class WorkdayClient {
         log.debug("$requestName status: ${postResponse.statusCode()}")
 
         return new WorkdayResponse(postResponse, documentBuilder.parse(new ByteArrayInputStream(postResponse.body().bytes)))
-    }
-
-    void putWorkerPhoto(String workerId, String photoBase64) {
-        WorkdayResponse putWorkerPhotoResponse = doWorkdayRequest("putWorkerPhoto", """
-            <bsvc:Put_Worker_Photo_Request xmlns:bsvc="urn:com.workday/bsvc">
-                <bsvc:Worker_Reference>
-                    <bsvc:ID bsvc:type="Employee_ID">$workerId</bsvc:ID>
-                </bsvc:Worker_Reference>
-                <bsvc:Worker_Photo_Data>
-                    <bsvc:Filename>${workerId}.jpg</bsvc:Filename>
-                    <bsvc:File>$photoBase64</bsvc:File>
-                </bsvc:Worker_Photo_Data>
-            </bsvc:Put_Worker_Photo_Request>"""
-        )
-
-        if (putWorkerPhotoResponse.statusCode != 200) {
-            log.error(putWorkerPhotoResponse.response.body())
-            throw new RuntimeException("Failed to put worker photo for $workerId: ${putWorkerPhotoResponse.statusCode}")
-        }
     }
 
     /**

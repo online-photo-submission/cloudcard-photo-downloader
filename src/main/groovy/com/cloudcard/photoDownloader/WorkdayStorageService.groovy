@@ -35,7 +35,7 @@ class WorkdayStorageService implements StorageService {
         log.info("   File Name Resolver : $fileNameResolver.class.simpleName")
     }
 
-    List<PhotoFile> save(Collection<Photo> photos) {
+    StorageResults save(Collection<Photo> photos) {
         if (!photos) {
             log.info("No Photos to Upload")
             return []
@@ -45,7 +45,7 @@ class WorkdayStorageService implements StorageService {
 
         List<PhotoFile> photoFiles = photos.findResults { save(it) }
 
-        return photoFiles
+        return new StorageResults(photoFiles)
     }
 
     PhotoFile save(Photo photo) {
