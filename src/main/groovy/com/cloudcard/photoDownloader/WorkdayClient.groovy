@@ -17,7 +17,8 @@ import javax.xml.xpath.XPath
 import javax.xml.xpath.XPathFactory
 import java.net.http.HttpClient
 import java.net.http.HttpRequest
-import java.net.http.HttpResponse;
+import java.net.http.HttpResponse
+import java.util.UUID
 
 import static com.cloudcard.photoDownloader.ApplicationPropertiesValidator.throwIfBlank;
 
@@ -79,6 +80,9 @@ class WorkdayClient {
         HttpRequest postRequest = HttpRequest.newBuilder()
             .uri(new URI(humanResourcesApi))
             .header("Content-Type", "application/xml")
+            .header("wd-external-application-id","remotephoto-for-workday")
+            .header("wd-external-originator-id", username)
+            .header("wd-external-request-id", UUID.randomUUID().toString())
             .POST(
                 HttpRequest.BodyPublishers.ofString("""\
                     <soapenv:Envelope xmlns:soapenv=\"http://schemas.xmlsoap.org/soap/envelope/\" xmlns:bsvc=\"urn:com.workday/bsvc\">
