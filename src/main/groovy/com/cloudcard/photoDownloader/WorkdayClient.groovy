@@ -20,13 +20,13 @@ import java.net.http.HttpRequest
 import java.net.http.HttpResponse
 import java.util.UUID
 
-import static com.cloudcard.photoDownloader.ApplicationPropertiesValidator.throwIfBlank;
+import static com.cloudcard.photoDownloader.ApplicationPropertiesValidator.throwIfBlank
 
 @Component
 @ConditionalOnProperty(value = "downloader.storageService", havingValue = "WorkdayStorageService")
 class WorkdayClient {
 
-    static final Logger log = LoggerFactory.getLogger(WorkdayClient.class);
+    static final Logger log = LoggerFactory.getLogger(WorkdayClient.class)
 
     @Value('${WorkdayClient.apiUrl}')
     String apiUrl
