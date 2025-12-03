@@ -110,7 +110,7 @@ class WorkdayClient {
                     <bsvc:ID bsvc:type="Employee_ID">$workerId</bsvc:ID>
                 </bsvc:Worker_Reference>
                 <bsvc:Worker_Photo_Data>
-                    <bsvc:Filename>${workerId}.jpg</bsvc:Filename>
+                    <bsvc:Filename>WorkerPhoto.jpg</bsvc:Filename>
                     <bsvc:File>$photoBase64</bsvc:File>
                 </bsvc:Worker_Photo_Data>
             </bsvc:Put_Worker_Photo_Request>"""
