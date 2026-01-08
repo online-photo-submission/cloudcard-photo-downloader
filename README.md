@@ -492,7 +492,7 @@ The `CSVManifestFileService` is responsible for generating a CSV file containing
         - Examples: `'Photo':'photo_fileName`, `'Photo Path':'photo_fullFilePath'`
         - NOTE: If downloading photos to multiple directories , the fullFilePath will always reference the first directory listed in `downloader.photoDirectories`.
 
-### Encrypting application properties ([Video](https://video.drift.com/v/abZMpJLIB5O/))
+### Encrypting application properties
 
 -This method uses AES-256 to encrypt the run.sh file and any application properties that it contains
 
@@ -518,3 +518,4 @@ from [Vision Database Systems](http://www.visiondatabase.com/).
 THIS PROJECT IS DISTRIBUTED WITHOUT ANY GUARANTEE OF SUPPORT FROM THE AUTHOR(S). SEE [LICENSE](LICENSE) FOR FULL
 DETAILS.  
 Separate support agreements are available, contact *info@OnlinePhotoSubmission.com* for more details.
+
