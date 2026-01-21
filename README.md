@@ -249,7 +249,7 @@ The downloader supports going through a proxy when using the CloudCardPhotoServi
 
 #### TouchNet Storage Service Settings
 
-*Note: `downloader.storageService` must be set to `TouchNetStorageService` for these to have any effect.*
+*Note: `downloader.storageService` must be set to `HttpStorageService`, and `HttpStorageService.httpClient` to `TouchNetClient` for these to have any effect.*
 
 - `TouchNetClient.apiUrl`
     - Internet accessible URL where the target OneCard API is located. 
@@ -268,7 +268,7 @@ The downloader supports going through a proxy when using the CloudCardPhotoServi
 
 #### Workday Storage Service Settings
 
-*Note: `downloader.storageService` must be set to `WorkdayStorageService` for these to have any effect.*
+*Note: `downloader.storageService` must be set to `HttpStorageService`, and `HttpStorageService.httpClient` to `WorkdayClient` for these to have any effect.*
 
 - `WorkdayClient.apiUrl`
     - URL, including TLD, but no other path, where the Workday API is located.
