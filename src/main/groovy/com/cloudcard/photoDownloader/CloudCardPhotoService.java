@@ -39,26 +39,20 @@ public class CloudCardPhotoService implements PhotoService {
     private String[] fetchStatuses;
 
     @Autowired
-    RestService restService;
-
-    @Autowired
     PreProcessor preProcessor;
 
     @Autowired
-    TokenService tokenService;
+    CloudCardClient cloudCardClient;
 
     public CloudCardPhotoService() {
-
     }
 
     public CloudCardPhotoService(String apiUrl) {
-
         this.apiUrl = apiUrl;
     }
 
     @PostConstruct
     void init() {
-
         throwIfBlank(apiUrl, "The CloudCard API URL must be specified.");
 
         log.info("              API URL : " + apiUrl);
@@ -74,68 +68,16 @@ public class CloudCardPhotoService implements PhotoService {
 
     @Override
     public List<Photo> fetchReadyForDownload() throws Exception {
-
-        List<Photo> photos = fetch(fetchStatuses);
-        for (Photo photo : photos) {
-            Photo processedPhoto = preProcessor.process(photo);
-            restService.fetchBytes(processedPhoto);
-        }
-        return photos;
-    }
-
-    public List<Photo> fetch(String[] statuses) throws Exception {
-
-        List<Photo> photoList = new ArrayList<>();
-
-        for (String status : statuses) {
-            List<Photo> photos = fetch(status);
-            photoList.addAll(photos);
-        }
-
-        return photoList;
-    }
-
-    public List<Photo> fetch(String status) throws Exception {
-
-        String url = apiUrl + "/trucredential/" + tokenService.getAuthToken() + "/photos?status=" + status + "&base64EncodedImage=false&max=1000&additionalPhotos=true";
-        HttpResponse<String> response = Unirest.get(url).headers(standardHeaders()).asString();
-
-        if (response.getStatus() != 200) {
-            log.error("Status " + response.getStatus() + " returned from CloudCard API when retrieving photo list to download.");
-            return new ArrayList<>();
-        }
-
-        return new ObjectMapper().readValue(response.getBody(), new TypeReference<List<Photo>>() {
-        });
+        return cloudCardClient.fetchWithBytes(fetchStatuses);
     }
 
     @Override
     public Photo markAsDownloaded(Photo photo) throws Exception {
-
         return updateStatus(photo, putStatus);
     }
 
     public Photo updateStatus(Photo photo, String status) throws Exception {
-
-        HttpResponse<String> response = Unirest.put(apiUrl + "/photos/" + photo.getId()).headers(standardHeaders()).body("{ \"status\": \"" + status + "\" }").asString();
-
-        if (response.getStatus() != 200) {
-            log.error("Status " + response.getStatus() + " returned from CloudCard API when updating photo: " + photo.getId());
-            log.error("\t" + response.getBody());
-            return null;
-        }
-
-        return new ObjectMapper().readValue(response.getBody(), new TypeReference<Photo>() {
-        });
-    }
-
-    private Map<String, String> standardHeaders() {
-
-        Map<String, String> headers = new HashMap<>();
-        headers.put("accept", "application/json");
-        headers.put("Content-Type", "application/json");
-        headers.put("X-Auth-Token", tokenService.getAuthToken());
-        return headers;
+        return cloudCardClient.updateStatus(photo, status);
     }
 
 }
