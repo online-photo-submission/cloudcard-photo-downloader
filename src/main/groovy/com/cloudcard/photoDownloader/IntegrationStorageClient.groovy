@@ -17,11 +17,11 @@ interface IntegrationStorageClient {
      *
      * This method is expected to throw exceptions if the upload fails for any reason and return otherwise.
      *
-     * @param accountId - account identifier in the target system
+     * @param identifier - account identifier in the target system
      * @param photoBase64 - photo in base64 format
      * @return
      */
-    void putPhoto(String accountId, String photoBase64)
+    void putPhoto(String identifier, String photoBase64)
 
     /**
      * Closes any persistent session or connection to the target system.

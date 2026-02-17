@@ -31,19 +31,27 @@ class IntegrationStorageService implements StorageService {
         log.info("  Integration Client : $integrationStorageClient.class.simpleName")
     }
 
-    List<PhotoFile> save(Collection<Photo> photos) {
+    StorageResults save(Collection<Photo> photos) {
+        StorageResults results = new StorageResults([])
+
         if (!photos) {
             log.info("No Photos to Upload")
-            return []
+            return results
         }
 
         log.info("Uploading Photos to ${integrationStorageClient.systemName}")
 
-        List<PhotoFile> photoFiles = photos.findResults { save(it) }
+        photos.each {
+            try {
+                save(it)?.with { results.downloadedPhotoFiles.add(it) }
+            } catch(FailedPhotoFileException failedPhotoFileException){
+                results.failedPhotoFiles.add(FailedPhotoFile.fromPhotoId(it.id, failedPhotoFileException.message))
+            }
+        }
 
         integrationStorageClient.close()
 
-        return photoFiles
+        return results
     }
 
     PhotoFile save(Photo photo) {
@@ -55,14 +63,13 @@ class IntegrationStorageService implements StorageService {
         log.info("Uploading to ${integrationStorageClient.systemName}: $photo.id for person: $photo.person.email")
 
         String accountId = resolveAccountId(photo)
-        String photoBase64 = getBytesBase64(photo)
 
-        if (!accountId || !photoBase64) {
-            return null
-        }
+        if (!accountId || !photo.bytesBase64) { return null }
 
         try {
-            integrationStorageClient.putPhoto(accountId, photoBase64)
+            integrationStorageClient.putPhoto(accountId, photo.bytesBase64)
+        } catch (FailedPhotoFileException failedPhotoFileException) {
+            throw failedPhotoFileException
         } catch (Exception e) {
             log.error("Photo $photo.id for $photo.person.email failed to upload into ${integrationStorageClient.systemName}.")
             return null
@@ -80,15 +87,6 @@ class IntegrationStorageService implements StorageService {
         }
 
         return accountId
-    }
-
-    String getBytesBase64(Photo photo) {
-        if (!photo.bytes) {
-            log.error("Photo $photo.id for $photo.person.email is missing binary data, so it cannot be uploaded to ${integrationStorageClient.systemName}.")
-            return null
-        }
-
-        return Base64.getEncoder().encodeToString(photo.bytes)
     }
 
 }

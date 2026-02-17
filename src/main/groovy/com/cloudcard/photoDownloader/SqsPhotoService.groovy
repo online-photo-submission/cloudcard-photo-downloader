@@ -106,6 +106,11 @@ class SqsPhotoService implements PhotoService {
         return photo
     }
 
+//    TODO: Implement this
+//    TODO: also update this to allow someone to post a message for ON_HOLD photos and use the CloudCardClient. And allow the markAsDownloaded method to optionally use the CC client as well.
+    @Override
+    Photo markAsFailed(Photo photo, String errorMessage) { return null }
+
     /* *** PRIVATE HELPERS *** */
 
     /**

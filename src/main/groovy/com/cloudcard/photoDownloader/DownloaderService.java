@@ -104,9 +104,10 @@ public class DownloaderService {
                 Photo downloadedPhoto = new Photo(photoFile.getPhotoId());
                 photoService.markAsDownloaded(downloadedPhoto);
             }
-            manifestFileService.createManifestFile(photosToDownload, downloadedPhotoFiles);
-            summaryService.createSummary(photosToDownload, downloadedPhotoFiles);
-            shellCommandService.postDownload(downloadedPhotoFiles);
+            for (FailedPhotoFile failedPhotoFile : results.failedPhotoFiles) {
+                Photo failedPhoto = new Photo(failedPhotoFile.getPhotoId());
+                photoService.markAsFailed(failedPhoto, failedPhotoFile.getErrorMessage());
+            }
             manifestFileService.createManifestFile(photosToDownload, results.downloadedPhotoFiles);
             summaryService.createSummary(photosToDownload, results.downloadedPhotoFiles);
             shellCommandService.postDownload(results.downloadedPhotoFiles);
