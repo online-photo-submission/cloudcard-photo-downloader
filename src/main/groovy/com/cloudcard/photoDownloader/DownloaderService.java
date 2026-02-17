@@ -98,16 +98,20 @@ public class DownloaderService {
             shellCommandService.preExecute();
             List<Photo> photosToDownload = photoService.fetchReadyForDownload();
             shellCommandService.preDownload(photosToDownload);
-            List<PhotoFile> downloadedPhotoFiles = storageService.save(photosToDownload);
-            for (PhotoFile photoFile : downloadedPhotoFiles) {
+//            TODO: Refactor all the save methods to return storage results instead of just downloaded photos.
+            StorageResults results = storageService.save(photosToDownload);
+            for (PhotoFile photoFile : results.downloadedPhotoFiles) {
                 Photo downloadedPhoto = new Photo(photoFile.getPhotoId());
                 photoService.markAsDownloaded(downloadedPhoto);
             }
             manifestFileService.createManifestFile(photosToDownload, downloadedPhotoFiles);
             summaryService.createSummary(photosToDownload, downloadedPhotoFiles);
             shellCommandService.postDownload(downloadedPhotoFiles);
+            manifestFileService.createManifestFile(photosToDownload, results.downloadedPhotoFiles);
+            summaryService.createSummary(photosToDownload, results.downloadedPhotoFiles);
+            shellCommandService.postDownload(results.downloadedPhotoFiles);
             shellCommandService.postExecute();
-            log.info("Completed downloading " + downloadedPhotoFiles.size() + " photos.");
+            log.info("Completed downloading " + results.downloadedPhotoFiles.size() + " photos.");
             tokenService.logout();
 
         } catch (Exception e) {
