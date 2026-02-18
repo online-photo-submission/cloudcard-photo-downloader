@@ -1,7 +1,7 @@
 package com.cloudcard.photoDownloader;
 
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -10,7 +10,7 @@ public class ShellCommandRunnerTest {
     public static final String DUMMY_COMMAND = "./dummy-script.sh";
     ShellCommandRunner shellCommandRunner;
 
-    @Before
+    @BeforeEach
     public void before() {
 
         shellCommandRunner = new ShellCommandRunner();

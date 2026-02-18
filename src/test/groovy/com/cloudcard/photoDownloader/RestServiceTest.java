@@ -1,7 +1,7 @@
 package com.cloudcard.photoDownloader;
 
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 import java.io.IOException;
 import java.nio.file.Files;
@@ -15,7 +15,7 @@ public class RestServiceTest {
     final static String TEST_IMAGE_URL = "https://sharptopco.github.io/cloudcard-custom-assets/example_id_photo.jpg";
     static byte[] expectedTestImageBytes;
 
-    @Before
+    @BeforeEach
     public void setUp() throws IOException {
         restService = new RestService();
         expectedTestImageBytes = Files.readAllBytes(Paths.get("src/test/resources/example_id_photo.jpg"));
