@@ -90,10 +90,8 @@ public class FileStorageService implements StorageService {
     }
 
     private String getDirectory(Photo photo, String photoDirectory) {
-        String separator = System.getProperty("file.separator");
-
         return useCardholderGroupSubdirectories
-                ? photoDirectory + separator + photo.getPerson().getCardholderGroup().getName()
+                ? photoDirectory + File.separator + photo.getPerson().getCardholderGroup().getName()
                 : photoDirectory;
     }
 
