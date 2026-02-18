@@ -32,7 +32,7 @@ class SqsPhotoService implements PhotoService {
     @Value('${sqsPhotoService.pollingDurationSeconds:20}')
     int pollingDurationSeconds
 
-    @Value('${aws.sqs.region:ca-central-1}')
+    @Value('${sqsPhotoService.region:${aws.sqs.region:ca-central-1}}')
     String region
 
     SqsClient sqsClient
