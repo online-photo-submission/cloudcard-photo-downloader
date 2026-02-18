@@ -26,6 +26,9 @@ public class FileStorageService implements StorageService {
     @Value("${downloader.photoDirectories}")
     private String[] photoDirectories;
 
+    @Value("${downloader.cardholderGroupSubdirectory:false}")
+    private Boolean useCardholderGroupSubdirectories;
+
     @Autowired
     @SuppressWarnings("SpringJavaInjectionPointsAutowiringInspection")
     private FileNameResolver fileNameResolver;
@@ -66,6 +69,7 @@ public class FileStorageService implements StorageService {
     protected PhotoFile save(Photo photo, String photoDirectory) throws Exception {
 
         String baseName = fileNameResolver.getBaseName(photo);
+        String directory = getDirectory(photo, photoDirectory);
 
         if (baseName == null || baseName.isEmpty()) {
             log.error("We could not resolve the base file name for '" + photo.getPerson().getEmail() + "' with ID number '"
@@ -78,11 +82,19 @@ public class FileStorageService implements StorageService {
             return null;
         }
 
-        String fullFileName = fileService.writeBytesToFile(photoDirectory, baseName + ".jpg", photo.getBytes());
+        String fullFileName = fileService.writeBytesToFile(directory, baseName + ".jpg", photo.getBytes());
 
-        PhotoFile photoFile = postProcessor.process(photo, photoDirectory, new PhotoFile(baseName, fullFileName, photo.getId()));
+        PhotoFile photoFile = postProcessor.process(photo, directory, new PhotoFile(baseName, fullFileName, photo.getId()));
 
         return photoFile;
+    }
+
+    private String getDirectory(Photo photo, String photoDirectory) {
+        String separator = System.getProperty("file.separator");
+
+        return useCardholderGroupSubdirectories
+                ? photoDirectory + separator + photo.getPerson().getCardholderGroup().getName()
+                : photoDirectory;
     }
 
     private String writeBytesToFile(String directoryName, String fileName, byte[] bytes) throws IOException {
