@@ -30,6 +30,7 @@ class CloudCardClient {
     @Autowired
     TokenService tokenService
 
+    //TODO move the contents of this restService back into the cloudcard client.
     @Autowired
     RestService restService
 
@@ -38,15 +39,13 @@ class CloudCardClient {
 
     @PostConstruct
     void init() {
+        throwIfBlank(apiUrl, "The CloudCard API URL must be specified.")
 
-        throwIfBlank(apiUrl, "The CloudCard API URL must be specified.");
-
-        log.info("              API URL : " + apiUrl);
-        log.info("        Pre-Processor : " + preProcessor.getClass().getSimpleName());
+        log.info("              API URL : " + apiUrl)
+        log.info("        Pre-Processor : " + preProcessor.getClass().getSimpleName())
     }
 
     Photo updateStatus(Photo photo, String status, String message = null) throws Exception {
-
         String url = "${apiUrl}/photos/${photo.id}"
 
         if (message && status == 'ON_HOLD') {
@@ -68,18 +67,19 @@ class CloudCardClient {
     }
 
     List<Photo> fetchWithBytes(String[] fetchStatuses) throws Exception {
-
         List<Photo> photos = fetch(fetchStatuses)
+
         for (Photo photo : photos) {
             Photo processedPhoto = preProcessor.process(photo)
             restService.fetchBytes(processedPhoto)
         }
+
         return photos
     }
 
     List<Photo> fetch(String[] statuses) throws Exception {
+        List<Photo> photoList = []
 
-        List<Photo> photoList = new ArrayList<>()
         for (String status : statuses) {
             List<Photo> photos = fetch(status)
             photoList.addAll(photos)
@@ -89,13 +89,12 @@ class CloudCardClient {
     }
 
     List<Photo> fetch(String status) throws Exception {
-
-        String url = apiUrl + "/trucredential/" + tokenService.getAuthToken() + "/photos?status=" + status + "&base64EncodedImage=false&max=1000&additionalPhotos=true"
+        String url = "$apiUrl/trucredential/${tokenService.getAuthToken()}/photos?status=$status&base64EncodedImage=false&max=1000&additionalPhotos=true"
         HttpResponse<String> response = Unirest.get(url).headers(standardHeaders()).asString()
 
         if (response.getStatus() != 200) {
-            log.error("Status " + response.getStatus() + " returned from CloudCard API when retrieving photo list to download.")
-            return new ArrayList<>()
+            log.error("Status $response.status returned from CloudCard API when retrieving photo list to download.")
+            return []
         }
 
         return new ObjectMapper().readValue(response.getBody(), new TypeReference<List<Photo>>() {
@@ -103,12 +102,11 @@ class CloudCardClient {
     }
 
     private Map<String, String> standardHeaders() {
-
-        Map<String, String> headers = new HashMap<>()
-        headers.put("accept", "application/json")
-        headers.put("Content-Type", "application/json")
-        headers.put("X-Auth-Token", tokenService.getAuthToken())
-        return headers
+        [
+            accept: "application/json",
+            "Content-Type": "application/json",
+            "X-Auth-Token": tokenService.getAuthToken()
+        ]
     }
 
 }
