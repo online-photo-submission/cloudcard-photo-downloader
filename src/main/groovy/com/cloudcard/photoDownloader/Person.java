@@ -20,6 +20,8 @@ public class Person {
     private String identifier;
     @JsonProperty("organization")
     private Organization organization;
+    @JsonProperty("cardholderGroup")
+    private CardholderGroup cardholderGroup;
     @JsonProperty("additionalPhotos")
     private List<AdditionalPhoto> additionalPhotos = null;
     @JsonProperty("customFields")
@@ -86,6 +88,16 @@ public class Person {
     public void setOrganization(Organization organization) {
 
         this.organization = organization;
+    }
+
+    @JsonProperty("cardholderGroup")
+    public CardholderGroup getCardholderGroup() {
+        return cardholderGroup;
+    }
+
+    @JsonProperty("cardholderGroup")
+    public void setCardholderGroup(CardholderGroup cardholderGroup) {
+        this.cardholderGroup = cardholderGroup;
     }
 
     @JsonProperty("additionalPhotos")

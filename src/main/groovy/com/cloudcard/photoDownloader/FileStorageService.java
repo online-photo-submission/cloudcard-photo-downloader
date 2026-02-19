@@ -26,6 +26,9 @@ public class FileStorageService implements StorageService {
     @Value("${downloader.photoDirectories}")
     private String[] photoDirectories;
 
+    @Value("${downloader.cardholderGroupSubdirectory:false}")
+    protected Boolean useCardholderGroupSubdirectories;
+
     @Autowired
     @SuppressWarnings("SpringJavaInjectionPointsAutowiringInspection")
     private FileNameResolver fileNameResolver;
@@ -43,9 +46,10 @@ public class FileStorageService implements StorageService {
         throwIfTrue(fileNameResolver == null, "The File Name Resolver must be specified.");
         throwIfTrue(photoDirectories == null || photoDirectories.length == 0, "The Photo Directory(ies) must be specified.");
 
-        log.info("   File Name Resolver : " + fileNameResolver.getClass().getSimpleName());
-        log.info(" Photo Directory(ies) : " + String.join(" , ", photoDirectories));
-        log.info("       Post-Processor : " + postProcessor.getClass().getSimpleName());
+        log.info("      File Name Resolver : " + fileNameResolver.getClass().getSimpleName());
+        log.info("    Photo Directory(ies) : " + String.join(" , ", photoDirectories));
+        log.info("          Post-Processor : " + postProcessor.getClass().getSimpleName());
+        log.info(" CardholderGroup Subdirs : " + useCardholderGroupSubdirectories);
     }
 
     @Override
@@ -66,6 +70,7 @@ public class FileStorageService implements StorageService {
     protected PhotoFile save(Photo photo, String photoDirectory) throws Exception {
 
         String baseName = fileNameResolver.getBaseName(photo);
+        String directory = getDirectory(photo, photoDirectory);
 
         if (baseName == null || baseName.isEmpty()) {
             log.error("We could not resolve the base file name for '" + photo.getPerson().getEmail() + "' with ID number '"
@@ -78,11 +83,56 @@ public class FileStorageService implements StorageService {
             return null;
         }
 
-        String fullFileName = fileService.writeBytesToFile(photoDirectory, baseName + ".jpg", photo.getBytes());
+        String fullFileName = fileService.writeBytesToFile(directory, baseName + ".jpg", photo.getBytes());
 
-        PhotoFile photoFile = postProcessor.process(photo, photoDirectory, new PhotoFile(baseName, fullFileName, photo.getId()));
+        PhotoFile photoFile = postProcessor.process(photo, directory, new PhotoFile(baseName, fullFileName, photo.getId()));
 
         return photoFile;
+    }
+
+    protected String getDirectory(Photo photo, String photoDirectory) {
+        if (!useCardholderGroupSubdirectories) {
+            return photoDirectory;
+        }
+
+        CardholderGroup cardholderGroup = photo.getPerson().getCardholderGroup();
+        if (cardholderGroup == null || cardholderGroup.getName() == null) {
+            log.warn("Photo " + photo.getId() + " has no cardholder group, using default directory");
+            return photoDirectory;
+        }
+
+        try {
+            String sanitizedName = sanitizeDirectoryName(cardholderGroup.getName());
+            return photoDirectory + File.separator + sanitizedName;
+        } catch (IllegalArgumentException e) {
+            return photoDirectory;
+        }
+    }
+
+    private String sanitizeDirectoryName(String name) {
+        if (name == null || name.trim().isEmpty()) {
+            throw new IllegalArgumentException("Directory name cannot be null or empty");
+        }
+
+        String original = name;
+        // Remove path traversal sequences and path separators
+        String sanitized = name
+                .replaceAll("\\.\\.", "_")  // Replace .. with _
+                .replaceAll("[/\\\\]", "_")  // Replace / and \ with _
+                .replaceAll("[\\x00-\\x1F\\x7F]", "_")  // Replace control characters with _
+                .trim();
+
+        // Check for empty result after sanitization
+        if (sanitized.isEmpty()) {
+            throw new IllegalArgumentException("Directory name '" + original + "' is invalid after sanitization. Using default directory.");
+        }
+
+        // Log if the name was modified for security monitoring
+        if (!sanitized.equals(original)) {
+            log.warn("Cardholder group name sanitized for security: '" + original + "' -> '" + sanitized + "'. Using default directory.");
+        }
+
+        return sanitized;
     }
 
     private String writeBytesToFile(String directoryName, String fileName, byte[] bytes) throws IOException {

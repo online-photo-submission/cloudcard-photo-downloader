@@ -1,8 +1,8 @@
 package com.cloudcard.photoDownloader;
 
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 import java.io.BufferedReader;
 import java.io.File;
@@ -24,13 +24,13 @@ public class FileServiceTest {
     final String binaryDirectory = "bacon";
     final String binaryFileName = "eggs.jpg";
 
-    @Before
+    @BeforeEach
     public void before() throws Exception {
         fileService = new FileService();
         cleanUpFiles();
     }
 
-    @After
+    @AfterEach
     public void after() throws Exception {
         cleanUpFiles();
     }
