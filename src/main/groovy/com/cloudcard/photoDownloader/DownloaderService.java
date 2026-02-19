@@ -98,7 +98,6 @@ public class DownloaderService {
             shellCommandService.preExecute();
             List<Photo> photosToDownload = photoService.fetchReadyForDownload();
             shellCommandService.preDownload(photosToDownload);
-//            TODO: Refactor all the save methods to return storage results instead of just downloaded photos.
             StorageResults results = storageService.save(photosToDownload);
             for (PhotoFile photoFile : results.downloadedPhotoFiles) {
                 Photo downloadedPhoto = new Photo(photoFile.getPhotoId());
