@@ -105,7 +105,7 @@ class ClearIdClient implements IntegrationStorageClient {
         //we may still need this one though.
         byte[] body = new byte[separator.length + photoBytes.length + endBoundary.length]
         System.arraycopy(separator, 0, body, 0, separator.length)
-        System.arraycopy(fileData, 0, body, separator.length, photoBytes.length)
+        System.arraycopy(photoBytes, 0, body, separator.length, photoBytes.length)
         System.arraycopy(endBoundary, 0, body, separator.length + photoBytes.length, endBoundary.length)
 
 
