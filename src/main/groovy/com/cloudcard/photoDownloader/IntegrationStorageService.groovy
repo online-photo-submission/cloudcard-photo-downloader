@@ -64,14 +64,16 @@ class IntegrationStorageService implements StorageService {
 
         String accountId = resolveAccountId(photo)
 
-        if (!accountId || !photo.bytesBase64) { return null }
+        if (!accountId || !photo.bytes) { return null }
 
         try {
-            integrationStorageClient.putPhoto(accountId, photo.bytesBase64)
+            integrationStorageClient.putPhoto(accountId, photo.bytes)
         } catch (FailedPhotoFileException failedPhotoFileException) {
             throw failedPhotoFileException
         } catch (Exception e) {
             log.error("Photo $photo.id for $photo.person.email failed to upload into ${integrationStorageClient.systemName}.")
+            log.error(e.message)
+            e.printStackTrace()
             return null
         }
 
