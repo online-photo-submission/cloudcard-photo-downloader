@@ -14,6 +14,8 @@ import org.springframework.http.ResponseEntity
 import org.springframework.stereotype.Component
 import org.springframework.validation.annotation.Validated
 import org.springframework.web.bind.annotation.*
+import org.springframework.web.multipart.MultipartFile
+import org.springframework.http.MediaType
 import org.springframework.web.filter.OncePerRequestFilter
 
 import java.util.concurrent.ConcurrentHashMap
@@ -51,6 +53,10 @@ class Identity {
   String accountId
   String identityId
   SystemData systemData
+
+  // Optional picture storage (in-memory)
+  String pictureContentType
+  byte[] pictureBytes
 }
 
 @CompileStatic
@@ -207,6 +213,51 @@ class IdentitiesController {
 
     idMap.put(newId, identity)
     return ResponseEntity.status(HttpStatus.CREATED).body(identity)
+  }
+
+  // POST /api/v4/accounts/{alias}/identities/{identityId}/picture
+  @PostMapping(path = "/{identityId}/picture", consumes = MediaType.MULTIPART_FORM_DATA_VALUE, produces = MediaType.TEXT_PLAIN_VALUE)
+  ResponseEntity<String> uploadPicture(
+      @PathVariable("alias") String alias,
+      @PathVariable("identityId") String identityId,
+      @RequestPart("picture") MultipartFile picture
+  ) {
+    requireAccount(alias)
+    def idMap = store.identitiesForAlias(alias)
+    def existing = idMap.get(identityId)
+    if (existing == null) throw new IdentityNotFound(alias, identityId)
+
+    if (picture == null || picture.isEmpty()) {
+      return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Missing picture")
+    }
+
+    existing.pictureContentType = picture.contentType ?: MediaType.APPLICATION_OCTET_STREAM_VALUE
+    existing.pictureBytes = picture.bytes
+    idMap.put(identityId, existing)
+
+    return ResponseEntity.ok("OK")
+  }
+
+  // GET /api/v4/accounts/{alias}/identities/{identityId}/picture
+  @GetMapping(path = "/{identityId}/picture")
+  ResponseEntity<byte[]> getPicture(
+      @PathVariable("alias") String alias,
+      @PathVariable("identityId") String identityId
+  ) {
+    requireAccount(alias)
+    def idMap = store.identitiesForAlias(alias)
+    def existing = idMap.get(identityId)
+    if (existing == null) throw new IdentityNotFound(alias, identityId)
+
+    if (existing.pictureBytes == null || existing.pictureBytes.length == 0) {
+      return ResponseEntity.status(HttpStatus.NOT_FOUND)
+          .body(null)
+    }
+
+    def ct = existing.pictureContentType ?: MediaType.APPLICATION_OCTET_STREAM_VALUE
+    return ResponseEntity.ok()
+        .contentType(MediaType.parseMediaType(ct))
+        .body(existing.pictureBytes)
   }
 
   // GET /api/v4/accounts/{alias}/identities/{identityId}
