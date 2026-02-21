@@ -16,6 +16,7 @@ import org.springframework.validation.annotation.Validated
 import org.springframework.web.bind.annotation.*
 import org.springframework.web.multipart.MultipartFile
 import org.springframework.http.MediaType
+import org.springframework.util.StringUtils
 import org.springframework.web.filter.OncePerRequestFilter
 
 import java.util.concurrent.ConcurrentHashMap
@@ -64,6 +65,20 @@ class IdentitiesListResponse {
   List<Identity> identities
   int totalItems
   String continuation
+}
+
+@CompileStatic
+class TokenResponse {
+  String access_token
+  int expires_in
+  String token_type
+  String scope
+}
+
+@CompileStatic
+class ErrorResponse {
+  String error
+  String message
 }
 
 /** Requests */
@@ -156,6 +171,40 @@ class BearerAuthFilter extends OncePerRequestFilter {
 }
 
 /** ===== Controllers ===== **/
+
+@RestController
+@RequestMapping("/sts/connect")
+@CompileStatic
+class StsController {
+
+  // POST /sts/connect/token
+  // Accepts application/x-www-form-urlencoded body (standard OAuth2 token request)
+  @PostMapping(path = "/token", consumes = MediaType.APPLICATION_FORM_URLENCODED_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
+  ResponseEntity<?> token(
+      @RequestParam(name = "client_id", required = false) String clientId,
+      @RequestParam(name = "client_secret", required = false) String clientSecret,
+      @RequestParam(name = "grant_type", required = false) String grantType
+  ) {
+    if (!StringUtils.hasText(clientId) || !StringUtils.hasText(clientSecret) || !StringUtils.hasText(grantType)) {
+      return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+          .body(new ErrorResponse(error: "invalid_request", message: "client_id, client_secret, and grant_type are required"))
+    }
+
+    if (grantType != "client_credentials") {
+      return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+          .body(new ErrorResponse(error: "unsupported_grant_type", message: "grant_type must be client_credentials"))
+    }
+
+    def resp = new TokenResponse(
+        access_token: UUID.randomUUID().toString().replace("-", ""),
+        expires_in: 3600,
+        token_type: "Bearer",
+        scope: "iams-all-permissions-delegated iams-api iams-roles openid"
+    )
+
+    return ResponseEntity.ok(resp)
+  }
+}
 
 @RestController
 @RequestMapping("/api/v4/accounts/{alias}")

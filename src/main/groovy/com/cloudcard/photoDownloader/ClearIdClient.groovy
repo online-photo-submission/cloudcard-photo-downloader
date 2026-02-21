@@ -15,7 +15,7 @@ import java.net.http.HttpClient
 import java.net.http.HttpRequest
 import java.net.http.HttpResponse
 
-import java.nio.charset.StandardCharsets.*
+import java.nio.charset.StandardCharsets
 
 import static com.cloudcard.photoDownloader.ApplicationPropertiesValidator.throwIfBlank
 
@@ -52,6 +52,7 @@ class ClearIdClient implements IntegrationStorageClient {
         throwIfBlank(clientId, "The ClearId clientId must be specified")
         throwIfBlank(clientSecret, "The ClearId clientSecret must be specified")
 
+        log.info("     ClearId STS URL : $stsUrl")
         log.info("     ClearId API URL : $apiUrl")
         log.info("   ClearId accountId : $accountId")
         log.info("    ClearId clientId : $clientId")
@@ -170,10 +171,9 @@ class ClearIdClient implements IntegrationStorageClient {
     }
 
     HttpRequest.Builder withAuth(HttpRequest.Builder builder) {
-        builder.header("Authorization", "Bearer $authToken")
+        builder.header("Authorization", "Bearer ${authToken ?: authenticate()}")
     }
 
-    //TODO test this
     String authenticate() {
         Map<String, String> formData = [
             "client_id"    : clientId,
@@ -181,29 +181,25 @@ class ClearIdClient implements IntegrationStorageClient {
             "grant_type"   : "client_credentials"
         ]
 
+        String tokenUrl = "$stsUrl/connect/token"
+
         HttpRequest request = HttpRequest.newBuilder()
-        //TODO figure out if the sts url is separate from the main api url.
-            .uri(URI.create(stsUrl))
+            .uri(URI.create(tokenUrl))
             .header("Content-Type", "application/x-www-form-urlencoded")
             .POST(buildFormDataPublisher(formData))
             .build()
 
-        HttpResponse<String> response = http.send(request, HttpResponse.BodyHandlers.ofString())
+        log.trace("POST \"$stsUrl/connect/token\": Sending...")
 
+        HttpResponse<String> response = client.send(request, HttpResponse.BodyHandlers.ofString())
+
+        log.trace("POST \"$stsUrl/connect/token\": ${response.statusCode()}")
+
+        //TODO use an objectmapper.
         Object json = new JsonSlurper().parseText(response.body())
-
-        // Output results
-        System.out.println("Status Code: " + response.statusCode());
-        System.out.println("Response: " + response.body());
-
 
         authToken = json.access_token
         return authToken
-    }
-
-    String getAuthToken() {
-//        return authToken ?: authenticate()
-        return "thisisauthtokenhaha"
     }
 
     /**
@@ -214,9 +210,11 @@ class ClearIdClient implements IntegrationStorageClient {
     }
 
     private static String buildFormData(Map<String, String> data) {
-        data.collect { String k, String v ->
-            "${URLEncoder.encode(k, UTF_8)}=${URLEncoder.encode(v, UTF_8)}"
-        }.join("&")
+        data.collect { String k, String v -> "${urlEncode(k)}=${urlEncode(v)}" }.join("&")
+    }
+
+    private static String urlEncode(String string) {
+        URLEncoder.encode(string, StandardCharsets.UTF_8)
     }
 
 }
