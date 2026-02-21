@@ -14,10 +14,12 @@ import org.springframework.stereotype.Component
 import static com.cloudcard.photoDownloader.ApplicationPropertiesValidator.throwIfBlank
 
 @Component
-@ConditionalOnProperty(value = "downloader.storageService", havingValue = "TouchNetStorageService")
-class TouchNetClient {
+@ConditionalOnProperty(value = "HttpStorageService.httpStorageClient", havingValue = "TouchNetClient")
+class TouchNetClient implements HttpStorageClient {
 
     static final Logger log = LoggerFactory.getLogger(TouchNetClient.class);
+
+    static final String AUTHENTICATION_FAILED_ERROR_CODE = "-2102"
 
     @Value('${TouchNetClient.apiUrl}')
     String apiUrl
@@ -40,9 +42,10 @@ class TouchNetClient {
     @Value('${TouchNetClient.originId}')
     int originId
 
+    String sessionId
+
     @PostConstruct
     void init() {
-
         throwIfBlank(apiUrl, "The TouchNet API URL must be specified.")
         throwIfBlank(developerKey, "The TouchNet developer key must be specified.")
         throwIfBlank(operatorId, "The TouchNet operator id must be specified")
@@ -58,11 +61,18 @@ class TouchNetClient {
         log.info("        TouchNet Origin ID : $originId")
     }
 
-    boolean apiOnline() {
-        log.trace("Checking if $apiUrl is online...")
-        HttpResponse<String> response = Unirest.get("$apiUrl/").asString();
-        log.trace("API Online Response: $response.status $response.body")
-        return response.status == 200
+    TouchNetResponse doApiRequestWithReauthentication(String name, String endpoint, Map body) {
+        body["SessionID"] = findOrCreateSession()
+
+        TouchNetResponse response = doApiRequest(name, endpoint, body)
+
+        if (!response.success && response.json?.ResponseStatus?.ErrorCode == AUTHENTICATION_FAILED_ERROR_CODE) {
+            log.warn("$name failed with authentication error. Attempting to reauthenticate.")
+            body["SessionID"] = createSession()
+            response = doApiRequest(name, endpoint, body)
+        }
+
+        return response
     }
 
     TouchNetResponse doApiRequest(String name, String endpoint, Map body) {
@@ -100,7 +110,7 @@ class TouchNetClient {
         return response.success ? response.json.Result : null
     }
 
-    boolean operatorLogout(String sessionId) {
+    boolean operatorLogout() {
         Map request = [
             SessionID: sessionId,
             OperatorId: operatorId
@@ -111,17 +121,51 @@ class TouchNetClient {
         return response.success
     }
 
-    boolean accountPhotoApprove(String sessionId, String accountId, String photoBase64) {
+    TouchNetResponse accountPhotoApprove(String accountId, String photoBase64) {
         Map request = [
-            SessionID: sessionId,
             AccountID: accountId,
             PhotoBase64: photoBase64,
             ForcePrintedFlag: false
         ]
 
-        TouchNetResponse response = doApiRequest("Account Photo Approve", "account/photo/approve", request)
+        doApiRequestWithReauthentication("Account Photo Approve", "account/photo/approve", request)
+    }
 
-        return response.success
+    @Override
+    String getSystemName() {
+        return "TouchNet"
+    }
+
+    @Override
+    void putPhoto(String accountId, String photoBase64) {
+        TouchNetResponse response = accountPhotoApprove(accountId, photoBase64)
+
+        if (!response.success) {
+            throw new RuntimeException("Failed to upload photo for account $accountId: ${response.json}")
+        }
+    }
+
+    @Override
+    void close() {
+        if (!sessionId) {
+            return
+        }
+
+        if (!operatorLogout()) {
+            log.warn("Failed to logout of the TouchNet API")
+        }
+
+        sessionId = null
+    }
+
+    String findOrCreateSession() {
+        sessionId ?: createSession()
+    }
+
+    String createSession() {
+        sessionId = operatorLogin()
+
+        return sessionId
     }
 }
 

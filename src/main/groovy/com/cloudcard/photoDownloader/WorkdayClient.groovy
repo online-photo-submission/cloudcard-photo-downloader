@@ -23,8 +23,8 @@ import java.util.UUID
 import static com.cloudcard.photoDownloader.ApplicationPropertiesValidator.throwIfBlank
 
 @Component
-@ConditionalOnProperty(value = "downloader.storageService", havingValue = "WorkdayStorageService")
-class WorkdayClient {
+@ConditionalOnProperty(value = "HttpStorageService.httpClient", havingValue = "WorkdayClient")
+class WorkdayClient implements HttpStorageClient {
 
     static final Logger log = LoggerFactory.getLogger(WorkdayClient.class)
 
@@ -76,6 +76,11 @@ class WorkdayClient {
         ]))
     }
 
+    @Override
+    String getSystemName() {
+        return "Workday"
+    }
+
     WorkdayResponse doWorkdayRequest(String requestName, String soapBody) {
         HttpRequest postRequest = HttpRequest.newBuilder()
             .uri(new URI(humanResourcesApi))
@@ -103,7 +108,8 @@ class WorkdayClient {
         return new WorkdayResponse(postResponse, documentBuilder.parse(new ByteArrayInputStream(postResponse.body().bytes)))
     }
 
-    void putWorkerPhoto(String workerId, String photoBase64) {
+    @Override
+    void putPhoto(String workerId, String photoBase64) {
         WorkdayResponse putWorkerPhotoResponse = doWorkdayRequest("putWorkerPhoto", """
             <bsvc:Put_Worker_Photo_Request xmlns:bsvc="urn:com.workday/bsvc">
                 <bsvc:Worker_Reference>
@@ -120,6 +126,11 @@ class WorkdayClient {
             log.error(putWorkerPhotoResponse.response.body())
             throw new RuntimeException("Failed to put worker photo for $workerId: ${putWorkerPhotoResponse.statusCode}")
         }
+    }
+
+    @Override
+    void close() {
+        // WorkdayClient does not maintain any resources that need to be closed.
     }
 
     /**
