@@ -132,6 +132,8 @@ Below are descriptions of each option:
 
 #### SqsPhotoService Settings
 
+> Note: this photoService requires `cloudcard.api.url` & `cloudcard.api.accessToken` to be set, even if you are not configuring the putStatus and therefore not using the cloudcard api. Use a valid value for `cloudcard.api.url`, but the accessToken can be a meaningless value.
+
 - sqsPhotoService.queueUrl
     - default: none
     - note: This will be provided by support once configured upon request. 
@@ -144,6 +146,10 @@ Below are descriptions of each option:
 - sqsPhotoService.pollingDurationSeconds
     - default: 20
     - description: used to configure the duration of [SQS Long Polling](https://docs.aws.amazon.com/AWSSimpleQueueService/latest/SQSDeveloperGuide/sqs-short-and-long-polling.html)
+- sqsPhotoService.putStatus
+    - default: none
+    - description: determines what status the photo is set to after downloading.
+    - note: if this is not set, the photo status will not be updated in CloudCard after downloading the photo.
 
 #### CloudCardPhotoService Settings
 

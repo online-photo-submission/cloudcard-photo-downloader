@@ -35,6 +35,9 @@ class SqsPhotoService implements PhotoService {
     @Value('${sqsPhotoService.region:${aws.sqs.region:ca-central-1}}')
     String region
 
+    @Value('${sqsPhotoService.putStatus')
+    String putStatus
+
     SqsClient sqsClient
 
     @Autowired
@@ -42,6 +45,9 @@ class SqsPhotoService implements PhotoService {
 
     @Autowired
     PreProcessor preProcessor
+
+    @Autowired
+    CloudCardClient cloudCardClient
 
     Map<Integer, Message> messageHistory = [:]
 
@@ -53,6 +59,7 @@ class SqsPhotoService implements PhotoService {
         log.info("              SQS URL : " + queueUrl)
         log.info("           AWS Region : " + region)
         log.info("        Pre-Processor : " + preProcessor.getClass().getSimpleName())
+        log.info("           Put Status : " + putStatus)
 
         try {
             sqsClient = SqsClient.builder()
@@ -92,6 +99,9 @@ class SqsPhotoService implements PhotoService {
      */
     @Override
     Photo markAsDownloaded(Photo photo) {
+        if (putStatus) {
+            cloudCardClient.updateStatus(photo, putStatus)
+        }
         deleteMessages(sqsClient, queueUrl, messageHistory[photo.id])
         return photo
     }
