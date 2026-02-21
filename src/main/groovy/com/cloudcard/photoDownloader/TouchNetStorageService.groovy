@@ -32,7 +32,7 @@ class TouchNetStorageService implements StorageService {
         log.info("   File Name Resolver : $fileNameResolver.class.simpleName")
     }
 
-    List<PhotoFile> save(Collection<Photo> photos) {
+    StorageResults save(Collection<Photo> photos) {
         if (!photos) {
             log.info("No Photos to Upload")
             return []
@@ -53,7 +53,7 @@ class TouchNetStorageService implements StorageService {
             log.warn("Failed to logout of the TouchNet API")
         }
 
-        return photoFiles
+        return new StorageResults(photoFiles)
     }
 
     PhotoFile save(Photo photo, String sessionId) {

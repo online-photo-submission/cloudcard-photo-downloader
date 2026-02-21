@@ -23,6 +23,7 @@ class CloudCardClient {
     public static final String READY_FOR_DOWNLOAD = "READY_FOR_DOWNLOAD"
     public static final String APPROVED = "APPROVED"
     public static final String DOWNLOADED = "DOWNLOADED"
+    public static final String ON_HOLD = "ON_HOLD"
 
     @Value('${cloudcard.api.url}')
     private String apiUrl

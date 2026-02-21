@@ -194,6 +194,15 @@ class Photo {
         this.bytes = bytes
     }
 
+    String getBytesBase64() {
+        if (!this.bytes) {
+            log.error("Photo $this.id for $this.person.email is missing binary data, so it cannot be downloaded.")
+            return null
+        }
+
+        return Base64.getEncoder().encodeToString(this.bytes)
+    }
+
     @JsonAnyGetter
     Map<String, Object> getAdditionalProperties() {
         return this.additionalProperties

@@ -18,6 +18,7 @@ import java.util.List;
 
 import static com.cloudcard.photoDownloader.ApplicationPropertiesValidator.throwIfBlank;
 
+@Deprecated
 @Service
 @ConditionalOnProperty(value = "downloader.storageService", havingValue = "UdfFileStorageService")
 public class UdfFileStorageService extends FileStorageService implements StorageService {
@@ -58,13 +59,13 @@ public class UdfFileStorageService extends FileStorageService implements Storage
     }
 
     @Override
-    public List<PhotoFile> save(Collection<Photo> photos) throws Exception {
+    public StorageResults save(Collection<Photo> photos) throws Exception {
 
-        List<PhotoFile> photoFiles = super.save(photos);
+        StorageResults results = super.save(photos);
 
-        createUdfFile(photoFiles);
+        createUdfFile(results.downloadedPhotoFiles);
 
-        return photoFiles;
+        return results;
     }
 
     private void createUdfFile(List<PhotoFile> photoFiles) throws IOException {

@@ -1,0 +1,536 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="utf-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1"/>
+    <title>Identity Stub UI</title>
+    <style>
+        body {
+            font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+            margin: 24px;
+            line-height: 1.35;
+        }
+
+        h1 {
+            margin: 0 0 16px;
+        }
+
+        .row {
+            display: flex;
+            gap: 12px;
+            flex-wrap: wrap;
+            align-items: end;
+        }
+
+        label {
+            display: grid;
+            gap: 6px;
+            font-size: 12px;
+            color: #333;
+        }
+
+        input, button, textarea {
+            font: inherit;
+            padding: 8px;
+        }
+
+        input, textarea {
+            min-width: 260px;
+        }
+
+        button {
+            cursor: pointer;
+        }
+
+        .card {
+            border: 1px solid #ddd;
+            border-radius: 10px;
+            padding: 14px;
+            margin: 14px 0;
+        }
+
+        .muted {
+            color: #666;
+            font-size: 12px;
+        }
+
+        pre {
+            background: #f7f7f7;
+            padding: 10px;
+            border-radius: 8px;
+            overflow: auto;
+        }
+
+        .grid2 {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+        }
+
+        .grid2 > .card {
+            margin: 0;
+        }
+
+        img {
+            max-width: 240px;
+            border: 1px solid #ddd;
+            border-radius: 10px;
+        }
+
+        .ok {
+            color: #0a7a2f;
+        }
+
+        .bad {
+            color: #b00020;
+        }
+    </style>
+</head>
+<body>
+<h1>Identity Stub UI</h1>
+
+<div class="card">
+    <div class="row">
+        <label>
+            Base URL
+            <input id="baseUrl" value="http://localhost:8080"/>
+        </label>
+        <label>
+            Account alias
+            <input id="alias" value="alias"/>
+        </label>
+        <label>
+            Bearer token (no “Bearer ” prefix)
+            <input id="token" value="test"/>
+        </label>
+        <button id="checkConfig">Check /config</button>
+    </div>
+    <div id="configResult" class="muted" style="margin-top:10px;"></div>
+    <div class="row">
+        <button id="getRateLimit">Get rate limit</button>
+        <label>
+            Rate limit %
+            <input id="rateLimitPercent" value="0" type="number" min="0" max="100"/>
+        </label>
+        <button id="setRateLimit">Update rate limit</button>
+    </div>
+    <div id="rateLimitResult" class="muted" style="margin-top:10px;"></div>
+</div>
+
+<div class="grid2">
+    <div class="card">
+        <h3>List identities</h3>
+        <div class="row">
+            <label>
+                externalId filter (optional)
+                <input id="filterExternalId" placeholder="asdf"/>
+            </label>
+            <button id="listBtn">List</button>
+        </div>
+        <div class="muted" style="margin-top:10px;">
+            Tip: click an identity in the list to load it into the “Get/Update/Delete” section.
+        </div>
+        <div id="listResult"></div>
+    </div>
+
+    <div class="card">
+        <h3>Create identity</h3>
+        <div class="row">
+            <label>
+                identityId (optional)
+                <input id="createIdentityId" placeholder="id_123"/>
+            </label>
+            <label>
+                externalId (required)
+                <input id="createExternalId" placeholder="asdf"/>
+            </label>
+            <button id="createBtn">Create</button>
+        </div>
+        <div id="createResult" class="muted" style="margin-top:10px;"></div>
+    </div>
+</div>
+
+<div class="card">
+    <h3>Get / Update / Delete identity</h3>
+
+    <div class="row">
+        <label>
+            identityId
+            <input id="selectedIdentityId" placeholder="paste identityId here"/>
+        </label>
+        <button id="getBtn">Get</button>
+        <button id="deleteBtn">Delete</button>
+    </div>
+
+    <div class="row" style="margin-top:10px;">
+        <label>
+            Update externalId
+            <input id="updateExternalId" placeholder="newExternalId"/>
+        </label>
+        <button id="updateBtn">Update</button>
+    </div>
+
+    <div id="identityResult" style="margin-top:12px;"></div>
+
+    <hr style="margin:16px 0; border:none; border-top:1px solid #eee;">
+
+    <h3>Picture</h3>
+    <div class="row">
+        <label>
+            Upload picture (form field: picture)
+            <input id="pictureFile" type="file" accept="image/*"/>
+        </label>
+        <button id="uploadPicBtn">Upload</button>
+        <button id="loadPicBtn">Load</button>
+        <button id="downloadPicBtn">Download</button>
+    </div>
+    <div id="picStatus" class="muted" style="margin-top:10px;"></div>
+    <div id="picPreview" style="margin-top:10px;"></div>
+</div>
+
+<div class="card">
+    <h3>Raw response</h3>
+    <div class="muted">Last request/response details (status, body)</div>
+    <pre id="raw"></pre>
+</div>
+
+<script>
+    const $ = (id) => document.getElementById(id);
+
+    function cfg() {
+        const baseUrl = $('baseUrl').value.trim().replace(/\/+$/, '');
+        const alias = $('alias').value.trim();
+        const token = $('token').value.trim();
+        return {baseUrl, alias, token};
+    }
+
+    function authHeaders(extra = {}) {
+        const {token} = cfg();
+        return {
+            'Authorization': `Bearer ${token}`,
+            ...extra
+        };
+    }
+
+    function api(path) {
+        const {baseUrl, alias} = cfg();
+        return `${baseUrl}/api/v4/accounts/${encodeURIComponent(alias)}${path}`;
+    }
+
+    async function showRaw(res, bodyText) {
+        const lines = [];
+        lines.push(`${res.status} ${res.statusText}`);
+        for (const [k, v] of res.headers.entries()) lines.push(`${k}: ${v}`);
+        lines.push('');
+        lines.push(bodyText ?? '');
+        $('raw').textContent = lines.join('\n');
+    }
+
+    function setStatus(el, ok, msg) {
+        el.className = ok ? 'ok' : 'bad';
+        el.textContent = msg;
+    }
+
+    async function checkConfig() {
+        const res = await fetch(api('/config'), {headers: authHeaders()});
+        const text = await res.text();
+        await showRaw(res, text);
+
+        if (res.ok) {
+            setStatus($('configResult'), true, `OK: ${text}`);
+        } else {
+            setStatus($('configResult'), false, `Error: ${text}`);
+        }
+    }
+
+    async function getRateLimit() {
+        const res = await fetch(`${cfg().baseUrl}/api/v4/mock/rate-limit`, {headers: authHeaders()});
+        const text = await res.text();
+        await showRaw(res, text);
+
+        if (!res.ok) {
+            setStatus($('rateLimitResult'), false, `Error: ${text}`);
+            return;
+        }
+
+        try {
+            const obj = JSON.parse(text);
+            if (typeof obj?.percent === 'number') {
+                $('rateLimitPercent').value = String(obj.percent);
+            }
+        } catch {
+            // ignore parse errors
+        }
+
+        setStatus($('rateLimitResult'), true, `OK: ${text}`);
+    }
+
+    async function setRateLimit() {
+        const raw = $('rateLimitPercent').value;
+        const percent = Number(raw);
+        if (!Number.isFinite(percent) || percent < 0 || percent > 100) {
+            return setStatus($('rateLimitResult'), false, 'Provide a percent between 0 and 100');
+        }
+
+        const res = await fetch(`${cfg().baseUrl}/api/v4/mock/rate-limit`, {
+            method: 'PUT',
+            headers: authHeaders({'Content-Type': 'application/json'}),
+            body: JSON.stringify({percent})
+        });
+
+        const text = await res.text();
+        await showRaw(res, text);
+
+        if (!res.ok) {
+            setStatus($('rateLimitResult'), false, `Error: ${text}`);
+            return;
+        }
+
+        setStatus($('rateLimitResult'), true, `Updated: ${text}`);
+    }
+
+    async function listIdentities() {
+        const q = $('filterExternalId').value.trim();
+        const url = q ? api(`/identities?ExternalId=${encodeURIComponent(q)}`) : api('/identities');
+
+        const res = await fetch(url, {headers: authHeaders()});
+        const text = await res.text();
+        await showRaw(res, text);
+
+        if (!res.ok) {
+            $('listResult').innerHTML = `<div class="bad">Error: ${escapeHtml(text)}</div>`;
+            return;
+        }
+
+        let data;
+        try {
+            data = JSON.parse(text);
+        } catch {
+            data = {identities: []};
+        }
+
+        const items = (data.identities || []).map(i => {
+            const ext = i?.systemData?.externalId ?? '';
+            return `
+        <div style="padding:8px;border:1px solid #eee;border-radius:10px;margin:8px 0;">
+          <div><b>${escapeHtml(i.identityId)}</b> <span class="muted">(${escapeHtml(i.accountId)})</span></div>
+          <div class="muted">externalId: ${escapeHtml(ext)}</div>
+          <button data-id="${escapeHtml(i.identityId)}" class="pickBtn" style="margin-top:8px;">Use this identity</button>
+        </div>
+      `;
+        }).join('');
+
+        $('listResult').innerHTML = `
+      <div class="muted">totalItems: ${data.totalItems ?? (data.identities?.length ?? 0)}</div>
+      ${items || '<div class="muted">No identities</div>'}
+    `;
+
+        document.querySelectorAll('.pickBtn').forEach(btn => {
+            btn.addEventListener('click', () => {
+                $('selectedIdentityId').value = btn.getAttribute('data-id');
+                $('updateExternalId').value = '';
+                $('picPreview').innerHTML = '';
+                $('picStatus').textContent = '';
+            });
+        });
+    }
+
+    async function createIdentity() {
+        const identityId = $('createIdentityId').value.trim();
+        const externalId = $('createExternalId').value.trim();
+
+        const payload = {
+            systemData: {externalId}
+        };
+        if (identityId) payload.identityId = identityId;
+
+        const res = await fetch(api('/identities'), {
+            method: 'POST',
+            headers: authHeaders({'Content-Type': 'application/json'}),
+            body: JSON.stringify(payload)
+        });
+
+        const text = await res.text();
+        await showRaw(res, text);
+
+        if (!res.ok) {
+            setStatus($('createResult'), false, `Error: ${text}`);
+            return;
+        }
+
+        setStatus($('createResult'), true, `Created: ${text}`);
+        // Try to extract identityId and populate selection
+        try {
+            const obj = JSON.parse(text);
+            if (obj?.identityId) $('selectedIdentityId').value = obj.identityId;
+        } catch {
+        }
+        await listIdentities();
+    }
+
+    async function getIdentity() {
+        const id = $('selectedIdentityId').value.trim();
+        if (!id) return setStatus($('identityResult'), false, 'Provide identityId');
+
+        const res = await fetch(api(`/identities/${encodeURIComponent(id)}`), {
+            headers: authHeaders()
+        });
+
+        const text = await res.text();
+        await showRaw(res, text);
+
+        if (!res.ok) {
+            $('identityResult').innerHTML = `<div class="bad">Error: ${escapeHtml(text)}</div>`;
+            return;
+        }
+
+        $('identityResult').innerHTML = `<pre>${escapeHtml(text)}</pre>`;
+    }
+
+    async function updateIdentity() {
+        const id = $('selectedIdentityId').value.trim();
+        const externalId = $('updateExternalId').value.trim();
+        if (!id) return setStatus($('identityResult'), false, 'Provide identityId');
+        if (!externalId) return setStatus($('identityResult'), false, 'Provide new externalId');
+
+        const payload = {systemData: {externalId}};
+
+        const res = await fetch(api(`/identities/${encodeURIComponent(id)}`), {
+            method: 'PUT',
+            headers: authHeaders({'Content-Type': 'application/json'}),
+            body: JSON.stringify(payload)
+        });
+
+        const text = await res.text();
+        await showRaw(res, text);
+
+        if (!res.ok) {
+            $('identityResult').innerHTML = `<div class="bad">Error: ${escapeHtml(text)}</div>`;
+            return;
+        }
+
+        $('identityResult').innerHTML = `<pre>${escapeHtml(text)}</pre>`;
+        await listIdentities();
+    }
+
+    async function deleteIdentity() {
+        const id = $('selectedIdentityId').value.trim();
+        if (!id) return setStatus($('identityResult'), false, 'Provide identityId');
+
+        const res = await fetch(api(`/identities/${encodeURIComponent(id)}`), {
+            method: 'DELETE',
+            headers: authHeaders()
+        });
+
+        const text = await res.text();
+        await showRaw(res, text);
+
+        if (res.status === 204) {
+            $('identityResult').innerHTML = `<div class="ok">Deleted.</div>`;
+            $('picPreview').innerHTML = '';
+            $('picStatus').textContent = '';
+            await listIdentities();
+            return;
+        }
+
+        $('identityResult').innerHTML = res.ok
+            ? `<div class="ok">${escapeHtml(text || 'Deleted')}</div>`
+            : `<div class="bad">Error: ${escapeHtml(text)}</div>`;
+    }
+
+    async function uploadPicture() {
+        const id = $('selectedIdentityId').value.trim();
+        const file = $('pictureFile').files?.[0];
+        if (!id) return setStatus($('picStatus'), false, 'Provide identityId');
+        if (!file) return setStatus($('picStatus'), false, 'Choose a file');
+
+        const form = new FormData();
+        form.append('picture', file, file.name || 'file');
+
+        const res = await fetch(api(`/identities/${encodeURIComponent(id)}/picture`), {
+            method: 'POST',
+            headers: authHeaders(), // DON'T set Content-Type; browser sets multipart boundary
+            body: form
+        });
+
+        const text = await res.text();
+        await showRaw(res, text);
+
+        if (!res.ok) {
+            setStatus($('picStatus'), false, `Upload failed: ${text}`);
+            return;
+        }
+        setStatus($('picStatus'), true, `Uploaded (${file.type || 'unknown'})`);
+    }
+
+    async function loadPicture(preview = true) {
+        const id = $('selectedIdentityId').value.trim();
+        if (!id) return setStatus($('picStatus'), false, 'Provide identityId');
+
+        const res = await fetch(api(`/identities/${encodeURIComponent(id)}/picture`), {
+            headers: authHeaders()
+        });
+
+        if (!res.ok) {
+            const text = await res.text();
+            await showRaw(res, text);
+            setStatus($('picStatus'), false, `No picture (status ${res.status})`);
+            $('picPreview').innerHTML = '';
+            return null;
+        }
+
+        const ct = res.headers.get('content-type') || 'application/octet-stream';
+        const blob = await res.blob();
+        await showRaw(res, `[binary ${blob.size} bytes]`);
+
+        setStatus($('picStatus'), true, `Loaded (${ct}, ${blob.size} bytes)`);
+
+        if (preview && ct.startsWith('image/')) {
+            const url = URL.createObjectURL(blob);
+            $('picPreview').innerHTML = `<img src="${url}" alt="picture preview">`;
+        } else {
+            $('picPreview').innerHTML = `<div class="muted">Binary content-type: ${escapeHtml(ct)}</div>`;
+        }
+        return {blob, contentType: ct};
+    }
+
+    async function downloadPicture() {
+        const result = await loadPicture(false);
+        if (!result) return;
+
+        const id = $('selectedIdentityId').value.trim();
+        const ext = (result.contentType.split('/')[1] || 'bin').split(';')[0];
+        const filename = `identity_${id}_picture.${ext}`;
+
+        const a = document.createElement('a');
+        a.href = URL.createObjectURL(result.blob);
+        a.download = filename;
+        document.body.appendChild(a);
+        a.click();
+        a.remove();
+    }
+
+    function escapeHtml(s) {
+        return String(s).replace(/[&<>"']/g, (c) => ({
+            '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'
+        }[c]));
+    }
+
+    // wire up
+    $('checkConfig').addEventListener('click', checkConfig);
+    $('getRateLimit').addEventListener('click', getRateLimit);
+    $('setRateLimit').addEventListener('click', setRateLimit);
+    $('listBtn').addEventListener('click', listIdentities);
+    $('createBtn').addEventListener('click', createIdentity);
+    $('getBtn').addEventListener('click', getIdentity);
+    $('updateBtn').addEventListener('click', updateIdentity);
+    $('deleteBtn').addEventListener('click', deleteIdentity);
+    $('uploadPicBtn').addEventListener('click', uploadPicture);
+    $('loadPicBtn').addEventListener('click', () => loadPicture(true));
+    $('downloadPicBtn').addEventListener('click', downloadPicture);
+
+    // initial
+    $('raw').textContent = '';
+</script>
+</body>
+</html>
