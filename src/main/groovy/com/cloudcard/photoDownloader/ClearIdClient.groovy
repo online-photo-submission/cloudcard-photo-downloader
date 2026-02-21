@@ -86,18 +86,16 @@ class ClearIdClient implements IntegrationStorageClient {
                 throw new IntegrationRateLimitExceededException()
             }
 
+            //TODO a 401 should throw an exception that results in reauthentication and a single retry.
+
             return response
         }).get()
     }
 
     String getIdentity(String identifier) {
-        //TODO I don't love this "withAuth" thing, but not sure how to do it better...
-        // Can we create interceptors on the client?
-        HttpRequest request = withAuth(
-            HttpRequest.newBuilder()
-                .uri(new URI("$apiUrl/accounts/$accountId/identities?ExternalId=$identifier"))
+        HttpRequest request = authenticatedRequestBuilder(new URI("$apiUrl/accounts/$accountId/identities?ExternalId=$identifier"))
                 .header("Accept", "application/json")
-        ).build()
+                .build()
 
         HttpResponse<String> response = sendWithBackoff(request)
 
@@ -106,6 +104,8 @@ class ClearIdClient implements IntegrationStorageClient {
         if (response.statusCode() == 404) {
             throw new FailedPhotoFileException("ClearID identity not found for $identifier")
         }
+
+        //TODO a 401 should throw an exception that results in reauthentication and a single retry.
 
         if (response.statusCode() != 200) {
             throw new Exception("Error finding ClearID identity for $identifier. Status: ${response.statusCode()}")
@@ -143,20 +143,17 @@ class ClearIdClient implements IntegrationStorageClient {
         System.arraycopy(photoBytes, 0, body, separator.length, photoBytes.length)
         System.arraycopy(endBoundary, 0, body, separator.length + photoBytes.length, endBoundary.length)
 
-
-        //TODO I don't love this "withAuth" thing, but not sure how to do it better...
-        // Can we create interceptors on the client?
-        HttpRequest request = withAuth(
-            HttpRequest.newBuilder()
-                .uri(new URI("$apiUrl/accounts/$accountId/identities/$identityId/picture"))
+        HttpRequest request = authenticatedRequestBuilder(new URI("$apiUrl/accounts/$accountId/identities/$identityId/picture"))
                 .header("Content-Type", "multipart/form-data; boundary=${boundary}")
                 .POST(HttpRequest.BodyPublishers.ofByteArray(body))
-        ).build()
+                .build()
 
         HttpResponse<String> response = sendWithBackoff(request)
         if (response.statusCode() != 200) {
             throw new Exception("Error updating picture for ClearId identity $identityId. Status: ${response.statusCode()}")
         }
+
+        //TODO a 401 should throw an exception that results in reauthentication and a single retry.
 
     }
 
@@ -170,11 +167,17 @@ class ClearIdClient implements IntegrationStorageClient {
 
     }
 
-    HttpRequest.Builder withAuth(HttpRequest.Builder builder) {
-        builder.header("Authorization", "Bearer ${authToken ?: authenticate()}")
+    private HttpRequest.Builder authenticatedRequestBuilder(URI uri) {
+        return HttpRequest.newBuilder()
+            .uri(uri)
+            .header("Authorization", "Bearer ${getValidToken()}")
     }
 
-    String authenticate() {
+    private String getValidToken() {
+        authToken ?: authenticate()
+    }
+
+    private String authenticate() {
         Map<String, String> formData = [
             "client_id"    : clientId,
             "client_secret": clientSecret,
