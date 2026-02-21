@@ -101,6 +101,9 @@ class InMemoryStore {
   // accountAlias -> (identityId -> Identity)
   final Map<String, Map<String, Identity>> identitiesByAlias = new ConcurrentHashMap<>()
 
+  // Mock rate limiting: percentage of /api/v4/** requests to fail with HTTP 429 (0-100)
+  final java.util.concurrent.atomic.AtomicInteger rateLimitPercent = new java.util.concurrent.atomic.AtomicInteger(0)
+
   Map<String, Identity> identitiesForAlias(String alias) {
     identitiesByAlias.computeIfAbsent(alias) { new ConcurrentHashMap<String, Identity>() }
   }
@@ -110,6 +113,13 @@ class InMemoryStore {
 
 @Component
 class BearerAuthFilter extends OncePerRequestFilter {
+
+  private final InMemoryStore store
+
+  BearerAuthFilter(InMemoryStore store) {
+    this.store = store
+  }
+
   @Override
   protected boolean shouldNotFilter(HttpServletRequest request) {
     // Only protect /api/v4/**
@@ -125,6 +135,22 @@ class BearerAuthFilter extends OncePerRequestFilter {
       response.writer.write('{"error":"missing_or_invalid_authorization","message":"Authorization: Bearer <token> header is required."}')
       return
     }
+
+    // Mock rate limiting (exclude the mock config endpoint itself so you can always change it)
+    def uri = request.requestURI ?: ""
+    if (!uri.startsWith("/api/v4/mock/rate-limit")) {
+      int pct = store.rateLimitPercent.get()
+      if (pct > 0) {
+        // Math.random() returns [0,1). Convert to [0,100)
+        if ((Math.random() * 100.0d) < (double)pct) {
+          response.status = HttpStatus.TOO_MANY_REQUESTS.value()
+          response.contentType = "application/json"
+          response.writer.write('{"error":"rate_limited","message":"Mock rate limiting triggered.","status":429}')
+          return
+        }
+      }
+    }
+
     filterChain.doFilter(request, response)
   }
 }
@@ -153,6 +179,42 @@ class AccountsController {
   }
 }
 
+@Validated
+@CompileStatic
+class RateLimitConfigRequest {
+  @jakarta.validation.constraints.Min(0L)
+  @jakarta.validation.constraints.Max(100L)
+  Integer percent
+}
+
+@RestController
+@RequestMapping("/api/v4/mock")
+@CompileStatic
+class MockController {
+
+  private final InMemoryStore store
+
+  MockController(InMemoryStore store) {
+    this.store = store
+  }
+
+  // GET /api/v4/mock/rate-limit
+  @GetMapping("/rate-limit")
+  ResponseEntity<?> getRateLimit() {
+    return ResponseEntity.ok([percent: store.rateLimitPercent.get()])
+  }
+
+  // PUT /api/v4/mock/rate-limit  {"percent": 25}
+  @PutMapping("/rate-limit")
+  ResponseEntity<?> updateRateLimit(@Valid @RequestBody RateLimitConfigRequest req) {
+    if (req == null || req.percent == null) {
+      return ResponseEntity.status(HttpStatus.BAD_REQUEST).body([error: "invalid_request", message: "percent is required (0-100)"])
+    }
+    store.rateLimitPercent.set(req.percent)
+    return ResponseEntity.ok([percent: store.rateLimitPercent.get()])
+  }
+}
+
 @RestController
 @RequestMapping("/api/v4/accounts/{alias}/identities")
 @CompileStatic
@@ -170,7 +232,7 @@ class IdentitiesController {
     return acct
   }
 
-  // GET /api/v4/accounts/{alias}/identities?externalId=asdf
+  // GET /api/v4/accounts/{alias}/identities?ExternalId=asdf
   @GetMapping
   IdentitiesListResponse list(
       @PathVariable("alias") String alias,

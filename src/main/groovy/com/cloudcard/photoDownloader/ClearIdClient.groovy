@@ -1,6 +1,9 @@
 package com.cloudcard.photoDownloader
 
 import groovy.json.JsonSlurper
+import io.github.resilience4j.core.IntervalFunction
+import io.github.resilience4j.retry.Retry
+import io.github.resilience4j.retry.RetryConfig
 import jakarta.annotation.PostConstruct
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
@@ -38,6 +41,7 @@ class ClearIdClient implements IntegrationStorageClient {
     String clientSecret
 
     HttpClient client
+    Retry retry
 
     String authToken
 
@@ -54,11 +58,35 @@ class ClearIdClient implements IntegrationStorageClient {
         log.info("ClearId clientSecret : ${clientSecret.length() > 0 ? "......" : ""}")
 
         client = HttpClient.newBuilder().build()
+
+        RetryConfig retryConfig = RetryConfig.custom()
+            .maxAttempts(10)
+            .intervalFunction(IntervalFunction.ofExponentialBackoff(500, 2.0, 30_000))
+            .retryExceptions(IntegrationRateLimitExceededException.class)
+            .failAfterMaxAttempts(true)
+            .build()
+
+        retry = Retry.of("ClearIdClient", retryConfig)
     }
 
     @Override
     String getSystemName() {
         return "ClearId"
+    }
+
+    HttpResponse<String> sendWithBackoff(HttpRequest request) {
+        return Retry.decorateSupplier(retry, {
+            //TODO - should the Retryer live in the integration storage service instead, and then all we have to do in the client is throw the rate limit exception?
+            // I prefer to throw the rate limit exception at the request layer, but maybe we can put it down into an http client wrapper.
+            HttpResponse<String> response = client.send(request, HttpResponse.BodyHandlers.ofString())
+
+            if (response.statusCode() == 429) {
+                log.trace("got a 429!")
+                throw new IntegrationRateLimitExceededException()
+            }
+
+            return response
+        }).get()
     }
 
     String getIdentity(String identifier) {
@@ -70,7 +98,9 @@ class ClearIdClient implements IntegrationStorageClient {
                 .header("Accept", "application/json")
         ).build()
 
-        HttpResponse<String> response = client.send(request, HttpResponse.BodyHandlers.ofString())
+        HttpResponse<String> response = sendWithBackoff(request)
+
+        log.trace("ClearId GET /identities?ExternalId=$identifier : ${response.statusCode()}")
 
         if (response.statusCode() == 404) {
             throw new FailedPhotoFileException("ClearID identity not found for $identifier")
@@ -83,6 +113,8 @@ class ClearIdClient implements IntegrationStorageClient {
         //TODO convert this to a type using an objectmapper or something
         def body = new JsonSlurper().parseText(response.body())
 
+        log.trace("ClearId GET /identities?ExternalId=$identifier : returned ${body?.identities?.size()} results")
+
         if (!body.identities || body.identities.size() == 0) {
             throw new FailedPhotoFileException("ClearID identity not found for $identifier")
         }
@@ -90,8 +122,10 @@ class ClearIdClient implements IntegrationStorageClient {
         if (body.identities.size() > 1) {
             throw new FailedPhotoFileException("ClearID contains multiple users with ExternalID $identifier")
         }
-
         String identityId = body.identities[0].identityId
+
+        log.trace("ClearId GET /identities?ExternalId=$identifier : identityId: $identityId")
+
         return identityId
     }
 
@@ -118,22 +152,16 @@ class ClearIdClient implements IntegrationStorageClient {
                 .POST(HttpRequest.BodyPublishers.ofByteArray(body))
         ).build()
 
-        HttpResponse<String> response = client.send(request, HttpResponse.BodyHandlers.ofString())
+        HttpResponse<String> response = sendWithBackoff(request)
         if (response.statusCode() != 200) {
             throw new Exception("Error updating picture for ClearId identity $identityId. Status: ${response.statusCode()}")
         }
 
     }
 
-//    TODO: Add resiliency to at least handle rate limiting.
     @Override
     void putPhoto(String identifier, byte[] photoBytes) {
-        String identityId = getIdentity(identifier)
-
-        putIdentityPicture(identityId, photoBytes)
-
-        //TODO remove this when we're done testing.
-        throw new FailedPhotoFileException("Upload to ClearId attempted. Remove hold to test again")
+        putIdentityPicture(getIdentity(identifier), photoBytes)
     }
 
     @Override

@@ -106,6 +106,15 @@
         <button id="checkConfig">Check /config</button>
     </div>
     <div id="configResult" class="muted" style="margin-top:10px;"></div>
+    <div class="row">
+        <button id="getRateLimit">Get rate limit</button>
+        <label>
+            Rate limit %
+            <input id="rateLimitPercent" value="0" type="number" min="0" max="100"/>
+        </label>
+        <button id="setRateLimit">Update rate limit</button>
+    </div>
+    <div id="rateLimitResult" class="muted" style="margin-top:10px;"></div>
 </div>
 
 <div class="grid2">
@@ -234,9 +243,55 @@
         }
     }
 
+    async function getRateLimit() {
+        const res = await fetch(`${cfg().baseUrl}/api/v4/mock/rate-limit`, {headers: authHeaders()});
+        const text = await res.text();
+        await showRaw(res, text);
+
+        if (!res.ok) {
+            setStatus($('rateLimitResult'), false, `Error: ${text}`);
+            return;
+        }
+
+        try {
+            const obj = JSON.parse(text);
+            if (typeof obj?.percent === 'number') {
+                $('rateLimitPercent').value = String(obj.percent);
+            }
+        } catch {
+            // ignore parse errors
+        }
+
+        setStatus($('rateLimitResult'), true, `OK: ${text}`);
+    }
+
+    async function setRateLimit() {
+        const raw = $('rateLimitPercent').value;
+        const percent = Number(raw);
+        if (!Number.isFinite(percent) || percent < 0 || percent > 100) {
+            return setStatus($('rateLimitResult'), false, 'Provide a percent between 0 and 100');
+        }
+
+        const res = await fetch(`${cfg().baseUrl}/api/v4/mock/rate-limit`, {
+            method: 'PUT',
+            headers: authHeaders({'Content-Type': 'application/json'}),
+            body: JSON.stringify({percent})
+        });
+
+        const text = await res.text();
+        await showRaw(res, text);
+
+        if (!res.ok) {
+            setStatus($('rateLimitResult'), false, `Error: ${text}`);
+            return;
+        }
+
+        setStatus($('rateLimitResult'), true, `Updated: ${text}`);
+    }
+
     async function listIdentities() {
         const q = $('filterExternalId').value.trim();
-        const url = q ? api(`/identities?externalId=${encodeURIComponent(q)}`) : api('/identities');
+        const url = q ? api(`/identities?ExternalId=${encodeURIComponent(q)}`) : api('/identities');
 
         const res = await fetch(url, {headers: authHeaders()});
         const text = await res.text();
@@ -463,6 +518,8 @@
 
     // wire up
     $('checkConfig').addEventListener('click', checkConfig);
+    $('getRateLimit').addEventListener('click', getRateLimit);
+    $('setRateLimit').addEventListener('click', setRateLimit);
     $('listBtn').addEventListener('click', listIdentities);
     $('createBtn').addEventListener('click', createIdentity);
     $('getBtn').addEventListener('click', getIdentity);
