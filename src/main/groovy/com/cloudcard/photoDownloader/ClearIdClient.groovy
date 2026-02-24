@@ -77,16 +77,12 @@ class ClearIdClient implements IntegrationStorageClient {
 
     HttpResponse<String> sendWithBackoff(HttpRequest request) {
         return Retry.decorateSupplier(retry, {
-            //TODO - should the Retryer live in the integration storage service instead, and then all we have to do in the client is throw the rate limit exception?
-            // I prefer to throw the rate limit exception at the request layer, but maybe we can put it down into an http client wrapper.
             HttpResponse<String> response = client.send(request, HttpResponse.BodyHandlers.ofString())
 
             if (response.statusCode() == 429) {
                 log.trace("got a 429!")
                 throw new IntegrationRateLimitExceededException()
             }
-
-            //TODO a 401 should throw an exception that results in reauthentication and a single retry.
 
             return response
         }).get()
@@ -105,13 +101,10 @@ class ClearIdClient implements IntegrationStorageClient {
             throw new FailedPhotoFileException("ClearID identity not found for $identifier")
         }
 
-        //TODO a 401 should throw an exception that results in reauthentication and a single retry.
-
         if (response.statusCode() != 200) {
             throw new Exception("Error finding ClearID identity for $identifier. Status: ${response.statusCode()}")
         }
 
-        //TODO convert this to a type using an objectmapper or something
         def body = new JsonSlurper().parseText(response.body())
 
         log.trace("ClearId GET /identities?ExternalId=$identifier : returned ${body?.identities?.size()} results")
@@ -132,7 +125,8 @@ class ClearIdClient implements IntegrationStorageClient {
 
 
     void putIdentityPicture(String identityId, byte[] photoBytes) {
-        //TODO why are we doing this lol. use a proper formdata builder.
+        log.trace("ClearId PUT /identities/$identityId/picture : create multipart form with a picture size of $photoBytes.length bytes")
+
         String boundary = UUID.randomUUID().toString()
         byte[] separator = "--${boundary}\r\nContent-Disposition: form-data; name=\"picture\"; filename=\"picture.jpg\"\r\nContent-Type: image/jpeg\r\n\r\n".getBytes()
         byte[] endBoundary = "\r\n--${boundary}--\r\n".getBytes()
@@ -143,18 +137,20 @@ class ClearIdClient implements IntegrationStorageClient {
         System.arraycopy(photoBytes, 0, body, separator.length, photoBytes.length)
         System.arraycopy(endBoundary, 0, body, separator.length + photoBytes.length, endBoundary.length)
 
+        log.trace("ClearId PUT /identities/$identityId/picture : sending request with body size of $body.length bytes")
+
         HttpRequest request = authenticatedRequestBuilder(new URI("$apiUrl/accounts/$accountId/identities/$identityId/picture"))
                 .header("Content-Type", "multipart/form-data; boundary=${boundary}")
                 .POST(HttpRequest.BodyPublishers.ofByteArray(body))
                 .build()
 
         HttpResponse<String> response = sendWithBackoff(request)
+
+        log.trace("ClearId PUT /identities/$identityId/picture : status : ${response.statusCode()}")
+
         if (response.statusCode() != 200) {
             throw new Exception("Error updating picture for ClearId identity $identityId. Status: ${response.statusCode()}")
         }
-
-        //TODO a 401 should throw an exception that results in reauthentication and a single retry.
-
     }
 
     @Override
@@ -198,9 +194,7 @@ class ClearIdClient implements IntegrationStorageClient {
 
         log.trace("POST \"$stsUrl/connect/token\": ${response.statusCode()}")
 
-        //TODO use an objectmapper.
         Object json = new JsonSlurper().parseText(response.body())
-
         authToken = json.access_token
         return authToken
     }
