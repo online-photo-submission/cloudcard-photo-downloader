@@ -36,7 +36,7 @@ class SqsPhotoService implements PhotoService {
     @Value('${sqsPhotoService.region:${aws.sqs.region:ca-central-1}}')
     String region
 
-    @Value('${sqsPhotoService.putStatus')
+    @Value('${sqsPhotoService.putStatus}')
     String putStatus
 
     SqsClient sqsClient
