@@ -39,12 +39,20 @@ public class TokenService {
 
     @PostConstruct
     void init() {
-
-        throwIfBlank(persistentAccessToken, "The CloudCard API Persistent Access token must be specified.");
-
-        log.info("Persist. Access Token : " + "..." + persistentAccessToken.substring(3, 8) + "...");
+        if (this.tokenIsEmpty()) {
+            log.info("Persist. Access Token not set.");
+        } else {
+            log.info("Persist. Access Token : ..." + persistentAccessToken.substring(3, 8) + "...");
+        }
     }
 
+    boolean tokenIsEmpty() {
+        return persistentAccessToken == null || persistentAccessToken.isEmpty();
+    }
+
+    boolean isConfigured() {
+        return !this.tokenIsEmpty();
+    }
 
     public void login() throws Exception {
         String url =  apiUrl + "/authenticationTokens";
@@ -62,6 +70,10 @@ public class TokenService {
     }
 
     public void logout() throws Exception {
+        if (authToken == null || authToken.isEmpty()) {
+            return;
+        }
+
         String url =  apiUrl + "/people/me/logout";
         HttpResponse<String> response = Unirest.post(url).headers(standardHeaders(true)).body("{\"authenticationToken\":\"" + authToken + "\"}").asString();
 
@@ -75,12 +87,21 @@ public class TokenService {
         Map<String, String> headers = new HashMap<>();
         headers.put("accept", "application/json");
         headers.put("Content-Type", "application/json");
-        if (includeToken) headers.put("X-Auth-Token", authToken);
+        if (includeToken) headers.put("X-Auth-Token", getAuthToken());
         return headers;
     }
 
     @JsonAnyGetter
     public String getAuthToken() {
+        if (this.authToken == null || this.authToken.isEmpty()) {
+            try {
+                this.login();
+            } catch (Exception e) {
+                log.error("Error while trying to retrieve token from CloudCard API.", e);
+                return null;
+            }
+        }
+
         return this.authToken;
     }
 

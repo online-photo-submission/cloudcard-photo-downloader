@@ -9,6 +9,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 
+import java.util.Arrays;
 import java.util.List;
 
 import static com.cloudcard.photoDownloader.ApplicationPropertiesValidator.*;
@@ -20,9 +21,6 @@ public class DownloaderService {
 
     @Autowired
     PhotoService photoService;
-
-    @Autowired
-    TokenService tokenService;
 
     @Autowired
     StorageService storageService;
@@ -94,7 +92,6 @@ public class DownloaderService {
         try {
 
             log.info("  ==========  Downloading photos  ==========  ");
-            tokenService.login();
             shellCommandService.preExecute();
             List<Photo> photosToDownload = photoService.fetchReadyForDownload();
             shellCommandService.preDownload(photosToDownload);
@@ -108,7 +105,6 @@ public class DownloaderService {
             shellCommandService.postDownload(downloadedPhotoFiles);
             shellCommandService.postExecute();
             log.info("Completed downloading " + downloadedPhotoFiles.size() + " photos.");
-            tokenService.logout();
 
         } catch (Exception e) {
 
@@ -117,6 +113,13 @@ public class DownloaderService {
             exitStatus = 1;
 
         } finally {
+            try {
+                photoService.close();
+            } catch (Exception e) {
+                log.error("Failed to close the photoService: ");
+                log.error(e.getMessage());
+                log.debug(Arrays.toString(e.getStackTrace()));
+            }
 
             if (!repeat) {
                 log.info("downloader.repeat is set to false. Exiting application now.");

@@ -16,6 +16,7 @@ import software.amazon.awssdk.services.sqs.model.SqsException
 import jakarta.annotation.PostConstruct
 
 import static com.cloudcard.photoDownloader.ApplicationPropertiesValidator.throwIfBlank
+import static com.cloudcard.photoDownloader.ApplicationPropertiesValidator.throwIfTrue
 
 @Service
 @ConditionalOnProperty(value = "downloader.photoService", havingValue = "SqsPhotoService", matchIfMissing = true)
@@ -61,6 +62,8 @@ class SqsPhotoService implements PhotoService {
         log.info("        Pre-Processor : " + preProcessor.getClass().getSimpleName())
         log.info("           Put Status : " + putStatus)
 
+        throwIfTrue(putStatus && !cloudCardClient.isConfigured(), "The CloudCardClient must be configured when putStatus is set.")
+
         try {
             sqsClient = SqsClient.builder()
                 .region(Region.of(region))
@@ -104,6 +107,11 @@ class SqsPhotoService implements PhotoService {
         }
         deleteMessages(sqsClient, queueUrl, messageHistory[photo.id])
         return photo
+    }
+
+    @Override
+    void close() {
+        cloudCardClient.close()
     }
 
     /* *** PRIVATE HELPERS *** */

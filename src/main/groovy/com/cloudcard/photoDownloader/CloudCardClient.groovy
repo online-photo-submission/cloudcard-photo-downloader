@@ -39,10 +39,17 @@ class CloudCardClient {
 
     @PostConstruct
     void init() {
-        throwIfBlank(apiUrl, "The CloudCard API URL must be specified.")
-
         log.info("              API URL : " + apiUrl)
         log.info("        Pre-Processor : " + preProcessor.getClass().getSimpleName())
+    }
+
+    /**
+     * Each usage of the CloudCardClient should check isConfigured to make sure the client is configured.
+     *
+     * @return
+     */
+    boolean isConfigured() {
+        return apiUrl && tokenService.isConfigured()
     }
 
     Photo updateStatus(Photo photo, String status, String message = null) throws Exception {
@@ -99,6 +106,10 @@ class CloudCardClient {
 
         return new ObjectMapper().readValue(response.getBody(), new TypeReference<List<Photo>>() {
         })
+    }
+
+    void close() {
+        tokenService.logout()
     }
 
     private Map<String, String> standardHeaders() {

@@ -11,15 +11,13 @@ import org.springframework.stereotype.Service
 import javax.management.timer.Timer
 
 import static com.cloudcard.photoDownloader.ApplicationPropertiesValidator.throwIfBlank
+import static com.cloudcard.photoDownloader.ApplicationPropertiesValidator.throwIfTrue
 
 @Service
 @ConditionalOnProperty(value = "downloader.photoService", havingValue = "CloudCardPhotoService")
 class CloudCardPhotoService implements PhotoService {
 
     private static final Logger log = LoggerFactory.getLogger(CloudCardPhotoService.class)
-
-    @Value('${cloudcard.api.url}')
-    private String apiUrl
 
     @Value('${downloader.putStatus:DOWNLOADED}')
     private String putStatus
@@ -33,15 +31,10 @@ class CloudCardPhotoService implements PhotoService {
     CloudCardPhotoService() {
     }
 
-    CloudCardPhotoService(String apiUrl) {
-        this.apiUrl = apiUrl
-    }
-
     @PostConstruct
     void init() {
-        throwIfBlank(apiUrl, "The CloudCard API URL must be specified.")
+        throwIfTrue(!cloudCardClient.isConfigured(), "The CloudCardClient must be configured when the CloudCardPhotoService is used.")
 
-        log.info("              API URL : " + apiUrl)
         log.info("           PUT Status : " + putStatus)
         log.info("       Fetch Statuses : " + String.join(" , ", fetchStatuses))
     }
@@ -59,6 +52,11 @@ class CloudCardPhotoService implements PhotoService {
     @Override
     Photo markAsDownloaded(Photo photo) throws Exception {
         cloudCardClient.updateStatus(photo, putStatus)
+    }
+
+    @Override
+    void close() {
+        cloudCardClient.close()
     }
 
 }

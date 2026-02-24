@@ -8,4 +8,9 @@ public interface PhotoService {
     Photo markAsDownloaded(Photo photo) throws Exception;
 
     long minDownloaderDelay();
+
+    /**
+     * implement this method to ensure all connections, sessions, and temporarily credentials are closed or terminated or logged out when the downloader loop is done.
+     */
+    void close();
 }

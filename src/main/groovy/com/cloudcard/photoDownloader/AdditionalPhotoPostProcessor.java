@@ -1,5 +1,6 @@
 package com.cloudcard.photoDownloader;
 
+import jakarta.annotation.PostConstruct;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -18,6 +19,7 @@ public class AdditionalPhotoPostProcessor implements PostProcessor {
     @Autowired
     FileService fileService;
 
+    //TODO refactor this to the CloudCardClient.
     @Autowired
     RestService restService;
 
