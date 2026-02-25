@@ -39,19 +39,23 @@ public class TokenService {
 
     @PostConstruct
     void init() {
-        if (this.tokenIsEmpty()) {
+        if (this.persistentAccessTokenIsEmpty()) {
             log.info("Persist. Access Token not set.");
         } else {
             log.info("Persist. Access Token : ..." + persistentAccessToken.substring(3, 8) + "...");
         }
     }
 
-    boolean tokenIsEmpty() {
+    boolean persistentAccessTokenIsEmpty() {
         return persistentAccessToken == null || persistentAccessToken.isEmpty();
     }
 
+    boolean authTokenIsEmpty() {
+        return authToken == null || authToken.isEmpty();
+    }
+
     boolean isConfigured() {
-        return !this.tokenIsEmpty();
+        return !persistentAccessTokenIsEmpty();
     }
 
     public void login() throws Exception {
@@ -70,7 +74,7 @@ public class TokenService {
     }
 
     public void logout() throws Exception {
-        if (authToken == null || authToken.isEmpty()) {
+        if (authTokenIsEmpty()) {
             return;
         }
 
@@ -93,7 +97,7 @@ public class TokenService {
 
     @JsonAnyGetter
     public String getAuthToken() {
-        if (this.authToken == null || this.authToken.isEmpty()) {
+        if (authTokenIsEmpty()) {
             try {
                 this.login();
             } catch (Exception e) {
@@ -102,7 +106,7 @@ public class TokenService {
             }
         }
 
-        return this.authToken;
+        return authToken;
     }
 
 }
