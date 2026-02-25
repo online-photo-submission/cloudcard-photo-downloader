@@ -56,7 +56,7 @@ class CloudCardClient {
     Photo updateStatus(Photo photo, String status, String message = null) throws Exception {
         String url = "${apiUrl}/photos/${photo.id}"
 
-        if (message && status == 'ON_HOLD') {
+        if (message && status == ON_HOLD) {
             String encoded = URLEncoder.encode(message, StandardCharsets.UTF_8.toString())
             url += "?onHoldReason=${encoded}"
         }
