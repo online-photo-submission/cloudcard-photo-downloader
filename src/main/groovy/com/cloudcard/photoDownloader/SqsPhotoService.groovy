@@ -16,7 +16,6 @@ import software.amazon.awssdk.services.sqs.model.SqsException
 import jakarta.annotation.PostConstruct
 
 import static com.cloudcard.photoDownloader.ApplicationPropertiesValidator.throwIfBlank
-import static com.cloudcard.photoDownloader.ApplicationPropertiesValidator.throwIfTrue
 
 @Service
 @ConditionalOnProperty(value = "downloader.photoService", havingValue = "SqsPhotoService", matchIfMissing = true)
@@ -105,6 +104,15 @@ class SqsPhotoService implements PhotoService {
         if (putStatus) {
             cloudCardClient.updateStatus(photo, putStatus)
         }
+        deleteMessages(sqsClient, queueUrl, messageHistory[photo.id])
+        return photo
+    }
+
+    @Override
+    Photo markAsFailed(Photo photo, String errorMessage) {
+        //TODO how to handle if this step fails?
+        cloudCardClient.updateStatus(photo, CloudCardClient.ON_HOLD, errorMessage)
+
         deleteMessages(sqsClient, queueUrl, messageHistory[photo.id])
         return photo
     }

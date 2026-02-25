@@ -7,6 +7,8 @@ public interface PhotoService {
 
     Photo markAsDownloaded(Photo photo) throws Exception;
 
+    Photo markAsFailed(Photo photo, String errorMessage) throws Exception;
+
     long minDownloaderDelay();
 
     /**
