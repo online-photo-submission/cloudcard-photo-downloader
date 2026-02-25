@@ -1,0 +1,2927 @@
+{
+  "openapi": "3.0.4",
+  "info": {
+    "title": "Identity Service API",
+    "description": "Use this API to manage identities.",
+    "termsOfService": "https://www.genetec.com/legal/cloudtos",
+    "license": {
+      "name": "Source Code License Agreement",
+      "url": "https://www.genetec.com/legal/eula"
+    },
+    "version": "4"
+  },
+  "servers": [
+    {
+      "url": "/identity"
+    }
+  ],
+  "paths": {
+    "/api/v4/accounts/{accountId}/identities": {
+      "post": {
+        "tags": [
+          "Identities"
+        ],
+        "summary": "Create a new identity in an account.",
+        "parameters": [
+          {
+            "name": "accountId",
+            "in": "path",
+            "description": "The account in which the identity belongs in.",
+            "required": true,
+            "schema": {
+              "title": "String",
+              "type": "string"
+            }
+          },
+          {
+            "name": "include",
+            "in": "query",
+            "description": "Possible values: SystemData, PrivateData, CompanyData, UserPermissions.",
+            "schema": {
+              "title": "String[]",
+              "type": "array",
+              "items": {
+                "title": "String",
+                "type": "string"
+              }
+            }
+          }
+        ],
+        "requestBody": {
+          "description": "Information of the identity to create.",
+          "content": {
+            "application/json-patch+json": {
+              "schema": {
+                "$ref": "#/components/schemas/Genetec.SaaS.Iams.IdentityService.Business.Models.Identity.CreateIdentityModel"
+              }
+            },
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/Genetec.SaaS.Iams.IdentityService.Business.Models.Identity.CreateIdentityModel"
+              }
+            },
+            "text/json": {
+              "schema": {
+                "$ref": "#/components/schemas/Genetec.SaaS.Iams.IdentityService.Business.Models.Identity.CreateIdentityModel"
+              }
+            },
+            "application/*+json": {
+              "schema": {
+                "$ref": "#/components/schemas/Genetec.SaaS.Iams.IdentityService.Business.Models.Identity.CreateIdentityModel"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "$ref": "#/components/schemas/Genetec.SaaS.Iams.IdentityService.Business.Models.Identity.IdentityModel"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Genetec.SaaS.Iams.IdentityService.Business.Models.Identity.IdentityModel"
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Genetec.SaaS.Iams.IdentityService.Business.Models.Identity.IdentityModel"
+                }
+              }
+            }
+          }
+        }
+      },
+      "get": {
+        "tags": [
+          "Identities"
+        ],
+        "summary": "List identities",
+        "parameters": [
+          {
+            "name": "accountId",
+            "in": "path",
+            "description": "The account in which the identity belongs in.",
+            "required": true,
+            "schema": {
+              "title": "String",
+              "type": "string"
+            }
+          },
+          {
+            "name": "ExternalId",
+            "in": "query",
+            "schema": {
+              "title": "String",
+              "maxLength": 100,
+              "minLength": 0,
+              "type": "string"
+            }
+          },
+          {
+            "name": "ExternalSyncSourceID",
+            "in": "query",
+            "schema": {
+              "title": "String",
+              "maxLength": 100,
+              "minLength": 0,
+              "type": "string"
+            }
+          },
+          {
+            "name": "IncludeDeleted",
+            "in": "query",
+            "schema": {
+              "title": "Boolean",
+              "type": "boolean",
+              "default": false
+            }
+          },
+          {
+            "name": "Continuation",
+            "in": "query",
+            "schema": {
+              "title": "String",
+              "maxLength": 100,
+              "minLength": 0,
+              "type": "string"
+            }
+          },
+          {
+            "name": "Take",
+            "in": "query",
+            "schema": {
+              "title": "Int32",
+              "maximum": 100,
+              "minimum": 0,
+              "type": "integer",
+              "format": "int32",
+              "default": 100
+            }
+          },
+          {
+            "name": "OnlyScSaas",
+            "in": "query",
+            "schema": {
+              "title": "Boolean",
+              "type": "boolean",
+              "default": false,
+              "deprecated": true
+            }
+          },
+          {
+            "name": "OnlyGenetecOne",
+            "in": "query",
+            "schema": {
+              "title": "Boolean",
+              "type": "boolean",
+              "default": false
+            }
+          },
+          {
+            "name": "ResourceFilterEntityId",
+            "in": "query",
+            "schema": {
+              "title": "String",
+              "maxLength": 100,
+              "minLength": 0,
+              "type": "string"
+            }
+          },
+          {
+            "name": "IdentityIds",
+            "in": "query",
+            "schema": {
+              "title": "String[]",
+              "maxItems": 100,
+              "type": "array",
+              "items": {
+                "title": "String",
+                "type": "string"
+              }
+            }
+          },
+          {
+            "name": "Statuses",
+            "in": "query",
+            "schema": {
+              "title": "String[]",
+              "maxItems": 4,
+              "type": "array",
+              "items": {
+                "title": "String",
+                "type": "string"
+              }
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "$ref": "#/components/schemas/Genetec.SaaS.Iams.IdentityService.Business.Models.Identity.IdentitiesListModel"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Genetec.SaaS.Iams.IdentityService.Business.Models.Identity.IdentitiesListModel"
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Genetec.SaaS.Iams.IdentityService.Business.Models.Identity.IdentitiesListModel"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v4/accounts/{accountId}/identities/{identityId}/picture": {
+      "get": {
+        "tags": [
+          "Picture"
+        ],
+        "summary": "Get an identity picture.",
+        "parameters": [
+          {
+            "name": "accountId",
+            "in": "path",
+            "description": "The account in which the identity belongs in.",
+            "required": true,
+            "schema": {
+              "title": "String",
+              "type": "string"
+            }
+          },
+          {
+            "name": "identityId",
+            "in": "path",
+            "description": "The identity id to find.",
+            "required": true,
+            "schema": {
+              "title": "String",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "404": {
+            "description": "Could not find an identity with the specified id.",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "$ref": "#/components/schemas/Microsoft.AspNetCore.Mvc.ProblemDetails"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Microsoft.AspNetCore.Mvc.ProblemDetails"
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Microsoft.AspNetCore.Mvc.ProblemDetails"
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "Picture"
+        ],
+        "summary": "Upload a picture for an identity.",
+        "description": "headers: {'Content-Type': 'multipart/form-data'}.\nFile maximum size: 5 MB.\nFile name maximum length: 255 char.\nSupported types: png, jpg, gif.",
+        "parameters": [
+          {
+            "name": "accountId",
+            "in": "path",
+            "description": "The account in which the identity belongs in.",
+            "required": true,
+            "schema": {
+              "title": "String",
+              "type": "string"
+            }
+          },
+          {
+            "name": "identityId",
+            "in": "path",
+            "description": "The identity id which refers to the identity to update.",
+            "required": true,
+            "schema": {
+              "title": "String",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "picture": {
+                    "title": "IFormFile",
+                    "type": "string",
+                    "description": "The byte stream array of the picture.",
+                    "format": "binary"
+                  }
+                }
+              },
+              "encoding": {
+                "picture": {
+                  "style": "form"
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "$ref": "#/components/schemas/Genetec.SaaS.Iams.IdentityService.Business.Models.Identity.IdentityModel"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Genetec.SaaS.Iams.IdentityService.Business.Models.Identity.IdentityModel"
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Genetec.SaaS.Iams.IdentityService.Business.Models.Identity.IdentityModel"
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "Picture"
+        ],
+        "summary": "Remove a picture from an Identity.",
+        "description": "The deletion of the picture is permanent and cannot be recovered.",
+        "parameters": [
+          {
+            "name": "accountId",
+            "in": "path",
+            "description": "The account in which the identity belongs in.",
+            "required": true,
+            "schema": {
+              "title": "String",
+              "type": "string"
+            }
+          },
+          {
+            "name": "identityId",
+            "in": "path",
+            "description": "The identity id which refers to the identity to update.",
+            "required": true,
+            "schema": {
+              "title": "String",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "Genetec.SaaS.Iams.IdentityService.Business.Models.Account.AccountConfiguration": {
+        "title": "AccountConfiguration",
+        "type": "object",
+        "properties": {
+          "isSupervisorAllowedToEditDirectReports": {
+            "title": "Boolean",
+            "type": "boolean"
+          },
+          "ordinal": {
+            "title": "Int32",
+            "type": "integer",
+            "format": "int32"
+          }
+        },
+        "additionalProperties": false
+      },
+      "Genetec.SaaS.Iams.IdentityService.Business.Models.Account.AccountConfiguration.CreateOrUpdate": {
+        "title": "CreateOrUpdate",
+        "required": [
+          "isSupervisorAllowedToEditDirectReports"
+        ],
+        "type": "object",
+        "properties": {
+          "isSupervisorAllowedToEditDirectReports": {
+            "title": "Boolean",
+            "type": "boolean"
+          },
+          "ordinal": {
+            "title": "Int32",
+            "type": "integer",
+            "format": "int32"
+          }
+        },
+        "additionalProperties": false
+      },
+      "Genetec.SaaS.Iams.IdentityService.Business.Models.Country.CountriesListModel": {
+        "title": "CountriesListModel",
+        "type": "object",
+        "properties": {
+          "countries": {
+            "title": "IEnumerable`1",
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Genetec.SaaS.Iams.IdentityService.Business.Models.Country.CountryModel"
+            },
+            "description": "The list of countries according to ISO 3166-1 alpha-3",
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "Genetec.SaaS.Iams.IdentityService.Business.Models.Country.CountryModel": {
+        "title": "CountryModel",
+        "type": "object",
+        "properties": {
+          "countryCode": {
+            "title": "String",
+            "type": "string",
+            "description": "The country code defined in ISO 3166-1 alpha-3",
+            "nullable": true
+          },
+          "countryName": {
+            "title": "String",
+            "type": "string",
+            "description": "The country name in english.",
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "Genetec.SaaS.Iams.IdentityService.Business.Models.Identity.AuthorModel": {
+        "title": "AuthorModel",
+        "type": "object",
+        "properties": {
+          "accountId": {
+            "title": "String",
+            "type": "string",
+            "nullable": true
+          },
+          "identityId": {
+            "title": "String",
+            "type": "string",
+            "nullable": true
+          },
+          "principalId": {
+            "title": "String",
+            "type": "string",
+            "nullable": true
+          },
+          "principalType": {
+            "title": "String",
+            "type": "string",
+            "nullable": true
+          },
+          "ipAddress": {
+            "title": "String",
+            "type": "string",
+            "nullable": true
+          },
+          "onBehalfOfId": {
+            "title": "String",
+            "type": "string",
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "Genetec.SaaS.Iams.IdentityService.Business.Models.Identity.BulkIdentityOperationMode": {
+        "title": "BulkIdentityOperationMode",
+        "enum": [
+          "IdentityId",
+          "ExternalId"
+        ],
+        "type": "string"
+      },
+      "Genetec.SaaS.Iams.IdentityService.Business.Models.Identity.CreateIdentityModel": {
+        "title": "CreateIdentityModel",
+        "required": [
+          "identityType",
+          "status"
+        ],
+        "type": "object",
+        "properties": {
+          "privateData": {
+            "$ref": "#/components/schemas/Genetec.SaaS.Iams.IdentityService.Business.Models.Identity.Fields.CreateOrUpdatePrivateDataModel"
+          },
+          "companyData": {
+            "$ref": "#/components/schemas/Genetec.SaaS.Iams.IdentityService.Business.Models.Identity.Fields.CreateOrUpdateCompanyDataModel"
+          },
+          "systemData": {
+            "$ref": "#/components/schemas/Genetec.SaaS.Iams.IdentityService.Business.Models.Identity.Fields.CreateOrUpdateSystemDataModel"
+          },
+          "description": {
+            "title": "String",
+            "maxLength": 300,
+            "minLength": 0,
+            "type": "string",
+            "description": "Description of this identity (cardholder description).",
+            "nullable": true
+          },
+          "status": {
+            "title": "String",
+            "minLength": 1,
+            "type": "string",
+            "description": "The state of the identity.\n<see cref=\"T:Genetec.SaaS.Iams.IdentityService.Business.Constants.IdentityStatus\">Active, Inactive, Deleted</see>"
+          },
+          "firstName": {
+            "title": "String",
+            "maxLength": 100,
+            "minLength": 0,
+            "type": "string",
+            "description": "First name of the identity",
+            "nullable": true
+          },
+          "lastName": {
+            "title": "String",
+            "maxLength": 100,
+            "minLength": 0,
+            "type": "string",
+            "description": "Last name of the identity",
+            "nullable": true
+          },
+          "middleName": {
+            "title": "String",
+            "maxLength": 100,
+            "minLength": 0,
+            "type": "string",
+            "description": "Middle name of the identity",
+            "nullable": true
+          },
+          "displayName": {
+            "title": "String",
+            "maxLength": 300,
+            "minLength": 0,
+            "type": "string",
+            "description": "Display name of the identity",
+            "nullable": true
+          },
+          "countryCode": {
+            "title": "String",
+            "type": "string",
+            "description": "Country code ISO 3 letters",
+            "nullable": true
+          },
+          "culture": {
+            "title": "String",
+            "type": "string",
+            "description": "Culture of the identity",
+            "nullable": true
+          },
+          "email": {
+            "title": "String",
+            "type": "string",
+            "description": "Primary email of the identity",
+            "nullable": true
+          },
+          "identityType": {
+            "title": "String",
+            "minLength": 1,
+            "type": "string",
+            "default": "Employee"
+          },
+          "creationOnBehalf": {
+            "title": "String",
+            "type": "string",
+            "description": "Identifier of the requester of the creation",
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "Genetec.SaaS.Iams.IdentityService.Business.Models.Identity.Fields.ApproverModel": {
+        "title": "ApproverModel",
+        "required": [
+          "approverId"
+        ],
+        "type": "object",
+        "properties": {
+          "approverId": {
+            "title": "String",
+            "minLength": 1,
+            "type": "string",
+            "description": "The id of the approver."
+          }
+        },
+        "additionalProperties": false
+      },
+      "Genetec.SaaS.Iams.IdentityService.Business.Models.Identity.Fields.CreateOrUpdateCompanyDataModel": {
+        "title": "CreateOrUpdateCompanyDataModel",
+        "type": "object",
+        "properties": {
+          "approvers": {
+            "title": "List`1",
+            "maxItems": 20,
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Genetec.SaaS.Iams.IdentityService.Business.Models.Identity.Fields.ApproverModel"
+            },
+            "description": "Supervisor model",
+            "nullable": true
+          },
+          "supervisorName": {
+            "title": "String",
+            "maxLength": 300,
+            "minLength": 0,
+            "type": "string",
+            "description": "Display name of the supervisor.",
+            "nullable": true
+          },
+          "departmentName": {
+            "title": "String",
+            "maxLength": 100,
+            "minLength": 0,
+            "type": "string",
+            "description": "Department name.",
+            "nullable": true
+          },
+          "jobTitle": {
+            "title": "String",
+            "maxLength": 100,
+            "minLength": 0,
+            "type": "string",
+            "description": "Job title.",
+            "nullable": true
+          },
+          "siteId": {
+            "title": "String",
+            "type": "string",
+            "description": "ClearID Site ID of where this identity is located.",
+            "nullable": true
+          },
+          "companyName": {
+            "title": "String",
+            "maxLength": 100,
+            "minLength": 0,
+            "type": "string",
+            "description": "Company name.",
+            "nullable": true
+          },
+          "workerTypeDescription": {
+            "title": "String",
+            "maxLength": 300,
+            "minLength": 0,
+            "type": "string",
+            "description": "Worker type description.",
+            "nullable": true
+          },
+          "workerTypeCode": {
+            "title": "String",
+            "maxLength": 100,
+            "minLength": 0,
+            "type": "string",
+            "description": "Worker type code.",
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "Genetec.SaaS.Iams.IdentityService.Business.Models.Identity.Fields.CreateOrUpdatePrivateDataModel": {
+        "title": "CreateOrUpdatePrivateDataModel",
+        "type": "object",
+        "properties": {
+          "birthday": {
+            "title": "Nullable`1",
+            "type": "string",
+            "description": "Birthday date.",
+            "format": "date-time",
+            "nullable": true
+          },
+          "employeeNumber": {
+            "title": "String",
+            "maxLength": 100,
+            "minLength": 0,
+            "type": "string",
+            "description": "Employee number.",
+            "nullable": true
+          },
+          "secondaryEmail": {
+            "title": "String",
+            "type": "string",
+            "description": "Secondary email address.",
+            "nullable": true
+          },
+          "cityOfResidence": {
+            "title": "String",
+            "maxLength": 100,
+            "minLength": 0,
+            "type": "string",
+            "description": "City of residence.",
+            "nullable": true
+          },
+          "stateOfResidence": {
+            "title": "String",
+            "maxLength": 100,
+            "minLength": 0,
+            "type": "string",
+            "description": "State of residence.",
+            "nullable": true
+          },
+          "zipCode": {
+            "title": "String",
+            "maxLength": 50,
+            "minLength": 0,
+            "type": "string",
+            "description": "Zip code.",
+            "nullable": true
+          },
+          "phoneNumberPrimary": {
+            "title": "String",
+            "maxLength": 50,
+            "minLength": 0,
+            "type": "string",
+            "description": "Primary phone number.",
+            "nullable": true
+          },
+          "phoneNumberSecondary": {
+            "title": "String",
+            "maxLength": 50,
+            "minLength": 0,
+            "type": "string",
+            "description": "Secondary phone number.",
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "Genetec.SaaS.Iams.IdentityService.Business.Models.Identity.Fields.CreateOrUpdateSystemDataModel": {
+        "title": "CreateOrUpdateSystemDataModel",
+        "type": "object",
+        "properties": {
+          "hasExtendedTime": {
+            "title": "Nullable`1",
+            "type": "boolean",
+            "description": "AC Disability for granting Extended Time",
+            "nullable": true
+          },
+          "activationDateUtc": {
+            "title": "Nullable`1",
+            "type": "string",
+            "description": "Activation Date in UTC.",
+            "format": "date-time",
+            "nullable": true
+          },
+          "expirationDateUtc": {
+            "title": "Nullable`1",
+            "type": "string",
+            "description": "Expiration Date in UTC",
+            "format": "date-time",
+            "nullable": true
+          },
+          "externalId": {
+            "title": "String",
+            "maxLength": 50,
+            "minLength": 0,
+            "type": "string",
+            "description": "External ID",
+            "nullable": true
+          },
+          "externalSyncSourceId": {
+            "title": "String",
+            "maxLength": 50,
+            "minLength": 0,
+            "type": "string",
+            "description": "The ID of the Synchronization source of the identity.",
+            "nullable": true
+          },
+          "externalSyncTimeUtc": {
+            "title": "Nullable`1",
+            "type": "string",
+            "description": "External Sync Time in UTC",
+            "format": "date-time",
+            "nullable": true
+          },
+          "provisioningAttributes": {
+            "title": "List`1",
+            "maxItems": 20,
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Genetec.SaaS.Iams.IdentityService.Business.Models.Identity.Fields.ProvisioningAttributeModel"
+            },
+            "description": "Provisioning Attributes",
+            "nullable": true
+          },
+          "customFields": {
+            "title": "List`1",
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Genetec.SaaS.Iams.IdentityService.Business.Models.Identity.Fields.CustomFieldModel"
+            },
+            "description": "Custom Fields",
+            "nullable": true
+          },
+          "resourceFilters": {
+            "title": "List`1",
+            "maxItems": 1000,
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Genetec.SaaS.Iams.IdentityService.Business.Models.Identity.Fields.ResourceFilterModel"
+            },
+            "description": "The resource filters applied the identity",
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "Genetec.SaaS.Iams.IdentityService.Business.Models.Identity.Fields.CustomFieldModel": {
+        "title": "CustomFieldModel",
+        "required": [
+          "customFieldName"
+        ],
+        "type": "object",
+        "properties": {
+          "customFieldType": {
+            "title": "String",
+            "type": "string",
+            "description": "Type of the custom field. Possible values: Text, Numeric, Boolean, DateTime, Decimal, Date.",
+            "nullable": true
+          },
+          "customFieldName": {
+            "title": "String",
+            "maxLength": 50,
+            "minLength": 1,
+            "type": "string",
+            "description": "Name of the custom field."
+          },
+          "customFieldValue": {
+            "title": "String",
+            "type": "string",
+            "description": "Value of the custom field.",
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "Genetec.SaaS.Iams.IdentityService.Business.Models.Identity.Fields.GetCompanyDataModel": {
+        "title": "GetCompanyDataModel",
+        "type": "object",
+        "properties": {
+          "approvers": {
+            "title": "List`1",
+            "maxItems": 20,
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Genetec.SaaS.Iams.IdentityService.Business.Models.Identity.Fields.ApproverModel"
+            },
+            "description": "Supervisor model",
+            "nullable": true
+          },
+          "supervisorName": {
+            "title": "String",
+            "maxLength": 300,
+            "minLength": 0,
+            "type": "string",
+            "description": "Display name of the supervisor.",
+            "nullable": true
+          },
+          "departmentName": {
+            "title": "String",
+            "maxLength": 100,
+            "minLength": 0,
+            "type": "string",
+            "description": "Department name.",
+            "nullable": true
+          },
+          "jobTitle": {
+            "title": "String",
+            "maxLength": 100,
+            "minLength": 0,
+            "type": "string",
+            "description": "Job title.",
+            "nullable": true
+          },
+          "siteId": {
+            "title": "String",
+            "type": "string",
+            "description": "ClearID Site ID of where this identity is located.",
+            "nullable": true
+          },
+          "companyName": {
+            "title": "String",
+            "maxLength": 100,
+            "minLength": 0,
+            "type": "string",
+            "description": "Company name.",
+            "nullable": true
+          },
+          "workerTypeDescription": {
+            "title": "String",
+            "maxLength": 300,
+            "minLength": 0,
+            "type": "string",
+            "description": "Worker type description.",
+            "nullable": true
+          },
+          "workerTypeCode": {
+            "title": "String",
+            "maxLength": 100,
+            "minLength": 0,
+            "type": "string",
+            "description": "Worker type code.",
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "Genetec.SaaS.Iams.IdentityService.Business.Models.Identity.Fields.GetPrivateDataModel": {
+        "title": "GetPrivateDataModel",
+        "type": "object",
+        "properties": {
+          "pictureBlobName": {
+            "title": "String",
+            "type": "string",
+            "description": "Blob name of the picture.",
+            "nullable": true
+          },
+          "birthday": {
+            "title": "Nullable`1",
+            "type": "string",
+            "description": "Birthday date.",
+            "format": "date-time",
+            "nullable": true
+          },
+          "employeeNumber": {
+            "title": "String",
+            "maxLength": 100,
+            "minLength": 0,
+            "type": "string",
+            "description": "Employee number.",
+            "nullable": true
+          },
+          "secondaryEmail": {
+            "title": "String",
+            "type": "string",
+            "description": "Secondary email address.",
+            "nullable": true
+          },
+          "cityOfResidence": {
+            "title": "String",
+            "maxLength": 100,
+            "minLength": 0,
+            "type": "string",
+            "description": "City of residence.",
+            "nullable": true
+          },
+          "stateOfResidence": {
+            "title": "String",
+            "maxLength": 100,
+            "minLength": 0,
+            "type": "string",
+            "description": "State of residence.",
+            "nullable": true
+          },
+          "zipCode": {
+            "title": "String",
+            "maxLength": 50,
+            "minLength": 0,
+            "type": "string",
+            "description": "Zip code.",
+            "nullable": true
+          },
+          "phoneNumberPrimary": {
+            "title": "String",
+            "maxLength": 50,
+            "minLength": 0,
+            "type": "string",
+            "description": "Primary phone number.",
+            "nullable": true
+          },
+          "phoneNumberSecondary": {
+            "title": "String",
+            "maxLength": 50,
+            "minLength": 0,
+            "type": "string",
+            "description": "Secondary phone number.",
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "Genetec.SaaS.Iams.IdentityService.Business.Models.Identity.Fields.GetSystemDataModel": {
+        "title": "GetSystemDataModel",
+        "type": "object",
+        "properties": {
+          "horizonId": {
+            "title": "String",
+            "maxLength": 50,
+            "minLength": 0,
+            "type": "string",
+            "description": "GenetecOne user profile ID. Null if the identity is not synchronized from a GenetecOne user.",
+            "nullable": true
+          },
+          "hasExtendedTime": {
+            "title": "Nullable`1",
+            "type": "boolean",
+            "description": "AC Disability for granting Extended Time",
+            "nullable": true
+          },
+          "activationDateUtc": {
+            "title": "Nullable`1",
+            "type": "string",
+            "description": "Activation Date in UTC.",
+            "format": "date-time",
+            "nullable": true
+          },
+          "expirationDateUtc": {
+            "title": "Nullable`1",
+            "type": "string",
+            "description": "Expiration Date in UTC",
+            "format": "date-time",
+            "nullable": true
+          },
+          "externalId": {
+            "title": "String",
+            "maxLength": 50,
+            "minLength": 0,
+            "type": "string",
+            "description": "External ID",
+            "nullable": true
+          },
+          "externalSyncSourceId": {
+            "title": "String",
+            "maxLength": 50,
+            "minLength": 0,
+            "type": "string",
+            "description": "The ID of the Synchronization source of the identity.",
+            "nullable": true
+          },
+          "externalSyncTimeUtc": {
+            "title": "Nullable`1",
+            "type": "string",
+            "description": "External Sync Time in UTC",
+            "format": "date-time",
+            "nullable": true
+          },
+          "provisioningAttributes": {
+            "title": "List`1",
+            "maxItems": 20,
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Genetec.SaaS.Iams.IdentityService.Business.Models.Identity.Fields.ProvisioningAttributeModel"
+            },
+            "description": "Provisioning Attributes",
+            "nullable": true
+          },
+          "customFields": {
+            "title": "List`1",
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Genetec.SaaS.Iams.IdentityService.Business.Models.Identity.Fields.CustomFieldModel"
+            },
+            "description": "Custom Fields",
+            "nullable": true
+          },
+          "resourceFilters": {
+            "title": "List`1",
+            "maxItems": 1000,
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Genetec.SaaS.Iams.IdentityService.Business.Models.Identity.Fields.ResourceFilterModel"
+            },
+            "description": "The resource filters applied the identity",
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "Genetec.SaaS.Iams.IdentityService.Business.Models.Identity.Fields.ProvisioningAttributeModel": {
+        "title": "ProvisioningAttributeModel",
+        "required": [
+          "name"
+        ],
+        "type": "object",
+        "properties": {
+          "name": {
+            "title": "String",
+            "maxLength": 150,
+            "minLength": 0,
+            "type": "string",
+            "description": "Name of the provisioning attribute."
+          },
+          "externalSyncSourceId": {
+            "title": "String",
+            "maxLength": 50,
+            "minLength": 0,
+            "type": "string",
+            "description": "The id of the external synchronization configuration. Optional.",
+            "nullable": true
+          }
+        },
+        "additionalProperties": false,
+        "description": "Model representing a provisioning attribute."
+      },
+      "Genetec.SaaS.Iams.IdentityService.Business.Models.Identity.Fields.ResourceFilterModel": {
+        "title": "ResourceFilterModel",
+        "required": [
+          "entityId",
+          "entityType",
+          "sourceId"
+        ],
+        "type": "object",
+        "properties": {
+          "entityId": {
+            "title": "String",
+            "minLength": 1,
+            "type": "string"
+          },
+          "entityType": {
+            "title": "String",
+            "minLength": 1,
+            "type": "string"
+          },
+          "sourceId": {
+            "title": "String",
+            "minLength": 1,
+            "type": "string"
+          },
+          "uniqueKey": {
+            "title": "String",
+            "type": "string",
+            "nullable": true,
+            "readOnly": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "Genetec.SaaS.Iams.IdentityService.Business.Models.Identity.HistoryEntriesModel": {
+        "title": "HistoryEntriesModel",
+        "required": [
+          "entries"
+        ],
+        "type": "object",
+        "properties": {
+          "entries": {
+            "title": "IEnumerable`1",
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Genetec.SaaS.Iams.IdentityService.Business.Models.Identity.HistoryEntryModel"
+            },
+            "nullable": true
+          },
+          "continuation": {
+            "title": "String",
+            "type": "string",
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "Genetec.SaaS.Iams.IdentityService.Business.Models.Identity.HistoryEntryDetailModel": {
+        "title": "HistoryEntryDetailModel",
+        "type": "object",
+        "properties": {
+          "propertyName": {
+            "title": "String",
+            "type": "string",
+            "nullable": true
+          },
+          "type": {
+            "title": "String",
+            "type": "string",
+            "nullable": true
+          },
+          "attributes": {
+            "title": "IDictionary`2",
+            "type": "object",
+            "additionalProperties": {
+              "title": "Object",
+              "nullable": true
+            },
+            "nullable": true
+          },
+          "oldValue": {
+            "title": "Object",
+            "nullable": true
+          },
+          "newValue": {
+            "title": "Object",
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "Genetec.SaaS.Iams.IdentityService.Business.Models.Identity.HistoryEntryModel": {
+        "title": "HistoryEntryModel",
+        "type": "object",
+        "properties": {
+          "whenUtc": {
+            "title": "DateTime",
+            "type": "string",
+            "format": "date-time"
+          },
+          "author": {
+            "$ref": "#/components/schemas/Genetec.SaaS.Iams.IdentityService.Business.Models.Identity.AuthorModel"
+          },
+          "action": {
+            "title": "String",
+            "type": "string",
+            "nullable": true
+          },
+          "reason": {
+            "title": "String",
+            "type": "string",
+            "nullable": true
+          },
+          "details": {
+            "title": "HistoryEntryDetailModel[]",
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Genetec.SaaS.Iams.IdentityService.Business.Models.Identity.HistoryEntryDetailModel"
+            },
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "Genetec.SaaS.Iams.IdentityService.Business.Models.Identity.IdentitiesListModel": {
+        "title": "IdentitiesListModel",
+        "type": "object",
+        "properties": {
+          "identities": {
+            "title": "IEnumerable`1",
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Genetec.SaaS.Iams.IdentityService.Business.Models.Identity.IdentityModel"
+            },
+            "description": "The list of identities which matched the filters.",
+            "nullable": true
+          },
+          "totalItems": {
+            "title": "Int64",
+            "type": "integer",
+            "format": "int64"
+          },
+          "continuation": {
+            "title": "String",
+            "type": "string",
+            "description": "The url to use to get the next page of identities.",
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "Genetec.SaaS.Iams.IdentityService.Business.Models.Identity.IdentityModel": {
+        "title": "IdentityModel",
+        "type": "object",
+        "properties": {
+          "accountId": {
+            "title": "String",
+            "type": "string",
+            "nullable": true
+          },
+          "identityId": {
+            "title": "String",
+            "type": "string",
+            "description": "A unique id to identify the identity.",
+            "nullable": true
+          },
+          "eTag": {
+            "title": "String",
+            "type": "string",
+            "description": "The hash version of the identity.\nMust be specified to update an identity.",
+            "nullable": true
+          },
+          "description": {
+            "title": "String",
+            "type": "string",
+            "description": "Description of this identity (cardholder description).",
+            "nullable": true
+          },
+          "status": {
+            "title": "String",
+            "type": "string",
+            "description": "The state of the identity.\nPossible values: <see cref=\"T:Genetec.SaaS.Iams.IdentityService.Business.Constants.IdentityStatus\">Active, Inactive, Deleted</see>.",
+            "nullable": true
+          },
+          "firstName": {
+            "title": "String",
+            "type": "string",
+            "description": "First name of the identity",
+            "nullable": true
+          },
+          "lastName": {
+            "title": "String",
+            "type": "string",
+            "description": "Last name of the identity",
+            "nullable": true
+          },
+          "middleName": {
+            "title": "String",
+            "type": "string",
+            "description": "Middle name",
+            "nullable": true
+          },
+          "displayName": {
+            "title": "String",
+            "type": "string",
+            "description": "Display name of the identity",
+            "nullable": true
+          },
+          "countryCode": {
+            "title": "String",
+            "type": "string",
+            "description": "Country code ISO 3 letters",
+            "nullable": true
+          },
+          "culture": {
+            "title": "String",
+            "type": "string",
+            "description": "Culture of the identity",
+            "nullable": true
+          },
+          "email": {
+            "title": "String",
+            "type": "string",
+            "description": "Primary email of the identity",
+            "nullable": true
+          },
+          "identityType": {
+            "title": "String",
+            "type": "string",
+            "nullable": true
+          },
+          "privateData": {
+            "$ref": "#/components/schemas/Genetec.SaaS.Iams.IdentityService.Business.Models.Identity.Fields.GetPrivateDataModel"
+          },
+          "companyData": {
+            "$ref": "#/components/schemas/Genetec.SaaS.Iams.IdentityService.Business.Models.Identity.Fields.GetCompanyDataModel"
+          },
+          "systemData": {
+            "$ref": "#/components/schemas/Genetec.SaaS.Iams.IdentityService.Business.Models.Identity.Fields.GetSystemDataModel"
+          },
+          "createdBy": {
+            "title": "String",
+            "type": "string",
+            "description": "Created by name.",
+            "nullable": true
+          },
+          "creationDateUtc": {
+            "title": "DateTime",
+            "type": "string",
+            "description": "Creation date in UTC",
+            "format": "date-time"
+          },
+          "creationOnBehalf": {
+            "title": "String",
+            "type": "string",
+            "description": "Creation on behalf identifier",
+            "nullable": true
+          },
+          "isSCSaaS": {
+            "title": "Nullable`1",
+            "type": "boolean",
+            "description": "Is associated and synchronized from a Genetec One user.",
+            "nullable": true,
+            "deprecated": true
+          },
+          "lastModifiedBy": {
+            "title": "String",
+            "type": "string",
+            "description": "Last modified by email.",
+            "nullable": true
+          },
+          "lastModifiedByIdentityId": {
+            "title": "String",
+            "type": "string",
+            "description": "IdentityId of the user who last modified this identity.",
+            "nullable": true
+          },
+          "lastModifiedByPrincipalType": {
+            "title": "String",
+            "type": "string",
+            "description": "Last modified by principal type.",
+            "nullable": true
+          },
+          "lastModificationDateUtc": {
+            "title": "DateTime",
+            "type": "string",
+            "description": "Last modification date in UTC.",
+            "format": "date-time"
+          },
+          "userPermissions": {
+            "$ref": "#/components/schemas/Genetec.SaaS.Iams.IdentityService.Business.Models.Permissions.IUserPermissions"
+          },
+          "ordinal": {
+            "title": "Nullable`1",
+            "type": "integer",
+            "description": "Commit ordinal in the storage.",
+            "format": "int64",
+            "nullable": true
+          },
+          "isDeleted": {
+            "title": "Boolean",
+            "type": "boolean",
+            "description": "If true, the identity was deleted and cannot be modified"
+          }
+        },
+        "additionalProperties": false
+      },
+      "Genetec.SaaS.Iams.IdentityService.Business.Models.Identity.UpdateIdentitySupervisorsModel": {
+        "title": "UpdateIdentitySupervisorsModel",
+        "required": [
+          "newSupervisors",
+          "reason"
+        ],
+        "type": "object",
+        "properties": {
+          "newSupervisors": {
+            "title": "String[]",
+            "maxItems": 20,
+            "minItems": 1,
+            "type": "array",
+            "items": {
+              "title": "String",
+              "type": "string"
+            }
+          },
+          "reason": {
+            "title": "String",
+            "maxLength": 300,
+            "minLength": 1,
+            "type": "string"
+          }
+        },
+        "additionalProperties": false
+      },
+      "Genetec.SaaS.Iams.IdentityService.Business.Models.Identity.V2.UpdateIdentityModel": {
+        "title": "UpdateIdentityModel",
+        "required": [
+          "displayName",
+          "eTag",
+          "status"
+        ],
+        "type": "object",
+        "properties": {
+          "privateData": {
+            "$ref": "#/components/schemas/Genetec.SaaS.Iams.IdentityService.Business.Models.Identity.Fields.CreateOrUpdatePrivateDataModel"
+          },
+          "companyData": {
+            "$ref": "#/components/schemas/Genetec.SaaS.Iams.IdentityService.Business.Models.Identity.Fields.CreateOrUpdateCompanyDataModel"
+          },
+          "systemData": {
+            "$ref": "#/components/schemas/Genetec.SaaS.Iams.IdentityService.Business.Models.Identity.Fields.CreateOrUpdateSystemDataModel"
+          },
+          "description": {
+            "title": "String",
+            "maxLength": 300,
+            "minLength": 0,
+            "type": "string",
+            "description": "Description of this identity (cardholder description).",
+            "nullable": true
+          },
+          "status": {
+            "title": "String",
+            "minLength": 1,
+            "type": "string",
+            "description": "The state of the identity.\n<see cref=\"T:Genetec.SaaS.Iams.IdentityService.Business.Constants.IdentityStatus\">Active, Inactive, Deleted</see>"
+          },
+          "firstName": {
+            "title": "String",
+            "maxLength": 100,
+            "minLength": 0,
+            "type": "string",
+            "description": "First name of the identity",
+            "nullable": true
+          },
+          "lastName": {
+            "title": "String",
+            "maxLength": 100,
+            "minLength": 0,
+            "type": "string",
+            "description": "Last name of the identity",
+            "nullable": true
+          },
+          "middleName": {
+            "title": "String",
+            "maxLength": 100,
+            "minLength": 0,
+            "type": "string",
+            "description": "Middle name",
+            "nullable": true
+          },
+          "displayName": {
+            "title": "String",
+            "maxLength": 300,
+            "minLength": 0,
+            "type": "string",
+            "description": "Display name of the identity"
+          },
+          "countryCode": {
+            "title": "String",
+            "type": "string",
+            "description": "Country code ISO 3 letters",
+            "nullable": true
+          },
+          "culture": {
+            "title": "String",
+            "type": "string",
+            "description": "Culture of the account",
+            "nullable": true
+          },
+          "email": {
+            "title": "String",
+            "type": "string",
+            "description": "Primary email of the identity",
+            "nullable": true
+          },
+          "eTag": {
+            "title": "String",
+            "minLength": 1,
+            "type": "string",
+            "description": "The hash version of the identity.\nMust be specified to update an identity."
+          },
+          "identityType": {
+            "title": "String",
+            "type": "string",
+            "description": "The type of the identity.\nGenetec.SaaS.Iams.IdentityService.ReadOnly.Constants.IdentityTypes",
+            "default": "Employee",
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "Genetec.SaaS.Iams.IdentityService.Business.Models.IdentityCustomFields.CreateIdentityCustomFieldModel": {
+        "title": "CreateIdentityCustomFieldModel",
+        "required": [
+          "customFieldName",
+          "customFieldType",
+          "displayName",
+          "isReadOnly"
+        ],
+        "type": "object",
+        "properties": {
+          "customFieldName": {
+            "title": "String",
+            "maxLength": 50,
+            "minLength": 1,
+            "type": "string",
+            "description": "Unique field name for synchronization with Security Center."
+          },
+          "displayName": {
+            "title": "String",
+            "maxLength": 100,
+            "minLength": 1,
+            "type": "string",
+            "description": "Text to display in the UI for this field."
+          },
+          "customFieldType": {
+            "title": "String",
+            "minLength": 1,
+            "type": "string",
+            "description": "Type of the identity custom field. Possible values: Text, Numeric, Boolean, DateTime, Decimal, Date."
+          },
+          "isReadOnly": {
+            "title": "Nullable`1",
+            "type": "boolean",
+            "description": "Flag that indicates if the field is read-only through the UI (even for admins)."
+          },
+          "synchronizationEnabled": {
+            "title": "Boolean",
+            "type": "boolean",
+            "description": "Toggle whether the custom field's value is synchronized to Security Center."
+          }
+        },
+        "additionalProperties": false
+      },
+      "Genetec.SaaS.Iams.IdentityService.Business.Models.IdentityCustomFields.IdentityCustomFieldModel": {
+        "title": "IdentityCustomFieldModel",
+        "type": "object",
+        "properties": {
+          "customFieldName": {
+            "title": "String",
+            "type": "string",
+            "description": "Unique field name for synchronization with Security Center.",
+            "nullable": true
+          },
+          "displayName": {
+            "title": "String",
+            "type": "string",
+            "description": "Text to display in the UI for this field.",
+            "nullable": true
+          },
+          "customFieldType": {
+            "title": "String",
+            "type": "string",
+            "description": "Type of the identity custom field. Possible values: Text, Numeric, Boolean, DateTime, Decimal, Date.",
+            "nullable": true
+          },
+          "isReadOnly": {
+            "title": "Boolean",
+            "type": "boolean",
+            "description": "Flag that indicates if the field is read-only through the UI (even for admins)."
+          },
+          "createdBy": {
+            "title": "String",
+            "type": "string",
+            "description": "Created by name.",
+            "nullable": true
+          },
+          "creationDateUtc": {
+            "title": "Nullable`1",
+            "type": "string",
+            "description": "Creation date in UTC",
+            "format": "date-time",
+            "nullable": true
+          },
+          "lastModifiedBy": {
+            "title": "String",
+            "type": "string",
+            "description": "Last modified by name.",
+            "nullable": true
+          },
+          "lastModificationDateUtc": {
+            "title": "Nullable`1",
+            "type": "string",
+            "description": "Last modification date in UTC.",
+            "format": "date-time",
+            "nullable": true
+          },
+          "eTag": {
+            "title": "String",
+            "type": "string",
+            "description": "The hash version of the identity custom field.\nMust be specified to update an identity custom field.",
+            "nullable": true
+          },
+          "synchronizationEnabled": {
+            "title": "Boolean",
+            "type": "boolean",
+            "description": "Toggle whether the custom field's value is synchronized to Security Center."
+          },
+          "isDeleting": {
+            "title": "Boolean",
+            "type": "boolean"
+          },
+          "isDeleted": {
+            "title": "Boolean",
+            "type": "boolean",
+            "description": "Flag to indicate custom field is deleted."
+          }
+        },
+        "additionalProperties": false
+      },
+      "Genetec.SaaS.Iams.IdentityService.Business.Models.IdentityCustomFields.PatchIdentityCustomFieldModel": {
+        "title": "PatchIdentityCustomFieldModel",
+        "required": [
+          "eTag"
+        ],
+        "type": "object",
+        "properties": {
+          "displayName": {
+            "title": "String",
+            "maxLength": 100,
+            "minLength": 0,
+            "type": "string",
+            "description": "Text to display in the UI for this field.",
+            "nullable": true
+          },
+          "isReadOnly": {
+            "title": "Nullable`1",
+            "type": "boolean",
+            "description": "Flag that indicates if the field is read-only through the UI (even for admins).",
+            "nullable": true
+          },
+          "eTag": {
+            "title": "String",
+            "minLength": 1,
+            "type": "string",
+            "description": "The hash version of the identity custom field.\nMust be specified to update an identity custom field."
+          },
+          "synchronizationEnabled": {
+            "title": "Nullable`1",
+            "type": "boolean",
+            "description": "Toggle whether the custom field's value is synchronized to Security Center.",
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "Genetec.SaaS.Iams.IdentityService.Business.Models.IdentityCustomFields.UpdateIdentityCustomFieldModel": {
+        "title": "UpdateIdentityCustomFieldModel",
+        "required": [
+          "displayName",
+          "eTag",
+          "isReadOnly"
+        ],
+        "type": "object",
+        "properties": {
+          "displayName": {
+            "title": "String",
+            "maxLength": 100,
+            "minLength": 1,
+            "type": "string",
+            "description": "Text to display in the UI for this field."
+          },
+          "isReadOnly": {
+            "title": "Nullable`1",
+            "type": "boolean",
+            "description": "Flag that indicates if the field is read-only through the UI (even for admins)."
+          },
+          "eTag": {
+            "title": "String",
+            "minLength": 1,
+            "type": "string",
+            "description": "The hash version of the identity custom field.\nMust be specified to update an identity custom field."
+          },
+          "synchronizationEnabled": {
+            "title": "Boolean",
+            "type": "boolean",
+            "description": "Toggle whether the custom field's value is synchronized to Security Center."
+          }
+        },
+        "additionalProperties": false
+      },
+      "Genetec.SaaS.Iams.IdentityService.Business.Models.IdentityCustomFieldsSections.CreateIdentityCustomFieldsSectionModel": {
+        "title": "CreateIdentityCustomFieldsSectionModel",
+        "required": [
+          "displayName",
+          "identityCustomFieldsSectionName"
+        ],
+        "type": "object",
+        "properties": {
+          "identityCustomFieldsSectionName": {
+            "title": "String",
+            "maxLength": 30,
+            "minLength": 1,
+            "type": "string",
+            "description": "Unique section name."
+          },
+          "displayName": {
+            "title": "String",
+            "maxLength": 100,
+            "minLength": 1,
+            "type": "string",
+            "description": "Text to display in the UI for this section's header."
+          },
+          "index": {
+            "title": "Nullable`1",
+            "type": "integer",
+            "description": "Sequence order to display this section.",
+            "format": "int32",
+            "nullable": true
+          },
+          "identityCustomFields": {
+            "title": "IndexedNameModel[]",
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Genetec.SaaS.Iams.IdentityService.Business.Models.IdentityCustomFieldsSections.IndexedNameModel"
+            },
+            "description": "Identity custom fields and order in which they are displayed in the section.",
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "Genetec.SaaS.Iams.IdentityService.Business.Models.IdentityCustomFieldsSections.IdentityCustomFieldsSectionModel": {
+        "title": "IdentityCustomFieldsSectionModel",
+        "type": "object",
+        "properties": {
+          "identityCustomFieldsSectionName": {
+            "title": "String",
+            "type": "string",
+            "description": "Unique section name.",
+            "nullable": true
+          },
+          "displayName": {
+            "title": "String",
+            "type": "string",
+            "description": "Text to display in the UI for this section's header.",
+            "nullable": true
+          },
+          "index": {
+            "title": "Int32",
+            "type": "integer",
+            "description": "Sequence order to display this section.",
+            "format": "int32"
+          },
+          "identityCustomFields": {
+            "title": "IndexedNameModel[]",
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Genetec.SaaS.Iams.IdentityService.Business.Models.IdentityCustomFieldsSections.IndexedNameModel"
+            },
+            "description": "Identity custom fields and order in which they are displayed in the section.",
+            "nullable": true
+          },
+          "identityCustomFieldsWithDefinitions": {
+            "title": "IndexedIdentityCustomFieldModel[]",
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Genetec.SaaS.Iams.IdentityService.Business.Models.IdentityCustomFieldsSections.IndexedIdentityCustomFieldModel"
+            },
+            "description": "Identity custom fields definitions and order in which they are displayed in the section.",
+            "nullable": true
+          },
+          "createdBy": {
+            "title": "String",
+            "type": "string",
+            "description": "Created by name.",
+            "nullable": true
+          },
+          "creationDateUtc": {
+            "title": "Nullable`1",
+            "type": "string",
+            "description": "Creation date in UTC",
+            "format": "date-time",
+            "nullable": true
+          },
+          "lastModifiedBy": {
+            "title": "String",
+            "type": "string",
+            "description": "Last modified by name.",
+            "nullable": true
+          },
+          "lastModificationDateUtc": {
+            "title": "Nullable`1",
+            "type": "string",
+            "description": "Last modification date in UTC.",
+            "format": "date-time",
+            "nullable": true
+          },
+          "eTag": {
+            "title": "String",
+            "type": "string",
+            "description": "The hash version of the identity custom fields section.\nMust be specified to update an identity custom fields section.",
+            "nullable": true
+          },
+          "isDeleted": {
+            "title": "Boolean",
+            "type": "boolean",
+            "description": "Indicates if the section is deleted."
+          }
+        },
+        "additionalProperties": false
+      },
+      "Genetec.SaaS.Iams.IdentityService.Business.Models.IdentityCustomFieldsSections.IndexedIdentityCustomFieldModel": {
+        "title": "IndexedIdentityCustomFieldModel",
+        "type": "object",
+        "properties": {
+          "identityCustomFieldModel": {
+            "$ref": "#/components/schemas/Genetec.SaaS.Iams.IdentityService.Business.Models.IdentityCustomFields.IdentityCustomFieldModel"
+          },
+          "index": {
+            "title": "Int32",
+            "type": "integer",
+            "description": "Index (control ordering) of the field in the section",
+            "format": "int32"
+          }
+        },
+        "additionalProperties": false
+      },
+      "Genetec.SaaS.Iams.IdentityService.Business.Models.IdentityCustomFieldsSections.IndexedNameModel": {
+        "title": "IndexedNameModel",
+        "type": "object",
+        "properties": {
+          "name": {
+            "title": "String",
+            "type": "string",
+            "description": "Identity custom field name",
+            "nullable": true
+          },
+          "index": {
+            "title": "Int32",
+            "type": "integer",
+            "description": "Index (control ordering) of the field in the section",
+            "format": "int32"
+          }
+        },
+        "additionalProperties": false
+      },
+      "Genetec.SaaS.Iams.IdentityService.Business.Models.IdentityCustomFieldsSections.PatchIdentityCustomFieldsSectionModel": {
+        "title": "PatchIdentityCustomFieldsSectionModel",
+        "required": [
+          "eTag"
+        ],
+        "type": "object",
+        "properties": {
+          "displayName": {
+            "title": "String",
+            "maxLength": 100,
+            "minLength": 0,
+            "type": "string",
+            "description": "Text to display in the UI for this section's header.",
+            "nullable": true
+          },
+          "index": {
+            "title": "Nullable`1",
+            "type": "integer",
+            "description": "Sequence order to display this section.",
+            "format": "int32",
+            "nullable": true
+          },
+          "identityCustomFields": {
+            "title": "IndexedNameModel[]",
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Genetec.SaaS.Iams.IdentityService.Business.Models.IdentityCustomFieldsSections.IndexedNameModel"
+            },
+            "description": "Identity custom fields and order in which they are displayed in the section.",
+            "nullable": true
+          },
+          "eTag": {
+            "title": "String",
+            "minLength": 1,
+            "type": "string",
+            "description": "The hash version of the identity custom fields section.\nMust be specified to update an identity custom fields section."
+          }
+        },
+        "additionalProperties": false
+      },
+      "Genetec.SaaS.Iams.IdentityService.Business.Models.IdentityCustomFieldsSections.UpdateIdentityCustomFieldsSectionModel": {
+        "title": "UpdateIdentityCustomFieldsSectionModel",
+        "required": [
+          "displayName",
+          "eTag",
+          "index"
+        ],
+        "type": "object",
+        "properties": {
+          "displayName": {
+            "title": "String",
+            "maxLength": 100,
+            "minLength": 1,
+            "type": "string",
+            "description": "Text to display in the UI for this section's header."
+          },
+          "index": {
+            "title": "Nullable`1",
+            "type": "integer",
+            "description": "Sequence order to display this section.",
+            "format": "int32"
+          },
+          "identityCustomFields": {
+            "title": "IndexedNameModel[]",
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Genetec.SaaS.Iams.IdentityService.Business.Models.IdentityCustomFieldsSections.IndexedNameModel"
+            },
+            "description": "Identity custom fields and order in which they are displayed in the section.",
+            "nullable": true
+          },
+          "eTag": {
+            "title": "String",
+            "minLength": 1,
+            "type": "string",
+            "description": "The hash version of the identity custom fields section.\nMust be specified to update an identity custom fields section."
+          }
+        },
+        "additionalProperties": false
+      },
+      "Genetec.SaaS.Iams.IdentityService.Business.Models.IdentityPermissions.PermissionsModel": {
+        "title": "PermissionsModel",
+        "type": "object",
+        "properties": {
+          "id": {
+            "title": "String",
+            "type": "string",
+            "description": "Permissions Id",
+            "nullable": true
+          },
+          "entityId": {
+            "title": "String",
+            "type": "string",
+            "description": "Identity or Team Id",
+            "nullable": true
+          },
+          "entityType": {
+            "title": "String",
+            "type": "string",
+            "description": "Entity Type is one of: Identity, Team",
+            "nullable": true
+          },
+          "entityName": {
+            "title": "String",
+            "type": "string",
+            "description": "Identity or Team display name",
+            "nullable": true
+          },
+          "entityInfo": {
+            "title": "String",
+            "type": "string",
+            "description": "Identity Email or Team Description",
+            "nullable": true
+          },
+          "templateName": {
+            "title": "String",
+            "type": "string",
+            "description": "Template Name is one of: ReadOnly, ReadWrite",
+            "nullable": true
+          },
+          "permissions": {
+            "title": "String[]",
+            "type": "array",
+            "items": {
+              "title": "String",
+              "type": "string"
+            },
+            "description": "List of permissions",
+            "nullable": true
+          },
+          "createdBy": {
+            "title": "String",
+            "type": "string",
+            "description": "IdentityId of the user who created the permissions",
+            "nullable": true
+          },
+          "lastModifiedBy": {
+            "title": "String",
+            "type": "string",
+            "description": "IdentityId of the user who last modified the permissions",
+            "nullable": true
+          },
+          "creationDateTimeUtc": {
+            "title": "DateTime",
+            "type": "string",
+            "description": "Creation date and time in UTC",
+            "format": "date-time"
+          },
+          "lastModificationDateTimeUtc": {
+            "title": "DateTime",
+            "type": "string",
+            "description": "Last modification date and time in UTC",
+            "format": "date-time"
+          },
+          "version": {
+            "title": "Int64",
+            "type": "integer",
+            "description": "Current version (ordinal)",
+            "format": "int64"
+          },
+          "isDeleted": {
+            "title": "Boolean",
+            "type": "boolean",
+            "description": "Deleted status"
+          }
+        },
+        "additionalProperties": false,
+        "description": "Permissions response model"
+      },
+      "Genetec.SaaS.Iams.IdentityService.Business.Models.IdentityPermissions.PermissionsModel.Challenge": {
+        "title": "Challenge",
+        "type": "object",
+        "properties": {
+          "isSupervisorAllowedToEditDirectReports": {
+            "title": "Boolean",
+            "type": "boolean",
+            "description": "Account configuration for if the supervisor are allowed to edit their direct report"
+          },
+          "permissions": {
+            "title": "IEnumerable`1",
+            "type": "array",
+            "items": {
+              "title": "String",
+              "type": "string"
+            },
+            "description": "List of permissions found for given entities",
+            "nullable": true
+          }
+        },
+        "additionalProperties": false,
+        "description": "Permissions response model for Challenge"
+      },
+      "Genetec.SaaS.Iams.IdentityService.Business.Models.IdentityPermissions.PermissionsModel.CreateMany": {
+        "title": "CreateMany",
+        "required": [
+          "entityIds",
+          "entityType",
+          "reason",
+          "templateName"
+        ],
+        "type": "object",
+        "properties": {
+          "entityIds": {
+            "title": "String[]",
+            "maxItems": 20,
+            "type": "array",
+            "items": {
+              "title": "String",
+              "type": "string"
+            },
+            "description": "List of entity Ids for which to create permissions"
+          },
+          "entityType": {
+            "title": "String",
+            "minLength": 1,
+            "type": "string",
+            "description": "Entity Type is one of: Identity, Team"
+          },
+          "reason": {
+            "title": "String",
+            "maxLength": 300,
+            "minLength": 0,
+            "type": "string",
+            "description": "Reason for giving these permissions"
+          },
+          "templateName": {
+            "title": "String",
+            "minLength": 1,
+            "type": "string",
+            "description": "Template Name is one of: ReadOnly, ReadWrite"
+          }
+        },
+        "additionalProperties": false,
+        "description": "Permissions request model for create many"
+      },
+      "Genetec.SaaS.Iams.IdentityService.Business.Models.IdentityPermissions.PermissionsModel.Delete": {
+        "title": "Delete",
+        "required": [
+          "reason",
+          "version"
+        ],
+        "type": "object",
+        "properties": {
+          "reason": {
+            "title": "String",
+            "maxLength": 300,
+            "minLength": 0,
+            "type": "string",
+            "description": "Reason for removing these permissions"
+          },
+          "version": {
+            "title": "Int64",
+            "type": "integer",
+            "description": "Current version (ordinal)",
+            "format": "int64"
+          }
+        },
+        "additionalProperties": false,
+        "description": "Permissions request model for delete"
+      },
+      "Genetec.SaaS.Iams.IdentityService.Business.Models.IdentityPermissions.PermissionsModel.List": {
+        "title": "List",
+        "type": "object",
+        "properties": {
+          "totalCount": {
+            "title": "Nullable`1",
+            "type": "integer",
+            "description": "Total count of permissions for the query",
+            "format": "int64",
+            "nullable": true
+          },
+          "permissionsModels": {
+            "title": "PermissionsModel[]",
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Genetec.SaaS.Iams.IdentityService.Business.Models.IdentityPermissions.PermissionsModel"
+            },
+            "description": "List of permissions paged for the query",
+            "nullable": true
+          }
+        },
+        "additionalProperties": false,
+        "description": "Permissions response model for List"
+      },
+      "Genetec.SaaS.Iams.IdentityService.Business.Models.IdentityPermissions.PermissionsModel.Update": {
+        "title": "Update",
+        "required": [
+          "reason",
+          "templateName",
+          "version"
+        ],
+        "type": "object",
+        "properties": {
+          "reason": {
+            "title": "String",
+            "maxLength": 300,
+            "minLength": 0,
+            "type": "string",
+            "description": "Reason for updating these permissions"
+          },
+          "templateName": {
+            "title": "String",
+            "minLength": 1,
+            "type": "string",
+            "description": "Template Name is one of: ReadOnly, ReadWrite"
+          },
+          "version": {
+            "title": "Int64",
+            "type": "integer",
+            "description": "Current version (ordinal)",
+            "format": "int64"
+          }
+        },
+        "additionalProperties": false,
+        "description": "Permissions request model for updates"
+      },
+      "Genetec.SaaS.Iams.IdentityService.Business.Models.Permissions.IUserPermissions": {
+        "title": "IUserPermissions",
+        "type": "object",
+        "properties": {
+          "basePermissions": {
+            "title": "String",
+            "type": "string",
+            "nullable": true,
+            "readOnly": true
+          },
+          "canCreateIdentities": {
+            "title": "Boolean",
+            "type": "boolean"
+          },
+          "canEditAccessControl": {
+            "title": "Boolean",
+            "type": "boolean"
+          },
+          "canEditCompanyData": {
+            "title": "Boolean",
+            "type": "boolean"
+          },
+          "canEditCustomFields": {
+            "title": "Boolean",
+            "type": "boolean"
+          },
+          "canEditVehicles": {
+            "title": "Boolean",
+            "type": "boolean"
+          },
+          "canEditDelegations": {
+            "title": "Boolean",
+            "type": "boolean"
+          },
+          "canEditIdentityAccesses": {
+            "title": "Boolean",
+            "type": "boolean"
+          },
+          "canEditIdentityDirectReport": {
+            "title": "Boolean",
+            "type": "boolean"
+          },
+          "canEditIdentityRoles": {
+            "title": "Boolean",
+            "type": "boolean"
+          },
+          "canEditPrivateData": {
+            "title": "Boolean",
+            "type": "boolean"
+          },
+          "canEditPublicData": {
+            "title": "Boolean",
+            "type": "boolean"
+          },
+          "canEditSystemData": {
+            "title": "Boolean",
+            "type": "boolean"
+          },
+          "canEditUserPermissions": {
+            "title": "Boolean",
+            "type": "boolean"
+          },
+          "canViewAccessControl": {
+            "title": "Boolean",
+            "type": "boolean"
+          },
+          "canViewCompanyData": {
+            "title": "Boolean",
+            "type": "boolean"
+          },
+          "canViewCustomFields": {
+            "title": "Boolean",
+            "type": "boolean"
+          },
+          "canViewVehicles": {
+            "title": "Boolean",
+            "type": "boolean"
+          },
+          "canViewDelegations": {
+            "title": "Boolean",
+            "type": "boolean"
+          },
+          "canViewIdentities": {
+            "title": "Boolean",
+            "type": "boolean"
+          },
+          "canViewIdentityCredentials": {
+            "title": "Boolean",
+            "type": "boolean"
+          },
+          "canEditIdentityCredentials": {
+            "title": "Boolean",
+            "type": "boolean"
+          },
+          "canViewIdentityAccesses": {
+            "title": "Boolean",
+            "type": "boolean"
+          },
+          "canViewIdentityDirectReport": {
+            "title": "Boolean",
+            "type": "boolean"
+          },
+          "canViewIdentityRoles": {
+            "title": "Boolean",
+            "type": "boolean"
+          },
+          "canViewPrivateData": {
+            "title": "Boolean",
+            "type": "boolean"
+          },
+          "canViewPublicData": {
+            "title": "Boolean",
+            "type": "boolean"
+          },
+          "canViewRestrictedPrivateData": {
+            "title": "Boolean",
+            "type": "boolean"
+          },
+          "canViewSystemData": {
+            "title": "Boolean",
+            "type": "boolean"
+          },
+          "canViewUserPermissions": {
+            "title": "Boolean",
+            "type": "boolean"
+          },
+          "canViewVisitorManagement": {
+            "title": "Boolean",
+            "type": "boolean"
+          }
+        },
+        "additionalProperties": false
+      },
+      "Genetec.SaaS.Iams.IdentityService.Business.Models.Synchronize.SynchronizeByExternalIdModel": {
+        "title": "SynchronizeByExternalIdModel",
+        "required": [
+          "externalIds"
+        ],
+        "type": "object",
+        "properties": {
+          "externalIds": {
+            "title": "String[]",
+            "maxItems": 100,
+            "type": "array",
+            "items": {
+              "title": "String",
+              "type": "string"
+            },
+            "description": "List of external IDs.\nMax size: 100 items"
+          }
+        },
+        "additionalProperties": false,
+        "description": "Synchronize Identity By ExternalId Model"
+      },
+      "Genetec.SaaS.Iams.IdentityService.Business.Models.Synchronize.SynchronizeModel": {
+        "title": "SynchronizeModel",
+        "required": [
+          "identityIds"
+        ],
+        "type": "object",
+        "properties": {
+          "identityIds": {
+            "title": "String[]",
+            "maxItems": 100,
+            "type": "array",
+            "items": {
+              "title": "String",
+              "type": "string"
+            },
+            "description": "List of Identity IDs.\nMax size : 100 items"
+          }
+        },
+        "additionalProperties": false,
+        "description": "Synchronize Identity Model"
+      },
+      "Genetec.SaaS.Iams.IdentityService.Business.Models.Synchronize.SynchronizeResultModel": {
+        "title": "SynchronizeResultModel",
+        "type": "object",
+        "properties": {
+          "totalOfSynchronizedIdentities": {
+            "title": "Int32",
+            "type": "integer",
+            "description": "Total number of identities for which we are requesting a synchronization.",
+            "format": "int32"
+          },
+          "failedIdentities": {
+            "title": "String[]",
+            "type": "array",
+            "items": {
+              "title": "String",
+              "type": "string"
+            },
+            "description": "List of identities which were not found or invalid.",
+            "nullable": true
+          }
+        },
+        "additionalProperties": false,
+        "description": "Result model for identities synchronization."
+      },
+      "Genetec.SaaS.Iams.IdentityService.Business.Models.Vehicles.CreateVehicleModel": {
+        "title": "CreateVehicleModel",
+        "required": [
+          "type"
+        ],
+        "type": "object",
+        "properties": {
+          "type": {
+            "title": "String",
+            "minLength": 1,
+            "type": "string"
+          },
+          "make": {
+            "title": "String",
+            "maxLength": 50,
+            "minLength": 1,
+            "type": "string",
+            "nullable": true
+          },
+          "model": {
+            "title": "String",
+            "maxLength": 50,
+            "minLength": 1,
+            "type": "string",
+            "nullable": true
+          },
+          "year": {
+            "title": "Nullable`1",
+            "maximum": 9999,
+            "minimum": 1900,
+            "type": "integer",
+            "format": "int32",
+            "nullable": true
+          },
+          "color": {
+            "title": "String",
+            "maxLength": 50,
+            "minLength": 1,
+            "type": "string",
+            "nullable": true
+          },
+          "licensePlateNumber": {
+            "title": "String",
+            "maxLength": 12,
+            "minLength": 1,
+            "type": "string",
+            "nullable": true
+          },
+          "ownerIds": {
+            "title": "String[]",
+            "maxItems": 10,
+            "minItems": 1,
+            "type": "array",
+            "items": {
+              "title": "String",
+              "type": "string"
+            },
+            "nullable": true
+          },
+          "notes": {
+            "title": "String",
+            "maxLength": 300,
+            "minLength": 1,
+            "type": "string",
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "Genetec.SaaS.Iams.IdentityService.Business.Models.Vehicles.UpdateVehicleModel": {
+        "title": "UpdateVehicleModel",
+        "required": [
+          "type"
+        ],
+        "type": "object",
+        "properties": {
+          "type": {
+            "title": "String",
+            "minLength": 1,
+            "type": "string"
+          },
+          "make": {
+            "title": "String",
+            "maxLength": 50,
+            "minLength": 1,
+            "type": "string",
+            "nullable": true
+          },
+          "model": {
+            "title": "String",
+            "maxLength": 50,
+            "minLength": 1,
+            "type": "string",
+            "nullable": true
+          },
+          "year": {
+            "title": "Nullable`1",
+            "maximum": 9999,
+            "minimum": 1900,
+            "type": "integer",
+            "format": "int32",
+            "nullable": true
+          },
+          "color": {
+            "title": "String",
+            "maxLength": 50,
+            "minLength": 1,
+            "type": "string",
+            "nullable": true
+          },
+          "licensePlateNumber": {
+            "title": "String",
+            "maxLength": 12,
+            "minLength": 1,
+            "type": "string",
+            "nullable": true
+          },
+          "ownerIds": {
+            "title": "String[]",
+            "maxItems": 10,
+            "minItems": 1,
+            "type": "array",
+            "items": {
+              "title": "String",
+              "type": "string"
+            },
+            "nullable": true
+          },
+          "notes": {
+            "title": "String",
+            "maxLength": 300,
+            "minLength": 1,
+            "type": "string",
+            "nullable": true
+          },
+          "version": {
+            "title": "String",
+            "type": "string",
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "Genetec.SaaS.Iams.IdentityService.Business.Models.Vehicles.VehicleModel": {
+        "title": "VehicleModel",
+        "type": "object",
+        "properties": {
+          "accountId": {
+            "title": "String",
+            "type": "string",
+            "nullable": true
+          },
+          "vehicleId": {
+            "title": "String",
+            "type": "string",
+            "nullable": true
+          },
+          "version": {
+            "title": "String",
+            "type": "string",
+            "nullable": true
+          },
+          "type": {
+            "title": "String",
+            "type": "string",
+            "nullable": true
+          },
+          "make": {
+            "title": "String",
+            "type": "string",
+            "nullable": true
+          },
+          "model": {
+            "title": "String",
+            "type": "string",
+            "nullable": true
+          },
+          "year": {
+            "title": "Nullable`1",
+            "type": "integer",
+            "format": "int32",
+            "nullable": true
+          },
+          "color": {
+            "title": "String",
+            "type": "string",
+            "nullable": true
+          },
+          "licensePlateNumber": {
+            "title": "String",
+            "type": "string",
+            "nullable": true
+          },
+          "ownerIds": {
+            "title": "String[]",
+            "type": "array",
+            "items": {
+              "title": "String",
+              "type": "string"
+            },
+            "nullable": true
+          },
+          "notes": {
+            "title": "String",
+            "type": "string",
+            "nullable": true
+          },
+          "createdBy": {
+            "title": "String",
+            "type": "string",
+            "nullable": true
+          },
+          "createdOnUtc": {
+            "title": "DateTime",
+            "type": "string",
+            "format": "date-time"
+          },
+          "lastModifiedBy": {
+            "title": "String",
+            "type": "string",
+            "nullable": true
+          },
+          "lastModifiedOnUtc": {
+            "title": "Nullable`1",
+            "type": "string",
+            "format": "date-time",
+            "nullable": true
+          },
+          "isDeleted": {
+            "title": "Boolean",
+            "type": "boolean"
+          },
+          "deletedOnUtc": {
+            "title": "Nullable`1",
+            "type": "string",
+            "format": "date-time",
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "Genetec.SaaS.Iams.Web.Bulk.OperationResultModel": {
+        "title": "OperationResultModel",
+        "type": "object",
+        "properties": {
+          "status": {
+            "$ref": "#/components/schemas/System.Net.HttpStatusCode"
+          },
+          "errors": {
+            "title": "IEnumerable`1",
+            "type": "array",
+            "items": {
+              "title": "String",
+              "type": "string"
+            },
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "Microsoft.AspNetCore.JsonPatch.JsonPatchDocument`1[[Genetec.SaaS.Iams.IdentityService.Business.Models.Identity.IdentityModel, Genetec.SaaS.Iams.IdentityService.Business, Version=2.0.6.0, Culture=neutral, PublicKeyToken=null]]": {
+        "title": "JsonPatchDocument`1",
+        "type": "object",
+        "properties": {
+          "operations": {
+            "title": "List`1",
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Microsoft.AspNetCore.JsonPatch.Operations.Operation`1[[Genetec.SaaS.Iams.IdentityService.Business.Models.Identity.IdentityModel, Genetec.SaaS.Iams.IdentityService.Business, Version=2.0.6.0, Culture=neutral, PublicKeyToken=null]]"
+            },
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "Microsoft.AspNetCore.JsonPatch.Operations.Operation": {
+        "title": "Operation",
+        "type": "object",
+        "properties": {
+          "value": {
+            "title": "Object",
+            "nullable": true
+          },
+          "path": {
+            "title": "String",
+            "type": "string",
+            "nullable": true
+          },
+          "op": {
+            "title": "String",
+            "type": "string",
+            "nullable": true
+          },
+          "from": {
+            "title": "String",
+            "type": "string",
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "Microsoft.AspNetCore.JsonPatch.Operations.OperationType": {
+        "title": "OperationType",
+        "enum": [
+          "Add",
+          "Remove",
+          "Replace",
+          "Move",
+          "Copy",
+          "Test",
+          "Invalid"
+        ],
+        "type": "string"
+      },
+      "Microsoft.AspNetCore.JsonPatch.Operations.Operation`1[[Genetec.SaaS.Iams.IdentityService.Business.Models.Identity.IdentityModel, Genetec.SaaS.Iams.IdentityService.Business, Version=2.0.6.0, Culture=neutral, PublicKeyToken=null]]": {
+        "title": "Operation`1",
+        "type": "object",
+        "properties": {
+          "value": {
+            "title": "Object",
+            "nullable": true
+          },
+          "path": {
+            "title": "String",
+            "type": "string",
+            "nullable": true
+          },
+          "op": {
+            "title": "String",
+            "type": "string",
+            "nullable": true
+          },
+          "from": {
+            "title": "String",
+            "type": "string",
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "Microsoft.AspNetCore.Mvc.ProblemDetails": {
+        "title": "ProblemDetails",
+        "type": "object",
+        "properties": {
+          "type": {
+            "title": "String",
+            "type": "string",
+            "nullable": true
+          },
+          "title": {
+            "title": "String",
+            "type": "string",
+            "nullable": true
+          },
+          "status": {
+            "title": "Nullable`1",
+            "type": "integer",
+            "format": "int32",
+            "nullable": true
+          },
+          "detail": {
+            "title": "String",
+            "type": "string",
+            "nullable": true
+          },
+          "instance": {
+            "title": "String",
+            "type": "string",
+            "nullable": true
+          }
+        },
+        "additionalProperties": {
+          "title": "Object"
+        }
+      },
+      "System.Net.HttpStatusCode": {
+        "title": "HttpStatusCode",
+        "enum": [
+          "Continue",
+          "SwitchingProtocols",
+          "Processing",
+          "EarlyHints",
+          "OK",
+          "Created",
+          "Accepted",
+          "NonAuthoritativeInformation",
+          "NoContent",
+          "ResetContent",
+          "PartialContent",
+          "MultiStatus",
+          "AlreadyReported",
+          "IMUsed",
+          "MultipleChoices",
+          "MovedPermanently",
+          "Found",
+          "SeeOther",
+          "NotModified",
+          "UseProxy",
+          "Unused",
+          "RedirectKeepVerb",
+          "PermanentRedirect",
+          "BadRequest",
+          "Unauthorized",
+          "PaymentRequired",
+          "Forbidden",
+          "NotFound",
+          "MethodNotAllowed",
+          "NotAcceptable",
+          "ProxyAuthenticationRequired",
+          "RequestTimeout",
+          "Conflict",
+          "Gone",
+          "LengthRequired",
+          "PreconditionFailed",
+          "RequestEntityTooLarge",
+          "RequestUriTooLong",
+          "UnsupportedMediaType",
+          "RequestedRangeNotSatisfiable",
+          "ExpectationFailed",
+          "MisdirectedRequest",
+          "UnprocessableEntity",
+          "Locked",
+          "FailedDependency",
+          "UpgradeRequired",
+          "PreconditionRequired",
+          "TooManyRequests",
+          "RequestHeaderFieldsTooLarge",
+          "UnavailableForLegalReasons",
+          "InternalServerError",
+          "NotImplemented",
+          "BadGateway",
+          "ServiceUnavailable",
+          "GatewayTimeout",
+          "HttpVersionNotSupported",
+          "VariantAlsoNegotiates",
+          "InsufficientStorage",
+          "LoopDetected",
+          "NotExtended",
+          "NetworkAuthenticationRequired"
+        ],
+        "type": "string"
+      }
+    },
+    "securitySchemes": {
+      "oauth2": {
+        "type": "oauth2",
+        "flows": {
+          "authorizationCode": {
+            "authorizationUrl": "https://sts-demo.clearid.io/connect/authorize",
+            "tokenUrl": "https://sts-demo.clearid.io/connect/token",
+            "scopes": {
+              "openid": "openid"
+            }
+          }
+        }
+      }
+    }
+  },
+  "security": [
+    {
+      "oauth2": [
+        "access"
+      ]
+    }
+  ],
+  "tags": [
+    {
+      "name": "AccountConfiguration"
+    },
+    {
+      "name": "Countries"
+    },
+    {
+      "name": "Identities"
+    },
+    {
+      "name": "IdentityCustomFields"
+    },
+    {
+      "name": "IdentityCustomFieldsSections"
+    },
+    {
+      "name": "IdentityHistoryEntries"
+    },
+    {
+      "name": "Permissions"
+    },
+    {
+      "name": "Picture"
+    },
+    {
+      "name": "SynchronizeIdentities"
+    },
+    {
+      "name": "Vehicles"
+    }
+  ]
+}
