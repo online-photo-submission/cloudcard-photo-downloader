@@ -23,6 +23,7 @@ class CloudCardClient {
     public static final String READY_FOR_DOWNLOAD = "READY_FOR_DOWNLOAD"
     public static final String APPROVED = "APPROVED"
     public static final String DOWNLOADED = "DOWNLOADED"
+    public static final String ON_HOLD = "ON_HOLD"
 
     @Value('${cloudcard.api.url}')
     private String apiUrl
@@ -55,7 +56,7 @@ class CloudCardClient {
     Photo updateStatus(Photo photo, String status, String message = null) throws Exception {
         String url = "${apiUrl}/photos/${photo.id}"
 
-        if (message && status == 'ON_HOLD') {
+        if (message && status == ON_HOLD) {
             String encoded = URLEncoder.encode(message, StandardCharsets.UTF_8.toString())
             url += "?onHoldReason=${encoded}"
         }
