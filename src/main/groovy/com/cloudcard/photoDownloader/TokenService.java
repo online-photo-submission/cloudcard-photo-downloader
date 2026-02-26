@@ -15,8 +15,6 @@ import org.springframework.stereotype.Service;
 import java.util.HashMap;
 import java.util.Map;
 
-import static com.cloudcard.photoDownloader.ApplicationPropertiesValidator.throwIfBlank;
-
 @Service
 public class TokenService {
 
@@ -78,11 +76,15 @@ public class TokenService {
             return;
         }
 
-        String url =  apiUrl + "/people/me/logout";
-        HttpResponse<String> response = Unirest.post(url).headers(standardHeaders(true)).body("{\"authenticationToken\":\"" + authToken + "\"}").asString();
+        try {
+            String url = apiUrl + "/people/me/logout";
+            HttpResponse<String> response = Unirest.post(url).headers(standardHeaders(true)).body("{\"authenticationToken\":\"" + authToken + "\"}").asString();
 
-        if (response.getStatus() != 204) {
-            log.error("Status " + response.getStatus() + " returned from CloudCard API when logging out accessToken.");
+            if (response.getStatus() != 204) {
+                log.error("Status " + response.getStatus() + " returned from CloudCard API when logging out accessToken.");
+            }
+        } finally {
+            authToken = null;
         }
     }
 
