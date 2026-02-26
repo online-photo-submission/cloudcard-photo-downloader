@@ -19,10 +19,10 @@ class TouchNetStorageServiceSpec extends Specification{
         List<Photo> photos = [];
 
         when:
-        List<PhotoFile> photoFiles = service.save(photos);
+        StorageResults storageResults = service.save(photos);
 
         then:
-        photoFiles.size() == 0;
+        storageResults.downloadedPhotoFiles.size() == 0;
 
         0 * service.touchNetClient._
     }
@@ -38,13 +38,13 @@ class TouchNetStorageServiceSpec extends Specification{
         List<Photo> photos = [ photo ]
 
         when:
-        List<PhotoFile> photoFiles = service.save(photos)
+        StorageResults storageResults = service.save(photos)
 
         then:
-        photoFiles.size() == 1
-        assert photoFiles[0]
-        photoFiles[0].baseName == identifier
-        photoFiles[0].photoId == 1
+        storageResults.downloadedPhotoFiles.size() == 1
+        assert storageResults.downloadedPhotoFiles[0]
+        storageResults.downloadedPhotoFiles[0].baseName == identifier
+        storageResults.downloadedPhotoFiles[0].photoId == 1
 
         1 * service.touchNetClient.operatorLogin() >> sessionId
         1 * service.fileNameResolver.getBaseName(photo) >> identifier
@@ -64,11 +64,11 @@ class TouchNetStorageServiceSpec extends Specification{
         }
 
         when:
-        List<PhotoFile> photoFiles = service.save(photos)
+        StorageResults storageResults = service.save(photos)
 
         then:
-        photoFiles.size() == 3
-        photoFiles.eachWithIndex { it, index ->
+        storageResults.downloadedPhotoFiles.size() == 3
+        storageResults.downloadedPhotoFiles.eachWithIndex { it, index ->
             assert it
             assert it.photoId == index
             assert it.baseName == identifiers[index]
@@ -96,16 +96,16 @@ class TouchNetStorageServiceSpec extends Specification{
         }
 
         when:
-        List<PhotoFile> photoFiles = service.save(photos)
+        StorageResults storageResults = service.save(photos)
 
         then:
-        photoFiles.size() == 2
-        assert photoFiles[0]
-        photoFiles[0].baseName == identifiers[0]
-        photoFiles[0].photoId == 0
-        assert photoFiles[1]
-        photoFiles[1].baseName == identifiers[2]
-        photoFiles[1].photoId == 2
+        storageResults.downloadedPhotoFiles.size() == 2
+        assert storageResults.downloadedPhotoFiles[0]
+        storageResults.downloadedPhotoFiles[0].baseName == identifiers[0]
+        storageResults.downloadedPhotoFiles[0].photoId == 0
+        assert storageResults.downloadedPhotoFiles[1]
+        storageResults.downloadedPhotoFiles[1].baseName == identifiers[2]
+        storageResults.downloadedPhotoFiles[1].photoId == 2
 
         1 * service.touchNetClient.operatorLogin() >> sessionId
         1 * service.fileNameResolver.getBaseName(photos[0]) >> identifiers[0]
@@ -128,10 +128,10 @@ class TouchNetStorageServiceSpec extends Specification{
         List<Photo> photos = [ photo ]
 
         when:
-        List<PhotoFile> photoFiles = service.save(photos)
+        StorageResults storageResults = service.save(photos)
 
         then:
-        photoFiles.size() == 0
+        storageResults.downloadedPhotoFiles.size() == 0
 
         1 * service.touchNetClient.operatorLogin() >> null
     }
@@ -148,13 +148,13 @@ class TouchNetStorageServiceSpec extends Specification{
 
 
         when:
-        List<PhotoFile> photoFiles = service.save(photos)
+        StorageResults storageResults = service.save(photos)
 
         then:
-        photoFiles.size() == 1
-        assert photoFiles[0]
-        photoFiles[0].baseName == identifier
-        photoFiles[0].photoId == 1
+        storageResults.downloadedPhotoFiles.size() == 1
+        assert storageResults.downloadedPhotoFiles[0]
+        storageResults.downloadedPhotoFiles[0].baseName == identifier
+        storageResults.downloadedPhotoFiles[0].photoId == 1
 
         1 * service.touchNetClient.operatorLogin() >> sessionId
         1 * service.fileNameResolver.getBaseName(photo) >> identifier

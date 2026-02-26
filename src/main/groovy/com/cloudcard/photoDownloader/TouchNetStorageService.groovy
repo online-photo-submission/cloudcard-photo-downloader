@@ -35,7 +35,7 @@ class TouchNetStorageService implements StorageService {
     StorageResults save(Collection<Photo> photos) {
         if (!photos) {
             log.info("No Photos to Upload")
-            return []
+            return StorageResults.empty()
         }
 
         log.info("Uploading Photos to TouchNet")
@@ -44,7 +44,7 @@ class TouchNetStorageService implements StorageService {
 
         if (!sessionId) {
             log.error("Failed to login to the TouchNet API")
-            return []
+            return StorageResults.empty()
         }
 
         List<PhotoFile> photoFiles = photos.findResults { save(it, sessionId) }

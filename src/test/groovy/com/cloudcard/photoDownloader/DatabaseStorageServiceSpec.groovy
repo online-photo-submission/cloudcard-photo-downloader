@@ -53,10 +53,10 @@ class DatabaseStorageServiceSpec extends Specification {
         List<Photo> photos = [];
 
         when:
-        List<PhotoFile> photoFiles = service.save(photos);
+        StorageResults storageResults = service.save(photos);
 
         then: "no photos are saved"
-        photoFiles.size() == 0;
+        storageResults.downloadedPhotoFiles.size() == 0;
 
         and: "the filename resolver was not called"
         0 * service.fileNameResolver._
@@ -76,13 +76,13 @@ class DatabaseStorageServiceSpec extends Specification {
         List<Photo> photos = [ photo ]
 
         when: "we save the photo"
-        List<PhotoFile> photoFiles = service.save(photos)
+        StorageResults storageResults = service.save(photos)
 
         then: "photoFiles contains one PhotoFile with the correct properties"
-        photoFiles.size() == 1
-        assert photoFiles[0]
-        photoFiles[0].baseName == identifier
-        photoFiles[0].photoId == 1
+        storageResults.downloadedPhotoFiles.size() == 1
+        assert storageResults.downloadedPhotoFiles[0]
+        storageResults.downloadedPhotoFiles[0].baseName == identifier
+        storageResults.downloadedPhotoFiles[0].photoId == 1
 
         and: "the filename resolver was called"
         1 * service.fileNameResolver.getBaseName(photo) >> identifier
@@ -94,13 +94,13 @@ class DatabaseStorageServiceSpec extends Specification {
 
         when: "we update the photo bytes and save again"
         photo.bytes = Base64.decoder.decode(base64BlackDot)
-        photoFiles = service.save(photos)
+        storageResults = service.save(photos)
 
         then: "photoFiles contains one PhotoFile with the correct properties"
-        photoFiles.size() == 1
-        assert photoFiles[0]
-        photoFiles[0].baseName == identifier
-        photoFiles[0].photoId == 1
+        storageResults.downloadedPhotoFiles.size() == 1
+        assert storageResults.downloadedPhotoFiles[0]
+        storageResults.downloadedPhotoFiles[0].baseName == identifier
+        storageResults.downloadedPhotoFiles[0].photoId == 1
 
         and: "the filename resolver was called"
         1 * service.fileNameResolver.getBaseName(photo) >> identifier
