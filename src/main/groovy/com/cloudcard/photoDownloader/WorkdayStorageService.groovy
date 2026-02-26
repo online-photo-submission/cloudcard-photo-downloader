@@ -38,7 +38,7 @@ class WorkdayStorageService implements StorageService {
     StorageResults save(Collection<Photo> photos) {
         if (!photos) {
             log.info("No Photos to Upload")
-            return []
+            return StorageResults.empty()
         }
 
         log.info("Uploading Photos to Workday")
