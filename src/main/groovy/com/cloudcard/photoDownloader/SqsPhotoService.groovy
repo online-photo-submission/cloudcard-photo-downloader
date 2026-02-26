@@ -16,6 +16,7 @@ import software.amazon.awssdk.services.sqs.model.SqsException
 import jakarta.annotation.PostConstruct
 
 import static com.cloudcard.photoDownloader.ApplicationPropertiesValidator.throwIfBlank
+import static com.cloudcard.photoDownloader.ApplicationPropertiesValidator.throwIfTrue
 
 @Service
 @ConditionalOnProperty(value = "downloader.photoService", havingValue = "SqsPhotoService", matchIfMissing = true)
@@ -35,6 +36,9 @@ class SqsPhotoService implements PhotoService {
     @Value('${sqsPhotoService.region:${aws.sqs.region:ca-central-1}}')
     String region
 
+    @Value('${sqsPhotoService.putStatus}')
+    String putStatus
+
     SqsClient sqsClient
 
     @Autowired
@@ -42,6 +46,9 @@ class SqsPhotoService implements PhotoService {
 
     @Autowired
     PreProcessor preProcessor
+
+    @Autowired
+    CloudCardClient cloudCardClient
 
     Map<Integer, Message> messageHistory = [:]
 
@@ -53,6 +60,9 @@ class SqsPhotoService implements PhotoService {
         log.info("              SQS URL : " + queueUrl)
         log.info("           AWS Region : " + region)
         log.info("        Pre-Processor : " + preProcessor.getClass().getSimpleName())
+        log.info("           Put Status : " + putStatus)
+
+        throwIfTrue(putStatus && !cloudCardClient.isConfigured(), "The CloudCardClient must be configured when putStatus is set.")
 
         try {
             sqsClient = SqsClient.builder()
@@ -92,8 +102,16 @@ class SqsPhotoService implements PhotoService {
      */
     @Override
     Photo markAsDownloaded(Photo photo) {
+        if (putStatus) {
+            cloudCardClient.updateStatus(photo, putStatus)
+        }
         deleteMessages(sqsClient, queueUrl, messageHistory[photo.id])
         return photo
+    }
+
+    @Override
+    void close() {
+        cloudCardClient.close()
     }
 
     /* *** PRIVATE HELPERS *** */

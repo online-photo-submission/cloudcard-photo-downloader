@@ -18,6 +18,7 @@ public class AdditionalPhotoPostProcessor implements PostProcessor {
     @Autowired
     FileService fileService;
 
+    //TODO refactor this to the CloudCardClient.
     @Autowired
     RestService restService;
 

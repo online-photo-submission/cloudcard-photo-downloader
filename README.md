@@ -144,8 +144,26 @@ Below are descriptions of each option:
 - sqsPhotoService.pollingDurationSeconds
     - default: 20
     - description: used to configure the duration of [SQS Long Polling](https://docs.aws.amazon.com/AWSSimpleQueueService/latest/SQSDeveloperGuide/sqs-short-and-long-polling.html)
+- sqsPhotoService.putStatus
+    - default: none
+    - description: determines what status the photo is set to after downloading.
+    - note: if this is not set, the photo status will not be updated in CloudCard after downloading the photo with the SQS integration.
+    - note: this option requires the CloudCardClient settings to be configured.
 
 #### CloudCardPhotoService Settings
+
+*Note: CloudCardPhotoService also requires CloudCardClient settings to be configured*
+
+- downloader.fetchStatuses
+    - default: `READY_FOR_DOWNLOAD`
+    - allowed values: `PENDING`,`APPROVED`,`DENIED`,`READY_FOR_DOWNLOAD`,`DOWNLOADED`,`DISCARDED`,`DONE`
+    - description: Photos with these statuses will be downloaded. Separate statuses with a comma.
+- downloader.putStatus
+    - default: `DOWNLOADED`
+    - allowed values: `PENDING`,`APPROVED`,`DENIED`,`READY_FOR_DOWNLOAD`,`DOWNLOADED`,`DISCARDED`,`DONE`
+    - description: Downloaded photos will be marked with this status in the CloudCard web application.
+
+#### CloudCardClient Settings
 
 - cloudcard.api.url
     - default: `https://api.onlinephotosubmission.com/api`
@@ -157,14 +175,6 @@ Below are descriptions of each option:
     - default: none
     - description: this setting holds the API access token for your service account and must be set before the exporter
       to run.
-- downloader.fetchStatuses
-    - default: `READY_FOR_DOWNLOAD`
-    - allowed values: `PENDING`,`APPROVED`,`DENIED`,`READY_FOR_DOWNLOAD`,`DOWNLOADED`,`DISCARDED`,`DONE`
-    - description: Photos with these statuses will be downloaded. Separate statuses with a comma.
-- downloader.putStatus
-    - default: `DOWNLOADED`
-    - allowed values: `PENDING`,`APPROVED`,`DENIED`,`READY_FOR_DOWNLOAD`,`DOWNLOADED`,`DISCARDED`,`DONE`
-    - description: Downloaded photos will be marked with this status in the CloudCard web application.
  
 #### Proxy Settings
 The downloader supports going through a proxy when using the CloudCardPhotoService to download photos to the file system.
@@ -405,6 +415,8 @@ marked as downloaded in CloudCard
           occur in `DatabasePostProcessor.query`
 
 #### AdditionalPhotoPostProcessor Settings
+
+*Note: this post processor requires the CloudCardClient to be configured.*
 
 - AdditionalPhotoPostProcessor.include
     - description: which supporting document types should be downloaded.
