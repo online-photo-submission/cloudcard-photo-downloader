@@ -160,7 +160,7 @@ class ClearIdClient implements IntegrationStorageClient {
 
     @Override
     void close() {
-
+        //Intentionally not implemented at present.
     }
 
     private HttpRequest.Builder authenticatedRequestBuilder(URI uri) {
@@ -174,7 +174,6 @@ class ClearIdClient implements IntegrationStorageClient {
     }
 
     private String authenticate() {
-        println("hello")
         Map<String, String> formData = [
             "client_id"    : clientId,
             "client_secret": clientSecret,

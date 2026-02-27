@@ -46,11 +46,12 @@ class ClearIdClientSpec extends Specification {
 
         then:
         token == "asdf"
-        //TODO I'd like to figure out how to assert on the individual properties of the built request.
-//        1 * mockHttpClient.send({
-//            it.uri == URI.create("${mockStsUrl}/connect/token")
-//        }, HttpResponse.BodyHandlers.ofString()) >> mockHttpResponse
-        1 * mockHttpClient.send(_, HttpResponse.BodyHandlers.ofString()) >> mockHttpResponse
+        1 * mockHttpClient.send({
+            it.uri().toString() == "https://clear-id-sts.mock/connect/token" &&
+            it.method() == "POST" &&
+            it.headers().firstValue("Content-Type").get() == "application/x-www-form-urlencoded"
+            //TODO assert on the body contents too...
+        }, HttpResponse.BodyHandlers.ofString()) >> mockHttpResponse
         1 * mockHttpResponse.statusCode() >> 200
         1 * mockHttpResponse.body() >> "{\"access_token\":\"asdf\"}"
 
@@ -72,7 +73,7 @@ class ClearIdClientSpec extends Specification {
     }
 
 
-    //TODO build out the rest of these tests.
+    //TODO build out the rest of these tests according the pattern that was shown to you above.
     void "test getIdentity"() {
 
     }
