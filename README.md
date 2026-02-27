@@ -107,7 +107,9 @@ Below are descriptions of each option:
     - options:
         - `FileStorageService` - stores images as jpeg files on the local or network file system
         - `DatabaseStorageService` - stores the jpeg encoded images as `BLOBs` in a relational database
+        - `IntegrationStorageService` - sends images to an internet-accessible API. Currently only supports Genetec ClearID.
         - `TouchNetStorageService` - sends images to a TouchNet API.
+        - `WorkdayStorageService` - sends images to a Workday instance.
 - downloader.repeat
     - default: `true`
     - description: This setting determines if the downloader will run once and exit, `downloader.repeat=false`, or if
@@ -232,7 +234,7 @@ The downloader supports going through a proxy when using the CloudCardPhotoServi
     - description: This boolean determines if downloaded photos will update existing cardholder photos in the database. If a cardholder doesn't yet exist in the database, this will default to an `INSERT` statement and write a new row to the database.
     - note: If this is set to `false`, downloaded photos will **always** be written to a new row.
 
-### Database Connection Settings ([Video](https://youtu.be/JeykYIykI6k))
+##### Database Connection Settings ([Video](https://youtu.be/JeykYIykI6k))
 
 - db.datasource.enabled
     - default: `false`
@@ -256,6 +258,28 @@ The downloader supports going through a proxy when using the CloudCardPhotoServi
         - Oracle: `org.hibernate.dialect.Oracle10gDialect`
         - MS SQLServer: `org.hibernate.dialect.SQLServer2012Dialect`
         - MySQL: `org.hibernate.dialect.MySQL5InnoDBDialect`
+
+#### ClearId Integration Settings
+
+*Note: `downloader.storageService` must be set to `IntegrationStorageService`, and `IntegrationStorageService.client` must be set to `ClearIdClient` for these to have any effect.*
+
+Note you will need to create an API integration in the Administration section of ClearID.
+
+- `ClearIdClient.apiUrl`
+    - The versioned identity api url for ClearID.
+    - example: `https://api.demo.clearid.io/identity/api/v4`
+- `ClearIdClient.stsUrl`
+    - The STS service url for ClearID.
+    - example: `https://sts-demo.clearid.io`
+- `ClearIdClient.accountId`
+    - Your organization's accountID in ClearID. 
+    - Note: You can find this in the url of your ClearID instance, e.g. `https://demo.clearid.io/<account_id>/administration/service-principals`
+- `ClearIdClient.clientId`
+    - The ClientID for the ClearID API Integration Key.
+    - Note: This information is only available one time, when you generate a key for an API integration in ClearID 
+- `ClearIdClient.clientSecret`
+    - The ClientSecret for the ClearID API Integration Key.
+    - Note: This information is only available one time, when you generate a key for an API integration in ClearID
 
 #### TouchNet Storage Service Settings
 
