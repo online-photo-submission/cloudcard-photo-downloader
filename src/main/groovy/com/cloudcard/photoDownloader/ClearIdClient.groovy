@@ -31,13 +31,13 @@ class ClearIdClient implements IntegrationStorageClient {
     @Value('${ClearIdClient.stsUrl}')
     String stsUrl
 
-    @Value('${ClearIdClient.accountId:customer}')
+    @Value('${ClearIdClient.accountId}')
     String accountId
 
-    @Value('${ClearIdClient.clientId:user}')
+    @Value('${ClearIdClient.clientId}')
     String clientId
 
-    @Value('${ClearIdClient.clientSecret:secret}')
+    @Value('${ClearIdClient.clientSecret}')
     String clientSecret
 
     HttpClient client
@@ -169,11 +169,12 @@ class ClearIdClient implements IntegrationStorageClient {
             .header("Authorization", "Bearer ${getValidToken()}")
     }
 
-    private String getValidToken() {
+    String getValidToken() {
         authToken ?: authenticate()
     }
 
     private String authenticate() {
+        println("hello")
         Map<String, String> formData = [
             "client_id"    : clientId,
             "client_secret": clientSecret,
