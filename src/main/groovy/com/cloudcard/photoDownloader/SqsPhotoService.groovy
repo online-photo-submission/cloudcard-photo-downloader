@@ -110,6 +110,16 @@ class SqsPhotoService implements PhotoService {
     }
 
     @Override
+    Photo markAsFailed(Photo photo, String errorMessage) {
+        deleteMessages(sqsClient, queueUrl, messageHistory[photo.id])
+
+        if (cloudCardClient.isConfigured()) {
+            cloudCardClient.updateStatus(photo, CloudCardClient.ON_HOLD, errorMessage)
+        }
+        return photo
+    }
+
+    @Override
     void close() {
         cloudCardClient.close()
     }
