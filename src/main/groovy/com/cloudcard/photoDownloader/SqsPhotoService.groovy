@@ -114,7 +114,7 @@ class SqsPhotoService implements PhotoService {
         deleteMessages(sqsClient, queueUrl, messageHistory[photo.id])
 
         if (cloudCardClient.isConfigured()) {
-            cloudCardClient.updateStatus(photo, CloudCardClient.ON_HOLD, errorMessage)
+            cloudCardClient.updateStatus(photo, CloudCardClient.FAILED, errorMessage)
         }
         return photo
     }
