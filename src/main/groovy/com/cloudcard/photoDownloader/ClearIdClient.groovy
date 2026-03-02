@@ -124,8 +124,8 @@ class ClearIdClient implements IntegrationStorageClient {
     }
 
 
-    void putIdentityPicture(String identityId, byte[] photoBytes) {
-        log.trace("ClearId PUT /identities/$identityId/picture : create multipart form with a picture size of $photoBytes.length bytes")
+    void postIdentityPicture(String identityId, byte[] photoBytes) {
+        log.trace("ClearId POST /identities/$identityId/picture : create multipart form with a picture size of $photoBytes.length bytes")
 
         String boundary = UUID.randomUUID().toString()
         byte[] separator = "--${boundary}\r\nContent-Disposition: form-data; name=\"picture\"; filename=\"picture.jpg\"\r\nContent-Type: image/jpeg\r\n\r\n".getBytes()
@@ -137,7 +137,7 @@ class ClearIdClient implements IntegrationStorageClient {
         System.arraycopy(photoBytes, 0, body, separator.length, photoBytes.length)
         System.arraycopy(endBoundary, 0, body, separator.length + photoBytes.length, endBoundary.length)
 
-        log.trace("ClearId PUT /identities/$identityId/picture : sending request with body size of $body.length bytes")
+        log.trace("ClearId POST /identities/$identityId/picture : sending request with body size of $body.length bytes")
 
         HttpRequest request = authenticatedRequestBuilder(new URI("$apiUrl/accounts/$accountId/identities/$identityId/picture"))
                 .header("Content-Type", "multipart/form-data; boundary=${boundary}")
@@ -146,7 +146,7 @@ class ClearIdClient implements IntegrationStorageClient {
 
         HttpResponse<String> response = sendWithBackoff(request)
 
-        log.trace("ClearId PUT /identities/$identityId/picture : status : ${response.statusCode()}")
+        log.trace("ClearId POST /identities/$identityId/picture : status : ${response.statusCode()}")
 
         if (response.statusCode() != 200) {
             throw new Exception("Error updating picture for ClearId identity $identityId. Status: ${response.statusCode()}")
@@ -155,7 +155,7 @@ class ClearIdClient implements IntegrationStorageClient {
 
     @Override
     void putPhoto(String identifier, byte[] photoBytes) {
-        putIdentityPicture(getIdentity(identifier), photoBytes)
+        postIdentityPicture(getIdentity(identifier), photoBytes)
     }
 
     @Override
