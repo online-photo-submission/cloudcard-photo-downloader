@@ -9,6 +9,7 @@ set -e
 
 if test ! -f $FILE; then
     echo "put """$PHOTO_DIRECTORY"""/*.jpg" > "$FILE"
+    echo "put """$PHOTO_DIRECTORY"""/*.png" >> "$FILE"
     echo "put """$PHOTO_DIRECTORY"""/*.csv" >> "$FILE"
 fi
 
