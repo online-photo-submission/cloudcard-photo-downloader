@@ -36,6 +36,21 @@ public class RestServiceTest {
     }
 
     @Test
+    public void testFetchBytesForPhotoPng() throws Exception {
+
+        //setup
+        Photo photo = new Photo();
+        // test PNG hosted by https://github.com/semanticdata/public-test?tab=readme-ov-file
+        photo.setExternalURL("https://raw.githubusercontent.com/semanticdata/public-test/main/PNG/myfinalform.png");
+
+        //test
+        restService.fetchBytes(photo);
+
+        //verify
+        assertThat(photo.getBytes().length).isGreaterThan(0);
+    }
+
+    @Test
     public void testFetchBytesForAdditionalPhoto() throws Exception {
 
         //setup

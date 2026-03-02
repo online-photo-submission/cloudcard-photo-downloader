@@ -106,7 +106,7 @@ public class DatabasePostProcessor implements PostProcessor {
         paramMap.putAll(photo.getPerson().getCustomFields());
         paramMap.put("timestamp", Timestamp.valueOf(LocalDateTime.now().withSecond(0).withNano(0)));
         paramMap.put("dateCreatedTimestamp", new Timestamp(photo.getDateCreated().getTime()));
-        paramMap.put("fileName", filePathOverride.equals("") ? file.getFileName() : filePathOverride + file.getBaseName() + ".jpg");
+        paramMap.put("fileName", filePathOverride.equals("") ? file.getFileName() : filePathOverride + file.getBaseName() + photo.getFileExtension());
         return paramMap;
     }
 

@@ -93,6 +93,7 @@ class PhotoSpec extends Specification {
         result.publicKey == "100348.24.240.m3uV8hi5s0W9fO5ZYyLk2KpgGzgwZNj9w61IVVMh2KpEVv8ZBrjJzOG21f03Czt8ujcKY0Olxn2jfQ59"
         result.links.bytes == "https://s3.amazonaws.com/test-photos.onlinephotosubmission.com/100348.24.240.m3uV8hi5s0W9fO5ZYyLk2KpgGzgwZNj9w61IVVMh2KpEVv8ZBrjJzOG21f03Czt8ujcKY0Olxn2jfQ59.jpg"
         result.externalURL == "https://s3.amazonaws.com/test-photos.onlinephotosubmission.com/100348.24.240.m3uV8hi5s0W9fO5ZYyLk2KpgGzgwZNj9w61IVVMh2KpEVv8ZBrjJzOG21f03Czt8ujcKY0Olxn2jfQ59.jpg"
+        result.fileExtension == ".jpg"
 
         result.person.id == 618543
         result.person.username == "jonathan+testThisJawn@cloudcard.us"

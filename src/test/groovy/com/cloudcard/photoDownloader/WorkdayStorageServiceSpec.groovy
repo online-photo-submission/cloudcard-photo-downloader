@@ -32,7 +32,8 @@ class WorkdayStorageServiceSpec extends Specification{
         Photo photo = new Photo(
                 id: 1,
                 person: new Person(identifier: identifier, email: "$identifier@bacon.edu"),
-                bytes: Base64.decoder.decode(base64Photo)
+                bytes: Base64.decoder.decode(base64Photo),
+                externalURL: "file.png"
         )
         List<Photo> photos = [ photo ]
 
@@ -46,7 +47,7 @@ class WorkdayStorageServiceSpec extends Specification{
         photoFiles[0].photoId == 1
 
         1 * service.fileNameResolver.getBaseName(photo) >> identifier
-        1 * service.workdayClient.putWorkerPhoto(identifier, base64Photo)
+        1 * service.workdayClient.putWorkerPhoto(identifier, base64Photo, ".png")
     }
 
     void "test save with three good photos"() {
@@ -56,7 +57,8 @@ class WorkdayStorageServiceSpec extends Specification{
             new Photo(
                     id: index,
                     person: new Person(identifier: it, email: "$it@bacon.edu"),
-                    bytes: [0,1,2,3,index] as byte[]
+                    bytes: [0,1,2,3,index] as byte[],
+                    externalURL: "file.jpg"
             )
         }
 
@@ -74,9 +76,9 @@ class WorkdayStorageServiceSpec extends Specification{
         1 * service.fileNameResolver.getBaseName(photos[0]) >> identifiers[0]
         1 * service.fileNameResolver.getBaseName(photos[1]) >> identifiers[1]
         1 * service.fileNameResolver.getBaseName(photos[2]) >> identifiers[2]
-        1 * service.workdayClient.putWorkerPhoto(identifiers[0], Base64.encoder.encodeToString([0,1,2,3,0] as byte[]))
-        1 * service.workdayClient.putWorkerPhoto(identifiers[1], Base64.encoder.encodeToString([0,1,2,3,1] as byte[]))
-        1 * service.workdayClient.putWorkerPhoto(identifiers[2], Base64.encoder.encodeToString([0,1,2,3,2] as byte[]))
+        1 * service.workdayClient.putWorkerPhoto(identifiers[0], Base64.encoder.encodeToString([0,1,2,3,0] as byte[]), ".jpg")
+        1 * service.workdayClient.putWorkerPhoto(identifiers[1], Base64.encoder.encodeToString([0,1,2,3,1] as byte[]), ".jpg")
+        1 * service.workdayClient.putWorkerPhoto(identifiers[2], Base64.encoder.encodeToString([0,1,2,3,2] as byte[]), ".jpg")
     }
 
     void "test save with one failure and two successful photos"() {
@@ -86,7 +88,8 @@ class WorkdayStorageServiceSpec extends Specification{
             new Photo(
                     id: index,
                     person: new Person(identifier: it, email: "$it@bacon.edu"),
-                    bytes: [0,1,2,3,index] as byte[]
+                    bytes: [0,1,2,3,index] as byte[],
+                    externalURL: "file.jpg"
             )
         }
 
@@ -105,11 +108,11 @@ class WorkdayStorageServiceSpec extends Specification{
         1 * service.fileNameResolver.getBaseName(photos[0]) >> identifiers[0]
         1 * service.fileNameResolver.getBaseName(photos[1]) >> identifiers[1]
         1 * service.fileNameResolver.getBaseName(photos[2]) >> identifiers[2]
-        1 * service.workdayClient.putWorkerPhoto(identifiers[0], Base64.encoder.encodeToString([0,1,2,3,0] as byte[]))
-        1 * service.workdayClient.putWorkerPhoto(identifiers[1], Base64.encoder.encodeToString([0,1,2,3,1] as byte[])) >> {
+        1 * service.workdayClient.putWorkerPhoto(identifiers[0], Base64.encoder.encodeToString([0,1,2,3,0] as byte[]), ".jpg")
+        1 * service.workdayClient.putWorkerPhoto(identifiers[1], Base64.encoder.encodeToString([0,1,2,3,1] as byte[]), ".jpg") >> {
             throw new RuntimeException("Failed to upload photo")
         }
-        1 * service.workdayClient.putWorkerPhoto(identifiers[2], Base64.encoder.encodeToString([0,1,2,3,2] as byte[]))
+        1 * service.workdayClient.putWorkerPhoto(identifiers[2], Base64.encoder.encodeToString([0,1,2,3,2] as byte[]), ".jpg")
     }
 
     void "test save when putWorkerPhoto fails"() {
@@ -118,7 +121,8 @@ class WorkdayStorageServiceSpec extends Specification{
         Photo photo = new Photo(
                 id: 1,
                 person: new Person(identifier: identifier, email: "$identifier@bacon.edu"),
-                bytes: Base64.decoder.decode(base64Photo)
+                bytes: Base64.decoder.decode(base64Photo),
+                externalURL: "file.jpg"
         )
         List<Photo> photos = [ photo ]
 
@@ -129,7 +133,7 @@ class WorkdayStorageServiceSpec extends Specification{
         photoFiles.size() == 0
 
         1 * service.fileNameResolver.getBaseName(photo) >> identifier
-        1 * service.workdayClient.putWorkerPhoto(identifier, base64Photo) >> {
+        1 * service.workdayClient.putWorkerPhoto(identifier, base64Photo, ".jpg") >> {
             throw new RuntimeException("Failed to upload photo")
         }
     }
