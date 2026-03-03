@@ -3,7 +3,11 @@ package com.cloudcard.photoDownloader
 import spock.lang.*
 
 import java.net.http.HttpClient
+import java.net.http.HttpRequest
 import java.net.http.HttpResponse
+import java.nio.ByteBuffer
+import java.util.concurrent.CountDownLatch
+import java.util.concurrent.Flow
 
 
 class ClearIdClientSpec extends Specification {
@@ -47,10 +51,10 @@ class ClearIdClientSpec extends Specification {
         then:
         token == "asdf"
         1 * mockHttpClient.send({
-            it.uri().toString() == "https://clear-id-sts.mock/connect/token" &&
+            it.uri().toString() == "$mockStsUrl/connect/token" &&
             it.method() == "POST" &&
-            it.headers().firstValue("Content-Type").get() == "application/x-www-form-urlencoded"
-            //TODO assert on the body contents too...
+            it.headers().firstValue("Content-Type").get() == "application/x-www-form-urlencoded" &&
+            assertBodyEquals(it, "client_id=mockClientId&client_secret=mockClientSecret&grant_type=client_credentials")
         }, HttpResponse.BodyHandlers.ofString()) >> mockHttpResponse
         1 * mockHttpResponse.statusCode() >> 200
         1 * mockHttpResponse.body() >> "{\"access_token\":\"asdf\"}"
@@ -72,18 +76,204 @@ class ClearIdClientSpec extends Specification {
         0 * _
     }
 
+    void "test getIdentity when response is 200 and valid"() {
+        given: "client is authenticated"
+        client.authToken = "asdf"
+        String mockExternalId = "mockExternalId"
 
-    //TODO build out the rest of these tests according the pattern that was shown to you above.
-    void "test getIdentity"() {
+        when:
+        String identity = client.getIdentity("mockExternalId")
 
+        then:
+        identity == "mockIdentityId"
+        1 * mockHttpClient.send({
+            it.uri().toString() == "$mockApiUrl/accounts/$mockAccountId/identities?ExternalId=$mockExternalId" &&
+                it.method() == "GET" &&
+                it.headers().firstValue("Accept").get() == "application/json"
+        }, HttpResponse.BodyHandlers.ofString()) >> mockHttpResponse
+        _ * mockHttpResponse.statusCode() >> 200
+        1 * mockHttpResponse.body() >> "{\"identities\":[{\"identityId\":\"mockIdentityId\"}]}"
+
+        and: "no unexpected mocks"
+        0 * _
     }
 
-    void "test putIdentityPicture"() {
+    void "test getIdentity when response is 404"() {
+        given: "client is authenticated"
+        client.authToken = "asdf"
+        String mockExternalId = "mockExternalId"
 
+        when:
+        String identity = client.getIdentity("mockExternalId")
+
+        then:
+        thrown(FailedPhotoFileException)
+
+        and:
+        1 * mockHttpClient.send({
+            it.uri().toString() == "$mockApiUrl/accounts/$mockAccountId/identities?ExternalId=$mockExternalId" &&
+                it.method() == "GET" &&
+                it.headers().firstValue("Accept").get() == "application/json"
+        }, HttpResponse.BodyHandlers.ofString()) >> mockHttpResponse
+        _ * mockHttpResponse.statusCode() >> 404
+
+        and: "no unexpected mocks"
+        0 * _
+    }
+
+    void "test getIdentity when response is 502"() {
+        given: "client is authenticated"
+        client.authToken = "asdf"
+        String mockExternalId = "mockExternalId"
+        String identity = null
+        Throwable caught = null
+
+        when:
+        try {
+            identity = client.getIdentity("mockExternalId")
+        } catch (Throwable e) {
+            caught = e
+        }
+
+        then:
+        identity == null
+        caught.class != FailedPhotoFileException
+        caught.class == Exception
+
+        and:
+        1 * mockHttpClient.send({
+            it.uri().toString() == "$mockApiUrl/accounts/$mockAccountId/identities?ExternalId=$mockExternalId" &&
+                it.method() == "GET" &&
+                it.headers().firstValue("Accept").get() == "application/json"
+        }, HttpResponse.BodyHandlers.ofString()) >> mockHttpResponse
+        _ * mockHttpResponse.statusCode() >> 502
+
+        and: "no unexpected mocks"
+        0 * _
+    }
+
+    void "test getIdentity when response is 200 and empty"() {
+        given: "client is authenticated"
+        client.authToken = "asdf"
+        String mockExternalId = "mockExternalId"
+
+        when:
+        String identity = client.getIdentity("mockExternalId")
+
+        then:
+        thrown(FailedPhotoFileException)
+        identity == null
+        1 * mockHttpClient.send({
+            it.uri().toString() == "$mockApiUrl/accounts/$mockAccountId/identities?ExternalId=$mockExternalId" &&
+                it.method() == "GET" &&
+                it.headers().firstValue("Accept").get() == "application/json"
+        }, HttpResponse.BodyHandlers.ofString()) >> mockHttpResponse
+        _ * mockHttpResponse.statusCode() >> 200
+        1 * mockHttpResponse.body() >> "{\"identities\":[]}"
+
+        and: "no unexpected mocks"
+        0 * _
+    }
+
+    void "test getIdentity when response is 200 and contains multiple identities"() {
+        given: "client is authenticated"
+        client.authToken = "asdf"
+        String mockExternalId = "mockExternalId"
+
+        when:
+        String identity = client.getIdentity("mockExternalId")
+
+        then:
+        thrown(FailedPhotoFileException)
+        identity == null
+        1 * mockHttpClient.send({
+            it.uri().toString() == "$mockApiUrl/accounts/$mockAccountId/identities?ExternalId=$mockExternalId" &&
+                it.method() == "GET" &&
+                it.headers().firstValue("Accept").get() == "application/json"
+        }, HttpResponse.BodyHandlers.ofString()) >> mockHttpResponse
+        _ * mockHttpResponse.statusCode() >> 200
+        1 * mockHttpResponse.body() >> "{\"identities\":[{\"identityId\":\"one\"},{\"identityId\":\"two\"}]}"
+
+        and: "no unexpected mocks"
+        0 * _
+    }
+
+    void "test putIdentityPicture when response is 200"() {
+        given: "client is authenticated"
+        client.authToken = "asdf"
+        String identityId = "mockIdentityId"
+        byte[] photoBytes = [1,2,3,4,5]
+
+        when:
+        client.postIdentityPicture(identityId, photoBytes)
+
+        then:
+        1 * mockHttpClient.send({
+            it.uri().toString() == "$mockApiUrl/accounts/$mockAccountId/identities/$identityId/picture" &&
+                it.method() == "POST" &&
+                it.headers().firstValue("Content-Type").get().startsWith("multipart/form-data; boundary=") &&
+                assertFormDataFile(it, "picture", "picture.jpg", "image/jpeg", photoBytes)
+        }, HttpResponse.BodyHandlers.ofString()) >> mockHttpResponse
+        _ * mockHttpResponse.statusCode() >> 200
+
+        and: "no unexpected mocks"
+        0 * _
+    }
+
+    void "test putIdentityPicture when response is 400"() {
+        given: "client is authenticated"
+        client.authToken = "asdf"
+        String identityId = "mockIdentityId"
+        byte[] photoBytes = [1, 2, 3, 4, 5]
+
+        when:
+        client.postIdentityPicture(identityId, photoBytes)
+
+        then:
+        thrown(Exception)
+
+        1 * mockHttpClient.send({
+            it.uri().toString() == "$mockApiUrl/accounts/$mockAccountId/identities/$identityId/picture" &&
+                it.method() == "POST" &&
+                it.headers().firstValue("Content-Type").get().startsWith("multipart/form-data; boundary=") &&
+                assertFormDataFile(it, "picture", "picture.jpg", "image/jpeg", photoBytes)
+        }, HttpResponse.BodyHandlers.ofString()) >> mockHttpResponse
+        _ * mockHttpResponse.statusCode() >> 400
+
+        and: "no unexpected mocks"
+        0 * _
     }
 
     void "test happyPath of putPhoto"() {
+        given: "client is authenticated"
+        client.authToken = "asdf"
+        String mockExternalId = "mockExternalId"
+        String identityId = "mockIdentityId"
+        byte[] photoBytes = [1,2,3,4,5]
 
+        when:
+        client.putPhoto(mockExternalId, photoBytes)
+
+        then: "we get the identity"
+        1 * mockHttpClient.send({
+            it.uri().toString() == "$mockApiUrl/accounts/$mockAccountId/identities?ExternalId=$mockExternalId" &&
+                it.method() == "GET" &&
+                it.headers().firstValue("Accept").get() == "application/json"
+        }, HttpResponse.BodyHandlers.ofString()) >> mockHttpResponse
+        _ * mockHttpResponse.statusCode() >> 200
+        1 * mockHttpResponse.body() >> "{\"identities\":[{\"identityId\":\"mockIdentityId\"}]}"
+
+        and: "photo is posted to the mockIdentity"
+        1 * mockHttpClient.send({
+            it.uri().toString() == "$mockApiUrl/accounts/$mockAccountId/identities/$identityId/picture" &&
+                it.method() == "POST" &&
+                it.headers().firstValue("Content-Type").get().startsWith("multipart/form-data; boundary=") &&
+                assertFormDataFile(it, "picture", "picture.jpg", "image/jpeg", photoBytes)
+        }, HttpResponse.BodyHandlers.ofString()) >> mockHttpResponse
+        _ * mockHttpResponse.statusCode() >> 200
+
+        and: "no unexpected mocks"
+        0 * _
     }
 
     /**
@@ -115,4 +305,88 @@ class ClearIdClientSpec extends Specification {
         assert client.close()
     }
 
+    /**
+     * Private Helpers
+     */
+    boolean assertBodyEquals(HttpRequest request, String expectedValue) {
+        FlowSubscriber<ByteBuffer> flowSubscriber = new FlowSubscriber<>();
+        request.bodyPublisher().get().subscribe(flowSubscriber)
+        byte[] actualValueBytes = flowSubscriber.getBodyItems().get(0).array()
+        String actualValue = new String(actualValueBytes)
+        boolean result = actualValue == expectedValue
+
+        if (!result) {
+            System.err.println("assertBodyEquals failed:")
+            System.err.println("    Expected: $expectedValue")
+            System.err.println("    Received: $actualValue")
+        }
+
+        return result
+    }
+
+    boolean assertFormDataFile(HttpRequest request, String expectedName, String expectedFileName, String expectedFileContentType, byte[] expectedFileBytes) {
+        String boundary = request.headers().firstValue("Content-Type").get().split("=")[1]
+        byte[] separator = "--${boundary}\r\nContent-Disposition: form-data; name=\"$expectedName\"; filename=\"$expectedFileName\"\r\nContent-Type: $expectedFileContentType\r\n\r\n".getBytes()
+        byte[] endBoundary = "\r\n--${boundary}--\r\n".getBytes()
+        byte[] expectedValueBytes = new byte[separator.length + expectedFileBytes.length + endBoundary.length]
+        System.arraycopy(separator, 0, expectedValueBytes, 0, separator.length)
+        System.arraycopy(expectedFileBytes, 0, expectedValueBytes, separator.length, expectedFileBytes.length)
+        System.arraycopy(endBoundary, 0, expectedValueBytes, separator.length + expectedFileBytes.length, endBoundary.length)
+
+
+        FlowSubscriber<ByteBuffer> flowSubscriber = new FlowSubscriber<>();
+        request.bodyPublisher().get().subscribe(flowSubscriber)
+        byte[] actualValueBytes = flowSubscriber.getBodyItems().get(0).array()
+
+        boolean result = actualValueBytes == expectedValueBytes
+
+        if (!result) {
+            String expectedValue = new String(expectedValueBytes)
+            String actualValue = new String(actualValueBytes)
+
+            System.err.println("assertFormDataFile failed:")
+            System.err.println("    Expected Value:")
+            System.err.println(expectedValue)
+            System.err.println("    Received Value:")
+            System.err.println(actualValue)
+        }
+
+        return result
+    }
+}
+
+
+
+class FlowSubscriber<T> implements Flow.Subscriber<T> {
+    private final CountDownLatch latch = new CountDownLatch(1)
+    private List<T> bodyItems = new ArrayList<>()
+
+    List<T> getBodyItems() {
+        try {
+            this.latch.await()
+        } catch (InterruptedException e) {
+            throw new RuntimeException(e)
+        }
+        return bodyItems
+    }
+
+    @Override
+    void onSubscribe(Flow.Subscription subscription) {
+        subscription.request(Long.MAX_VALUE)
+    }
+
+    @Override
+    void onNext(T item) {
+        this.bodyItems.add(item)
+    }
+
+    @Override
+    void onError(Throwable throwable) {
+        this.latch.countDown()
+    }
+
+    @Override
+    public void onComplete() {
+        this.latch.countDown()
+    }
 }
