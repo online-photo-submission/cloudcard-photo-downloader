@@ -56,7 +56,7 @@ class CloudCardPhotoService implements PhotoService {
 
     @Override
     Photo markAsFailed(Photo photo, String errorMessage) throws Exception {
-        cloudCardClient.updateStatus(photo, CloudCardClient.ON_HOLD, errorMessage)
+        cloudCardClient.updateStatus(photo, CloudCardClient.FAILED, errorMessage)
     }
 
     @Override
