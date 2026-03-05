@@ -1,4 +1,5 @@
 rm *.jpg
+rm *.png
 rm C*.udf
 rm *.txt
 echo

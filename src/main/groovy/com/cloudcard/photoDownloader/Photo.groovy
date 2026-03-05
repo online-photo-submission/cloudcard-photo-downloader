@@ -212,4 +212,9 @@ class Photo {
     void setAdditionalProperty(String name, Object value) {
         this.additionalProperties.put(name, value)
     }
+
+    @JsonIgnore
+    String getFileExtension() {
+        return getExternalURL().toLowerCase().endsWith(".png") ? ".png" : ".jpg";
+    }
 }

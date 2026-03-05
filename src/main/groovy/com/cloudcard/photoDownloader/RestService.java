@@ -20,10 +20,12 @@ public class RestService {
     }
 
     private static byte[] fetchBytes(String externalURL) throws Exception {
+        boolean isjpg = externalURL.toLowerCase().endsWith(".jpg");
+        String headerType = isjpg ? "image/jpeg" : "image/png";
 
         HttpResponse<byte[]> response = Unirest.get(externalURL)
-                                               .header("accept", "image/jpeg;charset=utf-8")
-                                               .header("Content-Type", "image/jpeg;charset=utf-8")
+                                               .header("accept", headerType + ";charset=utf-8")
+                                               .header("Content-Type", headerType + ";charset=utf-8")
                                                .asObject(RawResponse::getContentAsBytes);
 
         if (response.getStatus() != 200) {

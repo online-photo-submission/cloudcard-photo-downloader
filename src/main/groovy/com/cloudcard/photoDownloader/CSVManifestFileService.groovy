@@ -112,9 +112,9 @@ class CSVManifestFileService implements ManifestFileService {
 
         if (column == 'photo_fullFilePath') { return file?.fileName }
 
-        if (column == 'photo_fileName') { return "${file?.baseName}.jpg" }
+        if (column == 'photo_fileName') { return "${file?.baseName}${photo.fileExtension}" }
 
-        if (column == 'photo_customFilePath') { return "${customFilePath}${file?.baseName}.jpg" }
+        if (column == 'photo_customFilePath') { return "${customFilePath}${file?.baseName}${photo.fileExtension}" }
 
         def currentObject = photo
 

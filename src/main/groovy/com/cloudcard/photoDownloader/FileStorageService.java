@@ -83,7 +83,7 @@ public class FileStorageService implements StorageService {
             return null;
         }
 
-        String fullFileName = fileService.writeBytesToFile(directory, baseName + ".jpg", photo.getBytes());
+        String fullFileName = fileService.writeBytesToFile(directory, baseName + photo.getFileExtension(), photo.getBytes());
 
         PhotoFile photoFile = postProcessor.process(photo, directory, new PhotoFile(baseName, fullFileName, photo.getId()));
 

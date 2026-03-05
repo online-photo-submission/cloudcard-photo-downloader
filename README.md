@@ -335,7 +335,7 @@ Note you will need to create an API integration in the Administration section of
 - DatabaseFileNameResolver.baseFileName.query
     - default: none
     - description: Select query to get the base file name.
-        - If using the FileStorageService, this will have `.jpg` added to it.
+        - If using the FileStorageService, this will have `.jpg` added to it. (Or `.png` if you are using transparent backgrounds within your organization settings.)
         - If using the DatabaseStorageService, this is the value that will be written to the `studentId` column in your database. This column can be specified in the DatabaseStorageService settings.
     - example:
         - `SELECT TOP 1 student_id FROM my_table WHERE external_id = ? AND other_column LIKE 'abc%' ORDER BY date_created DESC`

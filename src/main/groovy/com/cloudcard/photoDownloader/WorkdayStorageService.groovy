@@ -64,7 +64,7 @@ class WorkdayStorageService implements StorageService {
         }
 
         try {
-            workdayClient.putWorkerPhoto(accountId, photoBase64)
+            workdayClient.putWorkerPhoto(accountId, photoBase64, photo.fileExtension)
         } catch (Exception e) {
             log.error("Photo $photo.id for $photo.person.email failed to upload into Workday.")
             return null
