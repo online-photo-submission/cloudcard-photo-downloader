@@ -15,6 +15,7 @@ import static groovy.json.JsonOutput.prettyPrint
 @JsonPropertyOrder(["aspectRatio", "classifications", "domainClass", "id", "isAspectRatioCorrect", "links", "lowestClassification", "originalPhoto", "person", "publicKey", "status"])
 class Photo {
 
+    static final List<String> APPROVED_STATUSES = ["APPROVED", "READY_FOR_DOWNLOAD", "DOWNLOADED", "DONE", "PRINTED"]
     static final Logger log = LoggerFactory.getLogger(Photo.class)
 
     @JsonProperty("aspectRatio")
