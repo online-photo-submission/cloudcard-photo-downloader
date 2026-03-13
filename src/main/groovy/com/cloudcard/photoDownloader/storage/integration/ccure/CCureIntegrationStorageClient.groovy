@@ -89,13 +89,14 @@ class CCureIntegrationStorageClient implements IntegrationStorageClient {
             // CCURE won't use the local identifier, we need to look up their CCURE id
             CCurePersonnel cCurePersonnel = cCureClient.getPersonnelDetailsByEmail(photo.person.email)
             if (cCurePersonnel?.id) {
-                cCureClient.storePhoto(cCurePersonnel.id, photo.bytesBase64)
+                cCureClient.storePhoto(cCurePersonnel.id, photo.bytesBase64, cCurePersonnel.partitionId)
             } else if (createCCurePersonnel) {
                 Long id = cCureClient.createPersonnel(photo.person.customFields?.firstName, photo.person.customFields?.lastName, photo.person.email)
                 if (!id) {
                     throw new FailedPhotoFileException("Unable to create CCURE personnel record for $photo.person.email")
                 }
-                cCureClient.storePhoto(id, photo.bytesBase64)
+                cCurePersonnel = cCureClient.getPersonnelDetailsByEmail(photo.person.email)
+                cCureClient.storePhoto(id, photo.bytesBase64, cCurePersonnel.partitionId)
             } else {
                 throw new FailedPhotoFileException("CCURE Personnel record not found for $photo.person.email")
             }

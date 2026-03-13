@@ -53,9 +53,6 @@ class CCureClient {
     @Value('${CCureClient.clientId}')
     String clientId
 
-    @Value('${CCureClient.partition:1}')
-    String partition
-
     @Value('${CCureClient.employeeIdField}')
     String employeeIdField
 
@@ -203,7 +200,7 @@ class CCureClient {
         }
     }
 
-    void storePhoto(Long identifier, String base64Image) {
+    void storePhoto(Long identifier, String base64Image, Long partition) {
         removePrimaryPhoto(identifier)
 
         log.trace "Sending photo to CCURE for $identifier"
@@ -224,7 +221,7 @@ class CCureClient {
                 "Children[0].PropertyValues[0]"       : "Portrait_${identifier}",
                 "Children[0].PropertyValues[1]"       : identifier,
                 "Children[0].PropertyValues[2]"       : "1", // 1 = Portrait
-                "Children[0].PropertyValues[3]"       : partition ?: "1",
+                "Children[0].PropertyValues[3]"       : partition?.toString() ?: "1",
                 "Children[0].PropertyValues[4]"       : "true",
                 "Children[0].PropertyValues[5]"       : base64Image,
                 "Children[0].PropertyValues[6]"       : LocalDateTime.now().format(LastRunPropertyServiceImpl.CCURE_DATE_FORMATTER),
@@ -269,13 +266,17 @@ class CCureClient {
                 responseItems.remove(0)
                 log.info("Audit Records Found: " + responseItems.size());
                 responseItems.each {
-                    resultList << getPersonnelDetailsByGuid(it.PrimaryObjectIdentity)
+                    // Ignore any creation records for photos, cards, etc., that may be attached to a person as a secondary object.
+                    if (it.SecondaryObjectType == "") {
+                        resultList << getPersonnelDetailsByGuid(it.PrimaryObjectIdentity)
+                    }
                 }
 
                 // use the metadata to recursively fetch more pages if needed
                 if (metaData.TotalPages > pageNumber) {
                     return queryAuditLogsForNewPeople(pageNumber + 1, resultList)
                 } else {
+                    log.info("Processing ${resultList.size()} personnel creation records. Discarding any secondary object records.")
                     return resultList
                 }
             }
@@ -284,6 +285,12 @@ class CCureClient {
         }
     }
 
+    /**
+     * Be careful with overusing these calls. They include the encoded photo 3 times (full image, thumbnail, and a
+     * small 3rd version), so the response is big and potentially slow.
+     * @param guid
+     * @return
+     */
     CCurePersonnel getPersonnelDetailsByGuid(String guid) {
         MultipartBody request = Unirest.post(apiUrl + "/Objects/FindObjsWithCriteriaFilter")
                 .field("TypeFullName", CCurePersonnel.TYPE)
@@ -295,6 +302,12 @@ class CCureClient {
         return executePersonnelSearch(request);
     }
 
+    /**
+     * Be careful with overusing these calls. They include the encoded photo 3 times (full image, thumbnail, and a
+     * small 3rd version), so the response is big and potentially slow.
+     * @param guid
+     * @return
+     */
     CCurePersonnel getPersonnelDetailsByEmail(String email) {
         MultipartBody request = Unirest.post(apiUrl + "/Objects/FindObjsWithCriteriaFilter")
                 .field("TypeFullName", CCurePersonnel.TYPE)
@@ -305,7 +318,7 @@ class CCureClient {
         return executePersonnelSearch(request);
     }
 
-    CCurePersonnel executePersonnelSearch(MultipartBody request) {
+    private CCurePersonnel executePersonnelSearch(MultipartBody request) {
         HttpResponse<JsonNode> response = throttledCall {
             request
                     .header("session-id", currentSessionId)
@@ -324,7 +337,8 @@ class CCureClient {
 
             return new CCurePersonnel(
                     id: responseObj.optInt("ObjectID"),
-                    emailAddress: responseObj.optString("EmailAddress")
+                    emailAddress: responseObj.optString("EmailAddress"),
+                    partitionId: responseObj.optInt("PartitionID")
             );
         } else {
             log.error("Error fetching details: " + response.getStatus() + " - " + response.getStatusText());
@@ -364,7 +378,11 @@ class CCureClient {
             return
         }
 
-        // Create a unique name to prevent future naming collisions
+        disconnectPhotoFromPerson(personIdentifier, imageObjectId)
+    }
+
+    private void disconnectPhotoFromPerson(long personIdentifier, String imageObjectId) {
+// Create a unique name to prevent future naming collisions
         def timestamp = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(new Date())
         def uniqueName = "RemovedImage-${personIdentifier}-${timestamp}"
 
@@ -372,12 +390,12 @@ class CCureClient {
 
         // Update to disassociate the image, using info from the docs
         Map<String, Object> updateFields = [
-                "PropertyNames[0]"  : "Name",
-                "PropertyNames[1]"  : "ParentClassType",
-                "PropertyNames[2]"  : "ParentID",
-                "PropertyValues[0]" : uniqueName,
-                "PropertyValues[1]" : "CCUREIDBadgeData.BadgeLayout", // Dummy class
-                "PropertyValues[2]" : "0"                             // Dummy ID
+                "PropertyNames[0]" : "Name",
+                "PropertyNames[1]" : "ParentClassType",
+                "PropertyNames[2]" : "ParentID",
+                "PropertyValues[0]": uniqueName,
+                "PropertyValues[1]": "CCUREIDBadgeData.BadgeLayout", // Dummy class
+                "PropertyValues[2]": "0"                             // Dummy ID
         ]
 
         HttpResponse<String> response = throttledCall {

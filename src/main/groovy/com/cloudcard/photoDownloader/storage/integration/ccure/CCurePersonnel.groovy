@@ -6,4 +6,5 @@ class CCurePersonnel {
 
     Long id
     String emailAddress
+    Long partitionId
 }

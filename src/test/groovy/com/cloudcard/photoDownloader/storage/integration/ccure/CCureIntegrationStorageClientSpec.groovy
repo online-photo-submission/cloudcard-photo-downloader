@@ -30,7 +30,7 @@ class CCureIntegrationStorageClientSpec extends Specification {
 
     def "test pushPhoto with existing CloudCard person and approved photo"() {
         given:
-        CCurePersonnel personnel = new CCurePersonnel(id: 123L, emailAddress: "test@example.com")
+        CCurePersonnel personnel = new CCurePersonnel(id: 123L, emailAddress: "test@example.com", partitionId: 1)
         Photo photo = new Photo(id: 1, status: "APPROVED", bytes: "bytes")
         Person person = new Person(
             email: "test@example.com",
@@ -45,13 +45,13 @@ class CCureIntegrationStorageClientSpec extends Specification {
         1 * cloudCardClient.findPerson("test@example.com") >> person
         1 * restService.fetchBytes(photo)
         1 * cCureClient.getPersonnelDetailsByEmail("test@example.com") >> personnel
-        1 * cCureClient.storePhoto(personnel.id, encodedBytes)
+        1 * cCureClient.storePhoto(personnel.id, encodedBytes, 1)
         1 * lastRunPropertyService.updateLastRunTimestamp()
     }
 
     def "test pushPhoto with non-approved photo does not push to CCURE"() {
         given:
-        CCurePersonnel personnel = new CCurePersonnel(id: 123L, emailAddress: "test@example.com")
+        CCurePersonnel personnel = new CCurePersonnel(id: 123L, emailAddress: "test@example.com", partitionId: 1)
         Photo photo = new Photo(id: 1, status: "PENDING")
         Person person = new Person(
             email: "test@example.com",
@@ -70,7 +70,7 @@ class CCureIntegrationStorageClientSpec extends Specification {
 
     def "test pushPhoto creates CloudCard person when none exists"() {
         given:
-        CCurePersonnel personnel = new CCurePersonnel(id: 123L, emailAddress: "test@example.com")
+        CCurePersonnel personnel = new CCurePersonnel(id: 123L, emailAddress: "test@example.com", partitionId: 1)
 
         when:
         integrationClient.pushPhoto(personnel)
@@ -83,7 +83,7 @@ class CCureIntegrationStorageClientSpec extends Specification {
 
     def "test pushPhoto ignores record when CloudCard person has no photo"() {
         given:
-        CCurePersonnel personnel = new CCurePersonnel(id: 123L, emailAddress: "test@example.com")
+        CCurePersonnel personnel = new CCurePersonnel(id: 123L, emailAddress: "test@example.com", partitionId: 1)
         Person person = new Person(email: "test@example.com", additionalProperties: [:])
 
         when:
@@ -100,14 +100,14 @@ class CCureIntegrationStorageClientSpec extends Specification {
         String identifier = "emp123"
         Person person = new Person(email: "test@example.com", customFields: [firstName: "John", lastName: "Doe"])
         Photo photo = new Photo(id: 1, person: person, bytes: "bytes")
-        CCurePersonnel personnel = new CCurePersonnel(id: 456L, emailAddress: "test@example.com")
+        CCurePersonnel personnel = new CCurePersonnel(id: 456L, emailAddress: "test@example.com", partitionId: 1)
 
         when:
         integrationClient.putPhoto(identifier, photo)
 
         then:
         1 * cCureClient.getPersonnelDetailsByEmail("test@example.com") >> personnel
-        1 * cCureClient.storePhoto(456L, encodedBytes)
+        1 * cCureClient.storePhoto(456L, encodedBytes, 1)
     }
 
     def "test putPhoto throws exception when CCURE personnel not found and createCCurePersonnel is false"() {
@@ -139,7 +139,8 @@ class CCureIntegrationStorageClientSpec extends Specification {
         then:
         1 * cCureClient.getPersonnelDetailsByEmail("test@example.com") >> null
         1 * cCureClient.createPersonnel("John", "Doe", "test@example.com") >> 789L
-        1 * cCureClient.storePhoto(789L, encodedBytes)
+        1 * cCureClient.getPersonnelDetailsByEmail("test@example.com") >> new CCurePersonnel(id: 789L, emailAddress: "test@example.com", partitionId: 1)
+        1 * cCureClient.storePhoto(789L, encodedBytes, 1)
     }
 
     def "test putPhoto throws exception when CCURE personnel creation fails"() {
@@ -164,7 +165,7 @@ class CCureIntegrationStorageClientSpec extends Specification {
         String identifier = "emp123"
         Person person = new Person(email: "test@example.com")
         Photo photo = new Photo(id: 1, person: person, bytes: "bytes")
-        CCurePersonnel personnel = new CCurePersonnel(id: null, emailAddress: "test@example.com")
+        CCurePersonnel personnel = new CCurePersonnel(id: null, emailAddress: "test@example.com", partitionId: 1)
         integrationClient.createCCurePersonnel = false
 
         when:
@@ -215,8 +216,8 @@ class CCureIntegrationStorageClientSpec extends Specification {
 
     def "test init authenticates and processes audit logs"() {
         given:
-        CCurePersonnel personnel1 = new CCurePersonnel(id: 1L, emailAddress: "user1@example.com")
-        CCurePersonnel personnel2 = new CCurePersonnel(id: 2L, emailAddress: "user2@example.com")
+        CCurePersonnel personnel1 = new CCurePersonnel(id: 1L, emailAddress: "user1@example.com", partitionId: 1)
+        CCurePersonnel personnel2 = new CCurePersonnel(id: 2L, emailAddress: "user2@example.com", partitionId: 1)
         List<CCurePersonnel> auditLogs = [personnel1, personnel2]
 
         when:
