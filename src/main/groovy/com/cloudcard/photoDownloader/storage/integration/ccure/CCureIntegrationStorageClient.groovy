@@ -75,7 +75,7 @@ class CCureIntegrationStorageClient implements IntegrationStorageClient {
                 restService.fetchBytes(photo)
                 putPhoto(personnel.id as String, photo)
             }
-        } else {
+        } else if (!cloudCardPerson) {
             log.trace "$personnel.emailAddress does not exist in RemotePhoto, creating record there"
             cloudCardClient.createPerson(personnel.emailAddress)
         }
