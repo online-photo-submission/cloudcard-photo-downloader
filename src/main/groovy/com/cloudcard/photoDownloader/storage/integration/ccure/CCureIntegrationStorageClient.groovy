@@ -66,6 +66,7 @@ class CCureIntegrationStorageClient implements IntegrationStorageClient {
      */
     void pushPhoto(CCurePersonnel personnel) {
         // load person by email
+        log.trace("Loading cloudcard record for $personnel.emailAddress")
         Person cloudCardPerson = cloudCardClient.findPerson(personnel.emailAddress)
         if (cloudCardPerson?.additionalProperties?.currentPhoto) {
             log.trace "Person $personnel.emailAddress has a photo, sending to CCURE"
@@ -90,7 +91,7 @@ class CCureIntegrationStorageClient implements IntegrationStorageClient {
             if (cCurePersonnel?.id) {
                 cCureClient.storePhoto(cCurePersonnel.id, photo.bytesBase64)
             } else if (createCCurePersonnel) {
-                Long id = cCureClient.createPersonnel(photo.person.customFields.firstName, photo.person.customFields.lastName, photo.person.email)
+                Long id = cCureClient.createPersonnel(photo.person.customFields?.firstName, photo.person.customFields?.lastName, photo.person.email)
                 if (!id) {
                     throw new FailedPhotoFileException("Unable to create CCURE personnel record for $photo.person.email")
                 }

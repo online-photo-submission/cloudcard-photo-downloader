@@ -61,8 +61,7 @@ public class LastRunPropertyServiceImpl implements LastRunPropertyService {
             try (InputStream is = new FileInputStream(file)) {
                 props.load(is);
             } catch (IOException e) {
-                // Log error or throw runtime exception
-                e.printStackTrace();
+                throw new RuntimeException("Failed to load properties file", e);
             }
         }
         return props;

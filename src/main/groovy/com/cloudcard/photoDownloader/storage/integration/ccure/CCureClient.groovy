@@ -1,11 +1,16 @@
 //file:noinspection SpellCheckingInspection
 package com.cloudcard.photoDownloader.storage.integration.ccure
 
+import com.cloudcard.photoDownloader.FailedPhotoFileException
+import com.cloudcard.photoDownloader.IntegrationRateLimitExceededException
 import com.github.signalr4j.client.hubs.HubConnection
 import com.github.signalr4j.client.hubs.HubProxy
+import groovy.json.JsonSlurper
+import io.github.resilience4j.ratelimiter.RateLimiter
+import io.github.resilience4j.ratelimiter.RateLimiterConfig
+import io.github.resilience4j.ratelimiter.RequestNotPermitted
 import jakarta.annotation.PostConstruct
 import jakarta.annotation.PreDestroy
-import kong.unirest.core.HttpRequestWithBody
 import kong.unirest.core.HttpResponse
 import kong.unirest.core.JsonNode
 import kong.unirest.core.MultipartBody
@@ -19,6 +24,8 @@ import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty
 import org.springframework.scheduling.annotation.Scheduled
 import org.springframework.stereotype.Component
 
+import java.text.SimpleDateFormat
+import java.time.Duration
 import java.time.LocalDateTime
 
 import static com.cloudcard.photoDownloader.ApplicationPropertiesValidator.throwIfBlank
@@ -34,8 +41,8 @@ class CCureClient {
     LastRunPropertyService lastRunPropertyService
 
     @Value('${CCureClient.baseUrl}')
-    static String baseUrl // http://<server-ip>/victorWebService
-    static String apiUrl = "$baseUrl/api"// http://<server-ip>/victorWebService/api
+    String baseUrl // http://<server-ip>/victorWebService
+    static String apiUrl // http://<server-ip>/victorWebService/api
 
     @Value('${CCureClient.username}')
     String username
@@ -55,7 +62,7 @@ class CCureClient {
     static String currentSessionId
     static HubConnection hubConnection
 
-    //TODO: add throttling backoff to the CCURE api calls
+    RateLimiter ccureRateLimiter
 
     @PostConstruct
     void init() {
@@ -63,6 +70,16 @@ class CCureClient {
         throwIfBlank(username, "The CCURE username for the api must be provided in CCureClient.username")
         throwIfBlank(password, "The CCURE password for the api must be provided in CCureClient.password")
         throwIfBlank(clientId, "The CCURE integration client ID must be provided in CCureClient.clientId")
+        apiUrl = "$baseUrl/api"
+
+        //CCURE docs say to space out all calls by 1-2 seconds to avoid rate limiting, so this will in enforce a 1
+        //second wait between calls
+        RateLimiterConfig config = RateLimiterConfig.custom()
+                .limitRefreshPeriod(Duration.ofSeconds(1))
+                .limitForPeriod(1)
+                .timeoutDuration(Duration.ofSeconds(30))
+                .build()
+        this.ccureRateLimiter = RateLimiter.of("ccureApi", config)
     }
 
     @PreDestroy
@@ -73,25 +90,38 @@ class CCureClient {
             log.info("Connection hub stopped. Logging out...")
         }
 
+        // manual pause to avoid throttling, since this is a static method
+        Thread.sleep(2000)
+
         HttpResponse<String> response = Unirest.post("${apiUrl}/Authenticate/Logout")
-                .header("session-id", currentSessionId)
-                .asString();
+                    .header("session-id", currentSessionId)
+                    .asString();
 
         if (response.isSuccess()) {
             log.info("Logged out successfully.");
         }
     }
 
+    def throttledCall(Closure apiCall) {
+        try {
+            return RateLimiter.decorateCallable(ccureRateLimiter, apiCall).call()
+        } catch (RequestNotPermitted ex) {
+            throw new IntegrationRateLimitExceededException()
+        }
+    }
+
     String authenticate() {
         log.info("Authenitcating with CCURE...")
-        HttpResponse<String> response = Unirest.post("${apiUrl}/authenticate/Login")
-                .header("Content-Type", "application/x-www-form-urlencoded")
-                .field("UserName", username)
-                .field("Password", password)
-                .field("ClientName", "RemotePhoto Integration")
-                .field("ClientID", clientId)
-                .field("ClientVersion", "3.10")
-                .asString();
+        HttpResponse<String> response = throttledCall {
+            Unirest.post("${apiUrl}/authenticate/Login")
+                    .header("Content-Type", "application/x-www-form-urlencoded")
+                    .field("UserName", username)
+                    .field("Password", password)
+                    .field("ClientName", "RemotePhoto Integration")
+                    .field("ClientID", clientId)
+                    .field("ClientVersion", "3.10")
+                    .asString()
+        } as HttpResponse<String>
 
         if (response.isSuccess()) {
             String sessionId = response.getHeaders().getFirst("session-id");
@@ -99,7 +129,7 @@ class CCureClient {
             currentSessionId =  sessionId;
             return currentSessionId
         } else {
-            throw new RuntimeException("Login failed: " + response.getStatusText());
+            throw new RuntimeException("CCURE Login failed: " + response.getStatusText());
         }
     }
 
@@ -108,10 +138,12 @@ class CCureClient {
         if (currentSessionId == null) return;
 
         try {
-            HttpResponse<String> response = Unirest.post("${apiUrl}/v2/session/keepalive")
-                    .header("session-id", currentSessionId)
-                    .header("accept", "application/json")
-                    .asString();
+            HttpResponse<String> response = throttledCall {
+                Unirest.post("${apiUrl}/v2/session/keepalive")
+                        .header("session-id", currentSessionId)
+                        .header("accept", "application/json")
+                        .asString()
+            } as HttpResponse<String>
 
             if (response.isSuccess()) {
                 log.trace("Session refreshed. Server UTC: " + response.getBody());
@@ -119,22 +151,31 @@ class CCureClient {
                 log.trace("Session expired or invalid ID used.");
                 init()
             }
+        } catch (IntegrationRateLimitExceededException e) {
+            // ignore, we're already sending enough requests to keep the connection alive
         } catch (Exception e) {
             init()
         }
     }
 
     Long createPersonnel(String firstName, String lastName, String email) {
-        def response = Unirest.post("${apiUrl}/Objects/Persist")
-                .header("session-id", currentSessionId)
-                .field("Type", "SoftwareHouse.NextGen.Common.SecurityObjects.Personnel")
-                .field("PropertyNames[0]", "FirstName")
-                .field("PropertyValues[0]", firstName)
-                .field("PropertyNames[1]", "LastName")
-                .field("PropertyValues[1]", lastName)
-                .field("PropertyNames[2]", "EmailAddress")
-                .field("PropertyValues[2]", email)
-                .asString()
+        if (!firstName || !lastName) {
+            log.warn("First/Last Name fields were missing for $email; unable to create CCURE Personnel")
+            return null
+        }
+
+        HttpResponse<String> response = throttledCall {
+            Unirest.post("${apiUrl}/Objects/Persist")
+                    .header("session-id", currentSessionId)
+                    .field("Type", "SoftwareHouse.NextGen.Common.SecurityObjects.Personnel")
+                    .field("PropertyNames[0]", "FirstName")
+                    .field("PropertyValues[0]", firstName)
+                    .field("PropertyNames[1]", "LastName")
+                    .field("PropertyValues[1]", lastName)
+                    .field("PropertyNames[2]", "EmailAddress")
+                    .field("PropertyValues[2]", email)
+                    .asString()
+        } as HttpResponse<String>
 
         if (response.isSuccess()) {
             return extractObjectId(response.body)
@@ -163,36 +204,42 @@ class CCureClient {
     }
 
     void storePhoto(Long identifier, String base64Image) {
+        removePrimaryPhoto(identifier)
+
         log.trace "Sending photo to CCURE for $identifier"
 
-        Map payload = [
-            Type    : "SoftwareHouse.NextGen.Common.SecurityObjects.Personnel",
-            ID      : identifier,
-            Children: [
-                [
-                    Type          : "SoftwareHouse.NextGen.Common.SecurityObjects.Images",
-                    PropertyNames : ["Name", "ParentId", "ImageType", "PartitionID", "Primary", "Image"],
-                    PropertyValues: [
-                            "Portrait_${identifier}", // Name
-                            identifier,               // ParentId
-                            "1",                       // ImageType (1 = Portrait)
-                            partition,                       // PartitionID (Default)
-                            "true",                    // Primary
-                            base64Image                // Base64 String
-                    ]
-                ]
-            ]
+        Map<String, Object> fields = [
+                "Type"                                : "SoftwareHouse.NextGen.Common.SecurityObjects.Personnel",
+                "ID"                                  : identifier,
+                "Children[0].Type"                    : "SoftwareHouse.NextGen.Common.SecurityObjects.Images",
+                // Note: Field names for arrays in v1 form posts often need explicit indexing
+                "Children[0].PropertyNames[0]"        : "Name",
+                "Children[0].PropertyNames[1]"        : "ParentId",
+                "Children[0].PropertyNames[2]"        : "ImageType",
+                "Children[0].PropertyNames[3]"        : "PartitionID",
+                "Children[0].PropertyNames[4]"        : "Primary",
+                "Children[0].PropertyNames[5]"        : "Image",
+                "Children[0].PropertyNames[6]"        : "ImageCaptureDate",
+
+                "Children[0].PropertyValues[0]"       : "Portrait_${identifier}",
+                "Children[0].PropertyValues[1]"       : identifier,
+                "Children[0].PropertyValues[2]"       : "1", // 1 = Portrait
+                "Children[0].PropertyValues[3]"       : partition ?: "1",
+                "Children[0].PropertyValues[4]"       : "true",
+                "Children[0].PropertyValues[5]"       : base64Image,
+                "Children[0].PropertyValues[6]"       : LocalDateTime.now().format(LastRunPropertyServiceImpl.CCURE_DATE_FORMATTER),
         ]
 
-        // Step 3: Execute the POST request
-        HttpResponse<String> response = Unirest.post("${apiUrl}/Objects/PersistToContainer")
-                .header("session-id", currentSessionId)
-                .header("Content-Type", "application/json")
-                .body(payload)
-                .asString()
+        HttpResponse<String> response = throttledCall {
+            Unirest.post("${apiUrl}/Objects/PersistToContainer")
+                    .header("session-id", currentSessionId)
+                    .header("Content-Type", "application/x-www-form-urlencoded")
+                    .fields(fields)
+                    .asString()
+        } as HttpResponse<String>
 
         if (!response.success) {
-            throw new RuntimeException("Failed to upload photo: ${response.status} - ${response.body}")
+            throw new FailedPhotoFileException("Failed to upload photo: ${response.status} - ${response.body}")
         }
 
         log.trace "Photo uploaded successfully for Personnel ID: ${identifier}"
@@ -202,16 +249,18 @@ class CCureClient {
         String lastRun = lastRunPropertyService.lastRunTimestamp
         log.info("Check CCURE audit logs (page $pageNumber) for personnel created since $lastRun ...")
 
-        HttpResponse<JsonNode> response = Unirest.post(apiUrl + "/v2/Audit/FindInAudit")
-                .header("session-id", currentSessionId)
-                .header("Content-Type", "application/json")
-                .body(new AuditRequest(
-                        lastRun,
-                        LocalDateTime.now().plusDays(1).format(LastRunPropertyServiceImpl.CCURE_DATE_FORMATTER),
-                        PAGE_SIZE,
-                        pageNumber
-                ))
-                .asJson();
+        HttpResponse<JsonNode> response = throttledCall {
+            Unirest.post(apiUrl + "/v2/Audit/FindInAudit")
+                    .header("session-id", currentSessionId)
+                    .header("Content-Type", "application/json")
+                    .body(new AuditRequest(
+                            lastRun,
+                            LocalDateTime.now().plusDays(1).format(LastRunPropertyServiceImpl.CCURE_DATE_FORMATTER),
+                            PAGE_SIZE,
+                            pageNumber
+                    ))
+                    .asJson()
+        } as HttpResponse<JsonNode>
 
         if (response.isSuccess()) {
             JSONArray responseItems = response.node.jsonArray
@@ -235,11 +284,34 @@ class CCureClient {
         }
     }
 
+    CCurePersonnel getPersonnelDetailsByGuid(String guid) {
+        MultipartBody request = Unirest.post(apiUrl + "/Objects/FindObjsWithCriteriaFilter")
+                .field("TypeFullName", "SoftwareHouse.NextGen.Common.SecurityObjects.Personnel")
+                .field("whereClause", "GUID = ?")
+                .field("arguments[]", guid)
+                .field("ArgTypes[]", "GUID") // Mandatory when passing a GUID argument
+                .field("PageSize", "1");
+
+        return executePersonnelSearch(request);
+    }
+
+    CCurePersonnel getPersonnelDetailsByEmail(String email) {
+        MultipartBody request = Unirest.post(apiUrl + "/Objects/FindObjsWithCriteriaFilter")
+                .field("TypeFullName", "SoftwareHouse.NextGen.Common.SecurityObjects.Personnel")
+                .field("whereClause", "EmailAddress = ?")
+                .field("arguments[]", email) // ArgTypes[] is not required for standard string comparisons
+                .field("PageSize", "1");
+
+        return executePersonnelSearch(request);
+    }
+
     CCurePersonnel executePersonnelSearch(MultipartBody request) {
-        HttpResponse<JsonNode> response = request
-                .header("session-id", currentSessionId)
-                .header("Content-Type", "application/x-www-form-urlencoded")
-                .asJson();
+        HttpResponse<JsonNode> response = throttledCall {
+            request
+                    .header("session-id", currentSessionId)
+                    .header("Content-Type", "application/x-www-form-urlencoded")
+                    .asJson()
+        } as HttpResponse<JsonNode>
 
         if (response.isSuccess()) {
             var jsonArray = response.getBody().getArray();
@@ -258,28 +330,6 @@ class CCureClient {
             log.error("Error fetching details: " + response.getStatus() + " - " + response.getStatusText());
             return null;
         }
-    }
-
-    CCurePersonnel getPersonnelDetailsByGuid(String guid) {
-        MultipartBody request = Unirest.post(apiUrl + "/Objects/FindObjsWithCriteriaFilter")
-                .field("TypeFullName", "SoftwareHouse.NextGen.Common.SecurityObjects.Personnel")
-                .field("whereClause", "GUID = ?")
-                .field("arguments[]", guid)
-                .field("ArgTypes[]", "GUID") // Mandatory when passing a GUID argument [cite: 615]
-                .field("PageSize", "1");
-
-        return executePersonnelSearch(request);
-    }
-
-    CCurePersonnel getPersonnelDetailsByEmail(String email) {
-        MultipartBody request = Unirest.post(apiUrl + "/Objects/FindObjsWithCriteriaFilter")
-                .field("TypeFullName", "SoftwareHouse.NextGen.Common.SecurityObjects.Personnel")
-                .field("whereClause", "EmailAddress = ?")
-                .field("arguments[]", email)
-        // ArgTypes[] is not required for standard string comparisons [cite: 614]
-                .field("PageSize", "1");
-
-        return executePersonnelSearch(request);
     }
 
     void subscribeForNewEvents(Closure handler) {
@@ -304,4 +354,75 @@ class CCureClient {
         log.info("Subscription established.")
     }
 
+    /**
+     * Unassigns the primary photo (if one exists) by moving it to a dummy parent and renaming it.
+     * This is the required workaround because Portraits cannot be deleted via API, per the docs.
+     */
+    void removePrimaryPhoto(Long personIdentifier) {
+        String imageObjectId = findExistingPhotoId(personIdentifier)
+        if (!imageObjectId) {
+            return
+        }
+
+        // Create a unique name to prevent future naming collisions
+        def timestamp = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(new Date())
+        def uniqueName = "RemovedImage-${personIdentifier}-${timestamp}"
+
+        log.trace "Unassigning image ObjectID: $imageObjectId"
+
+        // Update to disassociate the image, using info from the docs
+        Map<String, Object> updateFields = [
+                "PropertyNames[0]"  : "Name",
+                "PropertyNames[1]"  : "ParentClassType",
+                "PropertyNames[2]"  : "ParentID",
+                "PropertyValues[0]" : uniqueName,
+                "PropertyValues[1]" : "CCUREIDBadgeData.BadgeLayout", // Dummy class
+                "PropertyValues[2]" : "0"                             // Dummy ID
+        ]
+
+        HttpResponse<String> response = throttledCall {
+            Unirest.put("${apiUrl}/Objects/Put/SoftwareHouse.NextGen.Common.SecurityObjects.Images/$imageObjectId")
+                    .header("session-id", currentSessionId)
+                    .header("Content-Type", "application/x-www-form-urlencoded")
+                    .fields(updateFields)
+                    .asString()
+        } as HttpResponse<String>
+
+        if (!response.success) {
+            log.error "Failed to unassign photo: ${response.status} - ${response.body}"
+        }
+
+        log.trace "Successfully disassociated photo from person $personIdentifier"
+    }
+
+    private findExistingPhotoId(long personIdentifier) {
+        log.trace "Attempting to find photo to unassign for person: $personIdentifier"
+
+        // Find the ObjectID of the current Primary Image
+        // Use indexed arrays for Arguments and DisplayProperties to ensure CCURE parses them correctly
+        Map<String, Object> findFields = [
+                "TypeFullName"        : "SoftwareHouse.NextGen.Common.SecurityObjects.Images",
+                "DisplayProperties[0]": "ObjectID",
+                "WhereClause"         : "ParentID = ? AND ImageType = ? AND Primary = ?",
+                "Arguments[0]"        : personIdentifier.toString(),
+                "Arguments[1]"        : "1", // 1 = Portrait
+                "Arguments[2]"        : "true"
+        ]
+
+        HttpResponse<String> findResponse = throttledCall {
+            Unirest.post("${apiUrl}/Objects/GetAllWithCriteria")
+                    .header("session-id", currentSessionId)
+                    .header("Content-Type", "application/x-www-form-urlencoded")
+                    .fields(findFields)
+                    .asString()
+        } as HttpResponse<String>
+
+        if (!findResponse.success || findResponse.body == "[]" || findResponse.body == "null") {
+            log.warn "No primary photo found for person $personIdentifier"
+            return null
+        }
+
+        def images = new JsonSlurper().parseText(findResponse.body)
+        return images[0].ObjectID
+    }
 }

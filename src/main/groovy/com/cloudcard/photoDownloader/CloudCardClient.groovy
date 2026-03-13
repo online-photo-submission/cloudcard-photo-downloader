@@ -55,14 +55,14 @@ class CloudCardClient {
     }
 
     Person createPerson(String email) {
-        String url = "${apiUrl}/person"
+        String url = "${apiUrl}/people"
 
         HttpResponse<String> response = Unirest.post(url)
                 .headers(standardHeaders())
                 .body("{ \"email\": \"${email}\" }")
                 .asString()
 
-        if (response.status != 200) {
+        if (response.status != 201) {
             log.error("Status ${response.status} returned from CloudCard API when creating person: ${email}")
             return null
         }
@@ -71,14 +71,16 @@ class CloudCardClient {
     }
 
     Person findPerson(String email) {
-        String url = "${apiUrl}/person/${email}?findBy=email"
+        String url = "${apiUrl}/people/${email}?findBy=email"
 
         HttpResponse<String> response = Unirest.get(url)
                 .headers(standardHeaders())
                 .asString()
 
         if (response.status != 200) {
-            log.error("Status ${response.status} returned from CloudCard API when finding person: ${email}")
+            if (response.status >= 500) {
+                log.error("Status ${response.status} returned from CloudCard API when finding person: ${email}")
+            }
             return null
         }
 
