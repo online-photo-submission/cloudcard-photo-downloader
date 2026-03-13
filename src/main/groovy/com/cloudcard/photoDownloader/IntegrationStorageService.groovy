@@ -67,7 +67,7 @@ class IntegrationStorageService implements StorageService {
         if (!accountId || !photo.bytes) { return null }
 
         try {
-            integrationStorageClient.putPhoto(accountId, photo.bytes)
+            integrationStorageClient.putPhoto(accountId, photo)
         } catch (FailedPhotoFileException failedPhotoFileException) {
             throw failedPhotoFileException
         } catch (Exception e) {

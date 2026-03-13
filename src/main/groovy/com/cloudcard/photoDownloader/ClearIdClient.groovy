@@ -154,8 +154,8 @@ class ClearIdClient implements IntegrationStorageClient {
     }
 
     @Override
-    void putPhoto(String identifier, byte[] photoBytes) {
-        postIdentityPicture(getIdentity(identifier), photoBytes)
+    void putPhoto(String identifier, Photo photo) {
+        postIdentityPicture(getIdentity(identifier), photo.bytes)
     }
 
     @Override

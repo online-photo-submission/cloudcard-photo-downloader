@@ -46,7 +46,7 @@ class IntegrationStorageServiceSpec extends Specification {
         storageResults.downloadedPhotoFiles[0].photoId == 1
 
         1 * service.fileNameResolver.getBaseName(photo) >> identifier
-        1 * service.integrationStorageClient.putPhoto(identifier, photoBytes)
+        1 * service.integrationStorageClient.putPhoto(identifier, photo)
     }
 
     void "test save with three good photos"() {
@@ -74,9 +74,9 @@ class IntegrationStorageServiceSpec extends Specification {
         1 * service.fileNameResolver.getBaseName(photos[0]) >> identifiers[0]
         1 * service.fileNameResolver.getBaseName(photos[1]) >> identifiers[1]
         1 * service.fileNameResolver.getBaseName(photos[2]) >> identifiers[2]
-        1 * service.integrationStorageClient.putPhoto(identifiers[0], generateByteArray(0))
-        1 * service.integrationStorageClient.putPhoto(identifiers[1], generateByteArray(1))
-        1 * service.integrationStorageClient.putPhoto(identifiers[2], generateByteArray(2))
+        1 * service.integrationStorageClient.putPhoto(identifiers[0], photos[0])
+        1 * service.integrationStorageClient.putPhoto(identifiers[1], photos[1])
+        1 * service.integrationStorageClient.putPhoto(identifiers[2], photos[2])
     }
 
     void "test save with one runtime failure, one persistent failure, and one successful photo"() {
@@ -109,11 +109,11 @@ class IntegrationStorageServiceSpec extends Specification {
         1 * service.fileNameResolver.getBaseName(photos[0]) >> identifiers[0]
         1 * service.fileNameResolver.getBaseName(photos[1]) >> identifiers[1]
         1 * service.fileNameResolver.getBaseName(photos[2]) >> identifiers[2]
-        1 * service.integrationStorageClient.putPhoto(identifiers[0], generateByteArray(0))
-        1 * service.integrationStorageClient.putPhoto(identifiers[1], generateByteArray(1)) >> {
+        1 * service.integrationStorageClient.putPhoto(identifiers[0], photos[0])
+        1 * service.integrationStorageClient.putPhoto(identifiers[1], photos[1]) >> {
             throw new RuntimeException("Failed to upload photo")
         }
-        1 * service.integrationStorageClient.putPhoto(identifiers[2], generateByteArray(2)) >> {
+        1 * service.integrationStorageClient.putPhoto(identifiers[2], photos[2]) >> {
             throw new FailedPhotoFileException("Failed to upload photo")
         }
     }
@@ -135,7 +135,7 @@ class IntegrationStorageServiceSpec extends Specification {
         storageResults.downloadedPhotoFiles.size() == 0
 
         1 * service.fileNameResolver.getBaseName(photo) >> identifier
-        1 * service.integrationStorageClient.putPhoto(identifier, photoBytes) >> {
+        1 * service.integrationStorageClient.putPhoto(identifier, photo) >> {
             throw new RuntimeException("Failed to upload photo")
         }
     }
@@ -162,7 +162,7 @@ class IntegrationStorageServiceSpec extends Specification {
 
 
         1 * service.fileNameResolver.getBaseName(photo) >> identifier
-        1 * service.integrationStorageClient.putPhoto(identifier, photoBytes) >> {
+        1 * service.integrationStorageClient.putPhoto(identifier, photo) >> {
             throw new FailedPhotoFileException("Failed to upload photo")
         }
     }

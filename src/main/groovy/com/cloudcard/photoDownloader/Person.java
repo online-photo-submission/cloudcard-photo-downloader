@@ -1,6 +1,7 @@
 package com.cloudcard.photoDownloader;
 
 import com.fasterxml.jackson.annotation.*;
+import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 
 import java.util.HashMap;
 import java.util.List;
@@ -100,6 +101,11 @@ public class Person {
         this.cardholderGroup = cardholderGroup;
     }
 
+    /**
+     * WARNING: this field is only populated for people received through downloaded photos. It will not be populated for
+     * people retrieved via direct API calls.
+     * @return
+     */
     @JsonProperty("additionalPhotos")
     public List<AdditionalPhoto> getAdditionalPhotos() {
 
@@ -107,6 +113,7 @@ public class Person {
     }
 
     @JsonProperty("additionalPhotos")
+    @JsonDeserialize(using = AdditionalPhotosDeserializer.class)
     public void setAdditionalPhotos(List<AdditionalPhoto> additionalPhotos) {
 
         this.additionalPhotos = additionalPhotos;
@@ -118,9 +125,17 @@ public class Person {
     }
 
     @JsonProperty("customFields")
-    public void setCustomFields(Map<String, String> customFields) {
-
-        this.customFields = customFields;
+    public void setCustomFields(Map<String, Object> customFields) {
+        this.customFields = new HashMap<>();
+        for (Map.Entry<String, Object> entry : customFields.entrySet()) {
+            if (entry.getValue() instanceof String) {
+                this.customFields.put(entry.getKey(), (String) entry.getValue());
+            } else if (entry.getValue() instanceof Map) {
+                this.customFields.put(entry.getKey(), ((Map<String, Object>) entry.getValue()).get("value").toString());
+            } else {
+                this.customFields.put(entry.getKey(), entry.getValue() == null ? null : entry.getValue().toString());
+            }
+        }
     }
 
     @JsonAnyGetter

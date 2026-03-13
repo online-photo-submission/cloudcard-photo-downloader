@@ -18,10 +18,10 @@ interface IntegrationStorageClient {
      * This method is expected to throw exceptions if the upload fails for any reason and return otherwise.
      *
      * @param identifier - account identifier in the target system
-     * @param photoBytes - byte array of photo bytes. The client should convert this array into the appropriate format.
+     * @param photo - the complete photo object so that the client can retrieve bytes, person info, etc.
      * @return
      */
-    void putPhoto(String identifier, byte[] photoBytes)
+    void putPhoto(String identifier, Photo photo)
 
     /**
      * Closes any persistent session or connection to the target system.

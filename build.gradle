@@ -25,6 +25,7 @@ dependencies {
     implementation 'org.apache.groovy:groovy'
     implementation 'org.apache.groovy:groovy-json'
     implementation 'com.konghq:unirest-java-core:4.4.7'
+    implementation 'com.konghq:unirest-objectmapper-jackson:4.2.9'
     implementation 'com.fasterxml.jackson.core:jackson-databind:2.15.2'
     implementation 'org.apache.commons:commons-lang3:3.17.0'
     implementation 'jakarta.annotation:jakarta.annotation-api:2.1.1'
@@ -36,6 +37,9 @@ dependencies {
     implementation 'org.codehaus.janino:commons-compiler:3.1.12'
 
     implementation "io.github.resilience4j:resilience4j-retry:2.3.0"
+    implementation "io.github.resilience4j:resilience4j-ratelimiter:2.3.0"
+
+    implementation "com.github.signalr4j:signalr4j:2.0.4"
 
     testImplementation 'org.springframework.boot:spring-boot-starter-test:3.4.5'
     testImplementation "org.spockframework:spock-core:2.4-M6-groovy-4.0"

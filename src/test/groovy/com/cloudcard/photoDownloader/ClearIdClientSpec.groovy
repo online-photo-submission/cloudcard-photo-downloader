@@ -252,7 +252,7 @@ class ClearIdClientSpec extends Specification {
         byte[] photoBytes = [1,2,3,4,5]
 
         when:
-        client.putPhoto(mockExternalId, photoBytes)
+        client.putPhoto(mockExternalId, new Photo(bytes: photoBytes))
 
         then: "we get the identity"
         1 * mockHttpClient.send({
@@ -301,7 +301,7 @@ class ClearIdClientSpec extends Specification {
 
         expect:
         String clearIdIdentifier = client.getIdentity("100044616")
-        assert client.putPhoto(clearIdIdentifier, Base64.decoder.decode(base64Photo))
+        assert client.putPhoto(clearIdIdentifier, new Photo(bytes: Base64.decoder.decode(base64Photo)))
         assert client.close()
     }
 

@@ -54,6 +54,39 @@ class CloudCardClient {
         return apiUrl && tokenService.isConfigured()
     }
 
+    Person createPerson(String email) {
+        String url = "${apiUrl}/people"
+
+        HttpResponse<String> response = Unirest.post(url)
+                .headers(standardHeaders())
+                .body("{ \"email\": \"${email}\" }")
+                .asString()
+
+        if (response.status != 201) {
+            log.error("Status ${response.status} returned from CloudCard API when creating person: ${email}")
+            return null
+        }
+
+        return new ObjectMapper().readValue(response.body, new TypeReference<Person>() {})
+    }
+
+    Person findPerson(String email) {
+        String url = "${apiUrl}/people/${email}?findBy=email"
+
+        HttpResponse<String> response = Unirest.get(url)
+                .headers(standardHeaders())
+                .asString()
+
+        if (response.status != 200) {
+            if (response.status >= 500) {
+                log.error("Status ${response.status} returned from CloudCard API when finding person: ${email}")
+            }
+            return null
+        }
+
+        return new ObjectMapper().readValue(response.body, new TypeReference<Person>() {})
+    }
+
     Photo updateStatus(Photo photo, String status, String message = null) throws Exception {
         String url = "${apiUrl}/photos/${photo.id}"
 
