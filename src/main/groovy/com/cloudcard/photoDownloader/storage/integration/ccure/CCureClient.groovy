@@ -154,7 +154,7 @@ class CCureClient {
         } catch (IntegrationRateLimitExceededException e) {
             // ignore, we're already sending enough requests to keep the connection alive
         } catch (Exception e) {
-            init()
+            authenticate()
         }
     }
 
