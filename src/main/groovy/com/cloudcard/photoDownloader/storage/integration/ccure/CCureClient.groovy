@@ -167,7 +167,7 @@ class CCureClient {
         HttpResponse<String> response = throttledCall {
             Unirest.post("${apiUrl}/Objects/Persist")
                     .header("session-id", currentSessionId)
-                    .field("Type", "SoftwareHouse.NextGen.Common.SecurityObjects.Personnel")
+                    .field("Type", CCurePersonnel.TYPE)
                     .field("PropertyNames[0]", "FirstName")
                     .field("PropertyValues[0]", firstName)
                     .field("PropertyNames[1]", "LastName")
@@ -209,7 +209,7 @@ class CCureClient {
         log.trace "Sending photo to CCURE for $identifier"
 
         Map<String, Object> fields = [
-                "Type"                                : "SoftwareHouse.NextGen.Common.SecurityObjects.Personnel",
+                "Type"                                : CCurePersonnel.TYPE,
                 "ID"                                  : identifier,
                 "Children[0].Type"                    : "SoftwareHouse.NextGen.Common.SecurityObjects.Images",
                 // Note: Field names for arrays in v1 form posts often need explicit indexing
@@ -286,7 +286,7 @@ class CCureClient {
 
     CCurePersonnel getPersonnelDetailsByGuid(String guid) {
         MultipartBody request = Unirest.post(apiUrl + "/Objects/FindObjsWithCriteriaFilter")
-                .field("TypeFullName", "SoftwareHouse.NextGen.Common.SecurityObjects.Personnel")
+                .field("TypeFullName", CCurePersonnel.TYPE)
                 .field("whereClause", "GUID = ?")
                 .field("arguments[]", guid)
                 .field("ArgTypes[]", "GUID") // Mandatory when passing a GUID argument
@@ -297,7 +297,7 @@ class CCureClient {
 
     CCurePersonnel getPersonnelDetailsByEmail(String email) {
         MultipartBody request = Unirest.post(apiUrl + "/Objects/FindObjsWithCriteriaFilter")
-                .field("TypeFullName", "SoftwareHouse.NextGen.Common.SecurityObjects.Personnel")
+                .field("TypeFullName", CCurePersonnel.TYPE)
                 .field("whereClause", "EmailAddress = ?")
                 .field("arguments[]", email) // ArgTypes[] is not required for standard string comparisons
                 .field("PageSize", "1");
