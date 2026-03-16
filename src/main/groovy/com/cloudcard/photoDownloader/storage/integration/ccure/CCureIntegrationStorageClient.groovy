@@ -10,6 +10,8 @@ import org.springframework.beans.factory.annotation.Value
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty
 import org.springframework.stereotype.Component
 
+import static com.cloudcard.photoDownloader.ApplicationPropertiesValidator.throwIfBlank
+
 @Component
 @ConditionalOnProperty(value = "IntegrationStorageService.client", havingValue = "CCureClient")
 class CCureIntegrationStorageClient implements IntegrationStorageClient {
@@ -28,6 +30,12 @@ class CCureIntegrationStorageClient implements IntegrationStorageClient {
     @Value('${CCureClient.createPersonnel:false}')
     boolean createCCurePersonnel
 
+    @Value('${CCureClient.createPersonnel.firstName}')
+    String firstNameField
+
+    @Value('${CCureClient.createPersonnel.lastName}')
+    String lastNameField
+
     @Value('${CCureClient.employeeIdField}')
     String employeeIdField
 
@@ -37,6 +45,10 @@ class CCureIntegrationStorageClient implements IntegrationStorageClient {
 
     @PostConstruct
     void init() {
+        if (createCCurePersonnel) {
+            throwIfBlank(firstNameField, "The custom field name for first name must be provided in CCureClient.createPersonnel.firstName")
+            throwIfBlank(lastNameField, "The custom field name for first name must be provided in CCureClient.createPersonnel.lastName")
+        }
         cCureClient.authenticate()
 
         cCureClient.queryAuditLogsForNewPeople().each {pushPhoto(it)}
@@ -103,7 +115,7 @@ class CCureIntegrationStorageClient implements IntegrationStorageClient {
             if (cCurePersonnel?.id) {
                 cCureClient.storePhoto(cCurePersonnel.id, photo.bytesBase64, cCurePersonnel.partitionId)
             } else if (createCCurePersonnel) {
-                Long id = cCureClient.createPersonnel(photo.person.customFields?.firstName, photo.person.customFields?.lastName, photo.person.email, identifier)
+                Long id = cCureClient.createPersonnel(photo.person.customFields?[firstNameField], photo.person.customFields?[lastNameField], photo.person.email, identifier)
                 if (!id) {
                     throw new FailedPhotoFileException("Unable to create CCURE personnel record for $photo.person.email")
                 }

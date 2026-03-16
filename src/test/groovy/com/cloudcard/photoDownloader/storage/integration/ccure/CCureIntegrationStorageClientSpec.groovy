@@ -132,6 +132,8 @@ class CCureIntegrationStorageClientSpec extends Specification {
         Person person = new Person(email: "test@example.com", customFields: [firstName: "John", lastName: "Doe"])
         Photo photo = new Photo(id: 1, person: person, bytes: "bytes")
         integrationClient.createCCurePersonnel = true
+        integrationClient.firstNameField = "firstName"
+        integrationClient.lastNameField = "lastName"
 
         when:
         integrationClient.putPhoto(identifier, photo)
@@ -149,6 +151,8 @@ class CCureIntegrationStorageClientSpec extends Specification {
         Person person = new Person(email: "test@example.com", customFields: [firstName: "John", lastName: "Doe"])
         Photo photo = new Photo(id: 1, person: person, bytes: "bytes")
         integrationClient.createCCurePersonnel = true
+        integrationClient.firstNameField = "firstName"
+        integrationClient.lastNameField = "lastName"
 
         when:
         integrationClient.putPhoto(identifier, photo)
