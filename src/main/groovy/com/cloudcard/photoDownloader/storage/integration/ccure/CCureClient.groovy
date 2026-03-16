@@ -155,7 +155,7 @@ class CCureClient {
         }
     }
 
-    Long createPersonnel(String firstName, String lastName, String email) {
+    Long createPersonnel(String firstName, String lastName, String email, String employeeId) {
         if (!firstName || !lastName) {
             log.warn("First/Last Name fields were missing for $email; unable to create CCURE Personnel")
             return null
@@ -171,6 +171,8 @@ class CCureClient {
                     .field("PropertyValues[1]", lastName)
                     .field("PropertyNames[2]", "EmailAddress")
                     .field("PropertyValues[2]", email)
+                    .field("PropertyNames[3]", employeeIdField)
+                    .field("PropertyValues[3]", employeeId)
                     .asString()
         } as HttpResponse<String>
 
@@ -308,6 +310,25 @@ class CCureClient {
      * @param guid
      * @return
      */
+    CCurePersonnel getPersonnelDetails(String id, String email) {
+        CCurePersonnel result = getPersonnelDetailsByEmployeeId(id)
+        if (!result) {
+            result = getPersonnelDetailsByEmail(email)
+        }
+
+        return result
+    }
+
+    CCurePersonnel getPersonnelDetailsByEmployeeId(String id) {
+        MultipartBody request = Unirest.post(apiUrl + "/Objects/FindObjsWithCriteriaFilter")
+                .field("TypeFullName", CCurePersonnel.TYPE)
+                .field("whereClause", "$employeeIdField = ?")
+                .field("arguments[]", id) // ArgTypes[] is not required for standard string comparisons
+                .field("PageSize", "1");
+
+        return executePersonnelSearch(request);
+    }
+
     CCurePersonnel getPersonnelDetailsByEmail(String email) {
         MultipartBody request = Unirest.post(apiUrl + "/Objects/FindObjsWithCriteriaFilter")
                 .field("TypeFullName", CCurePersonnel.TYPE)
@@ -338,6 +359,7 @@ class CCureClient {
             return new CCurePersonnel(
                     id: responseObj.optInt("ObjectID"),
                     emailAddress: responseObj.optString("EmailAddress"),
+                    employeeId: responseObj.optString(employeeIdField),
                     partitionId: responseObj.optInt("PartitionID")
             );
         } else {

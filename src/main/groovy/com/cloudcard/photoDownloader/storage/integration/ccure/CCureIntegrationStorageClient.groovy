@@ -46,7 +46,8 @@ class CCureIntegrationStorageClient implements IntegrationStorageClient {
                 log.info("Received notification of personnel creation for ${payload.NotificationDSO.EmailAddress}");
                 CCurePersonnel newPersonnel = new CCurePersonnel(
                         id: payload.NotificationDSO.ObjectID,
-                        emailAddress: payload.NotificationDSO.EmailAddress
+                        emailAddress: payload.NotificationDSO.EmailAddress,
+                        employeeId: payload.NotificationDSO[employeeIdField]
                 )
                 pushPhoto(newPersonnel)
             }
@@ -67,35 +68,46 @@ class CCureIntegrationStorageClient implements IntegrationStorageClient {
     void pushPhoto(CCurePersonnel personnel) {
         // load person by email
         log.trace("Loading cloudcard record for $personnel.emailAddress")
-        Person cloudCardPerson = cloudCardClient.findPerson(personnel.emailAddress)
+        Person cloudCardPerson = findCloudCardPerson(personnel)
         if (cloudCardPerson?.additionalProperties?.currentPhoto) {
             log.trace "Person $personnel.emailAddress has a photo, sending to CCURE"
             Photo photo = cloudCardPerson.additionalProperties.currentPhoto as Photo
             if (Photo.APPROVED_STATUSES.contains(photo.status)) {
                 restService.fetchBytes(photo)
-                putPhoto(personnel.id as String, photo)
+                putPhoto(personnel.employeeId as String, photo)
             }
         } else if (!cloudCardPerson) {
             log.trace "$personnel.emailAddress does not exist in RemotePhoto, creating record there"
-            cloudCardClient.createPerson(personnel.emailAddress)
+            cloudCardClient.createPerson(personnel.emailAddress, personnel.employeeId)
         }
 
         lastRunPropertyService.updateLastRunTimestamp()
     }
 
+    Person findCloudCardPerson(CCurePersonnel personnel) {
+        Person cloudCardPerson = null
+        if (personnel.employeeId) {
+            cloudCardPerson = cloudCardClient.findPersonByIdentifier(personnel.employeeId)
+        }
+        if (!cloudCardPerson) {
+            cloudCardPerson = cloudCardClient.findPersonByEmail(personnel.emailAddress)
+        }
+
+        return cloudCardPerson
+    }
+
     @Override
     void putPhoto(String identifier, Photo photo) {
         try {
-            // CCURE won't use the local identifier, we need to look up their CCURE id
-            CCurePersonnel cCurePersonnel = cCureClient.getPersonnelDetailsByEmail(photo.person.email)
+            CCurePersonnel cCurePersonnel = cCureClient.getPersonnelDetails(identifier, photo.person.email)
             if (cCurePersonnel?.id) {
                 cCureClient.storePhoto(cCurePersonnel.id, photo.bytesBase64, cCurePersonnel.partitionId)
             } else if (createCCurePersonnel) {
-                Long id = cCureClient.createPersonnel(photo.person.customFields?.firstName, photo.person.customFields?.lastName, photo.person.email)
+                Long id = cCureClient.createPersonnel(photo.person.customFields?.firstName, photo.person.customFields?.lastName, photo.person.email, identifier)
                 if (!id) {
                     throw new FailedPhotoFileException("Unable to create CCURE personnel record for $photo.person.email")
                 }
-                cCurePersonnel = cCureClient.getPersonnelDetailsByEmail(photo.person.email)
+                cCurePersonnel = cCureClient.getPersonnelDetails(identifier, photo.person.email)
                 cCureClient.storePhoto(id, photo.bytesBase64, cCurePersonnel.partitionId)
             } else {
                 throw new FailedPhotoFileException("CCURE Personnel record not found for $photo.person.email")

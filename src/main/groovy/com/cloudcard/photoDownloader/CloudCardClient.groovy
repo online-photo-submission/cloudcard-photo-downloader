@@ -13,9 +13,6 @@ import java.nio.charset.StandardCharsets
 
 import jakarta.annotation.PostConstruct
 
-import static com.cloudcard.photoDownloader.ApplicationPropertiesValidator.throwIfBlank
-
-
 @Component
 class CloudCardClient {
 
@@ -54,12 +51,12 @@ class CloudCardClient {
         return apiUrl && tokenService.isConfigured()
     }
 
-    Person createPerson(String email) {
+    Person createPerson(String email, String identifier) {
         String url = "${apiUrl}/people"
 
         HttpResponse<String> response = Unirest.post(url)
                 .headers(standardHeaders())
-                .body("{ \"email\": \"${email}\" }")
+                .body("{ \"email\": \"${email}\", \"identifier\": \"${identifier}\" }")
                 .asString()
 
         if (response.status != 201) {
@@ -70,8 +67,16 @@ class CloudCardClient {
         return new ObjectMapper().readValue(response.body, new TypeReference<Person>() {})
     }
 
-    Person findPerson(String email) {
-        String url = "${apiUrl}/people/${email}?findBy=email"
+    Person findPersonByIdentifier(String id) {
+        return findPerson(id, "identifier")
+    }
+
+    Person findPersonByEmail(String email) {
+        return findPerson(email, "email")
+    }
+
+    Person findPerson(String identifier, String findBy) {
+        String url = "${apiUrl}/people/${identifier}?findBy=${findBy}"
 
         HttpResponse<String> response = Unirest.get(url)
                 .headers(standardHeaders())
@@ -79,7 +84,7 @@ class CloudCardClient {
 
         if (response.status != 200) {
             if (response.status >= 500) {
-                log.error("Status ${response.status} returned from CloudCard API when finding person: ${email}")
+                log.error("Status ${response.status} returned from CloudCard API when finding person: ${identifier}")
             }
             return null
         }

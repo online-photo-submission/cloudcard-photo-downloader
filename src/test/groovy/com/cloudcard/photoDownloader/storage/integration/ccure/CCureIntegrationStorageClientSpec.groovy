@@ -20,7 +20,7 @@ class CCureIntegrationStorageClientSpec extends Specification {
         integrationClient.restService = Mock(RestService)
         integrationClient.lastRunPropertyService = Mock(LastRunPropertyService)
         integrationClient.createCCurePersonnel = false
-        integrationClient.employeeIdField = "employeeId"
+        integrationClient.employeeIdField = "Text1"
 
         cCureClient = integrationClient.cCureClient
         cloudCardClient = integrationClient.cloudCardClient
@@ -42,9 +42,9 @@ class CCureIntegrationStorageClientSpec extends Specification {
         integrationClient.pushPhoto(personnel)
 
         then:
-        1 * cloudCardClient.findPerson("test@example.com") >> person
+        1 * cloudCardClient.findPersonByEmail("test@example.com") >> person
         1 * restService.fetchBytes(photo)
-        1 * cCureClient.getPersonnelDetailsByEmail("test@example.com") >> personnel
+        1 * cCureClient.getPersonnelDetails(null, person.email) >> personnel
         1 * cCureClient.storePhoto(personnel.id, encodedBytes, 1)
         1 * lastRunPropertyService.updateLastRunTimestamp()
     }
@@ -62,7 +62,7 @@ class CCureIntegrationStorageClientSpec extends Specification {
         integrationClient.pushPhoto(personnel)
 
         then:
-        1 * cloudCardClient.findPerson("test@example.com") >> person
+        1 * cloudCardClient.findPersonByEmail("test@example.com") >> person
         0 * restService.fetchBytes(_)
         0 * cCureClient.storePhoto(_, _)
         1 * lastRunPropertyService.updateLastRunTimestamp()
@@ -70,14 +70,14 @@ class CCureIntegrationStorageClientSpec extends Specification {
 
     def "test pushPhoto creates CloudCard person when none exists"() {
         given:
-        CCurePersonnel personnel = new CCurePersonnel(id: 123L, emailAddress: "test@example.com", partitionId: 1)
+        CCurePersonnel personnel = new CCurePersonnel(id: 123L, emailAddress: "test@example.com", partitionId: 1, employeeId: "emp123")
 
         when:
         integrationClient.pushPhoto(personnel)
 
         then:
-        1 * cloudCardClient.findPerson("test@example.com") >> null
-        1 * cloudCardClient.createPerson("test@example.com")
+        1 * cloudCardClient.findPersonByEmail("test@example.com") >> null
+        1 * cloudCardClient.createPerson(personnel.emailAddress, personnel.employeeId)
         1 * lastRunPropertyService.updateLastRunTimestamp()
     }
 
@@ -90,7 +90,7 @@ class CCureIntegrationStorageClientSpec extends Specification {
         integrationClient.pushPhoto(personnel)
 
         then:
-        1 * cloudCardClient.findPerson("test@example.com") >> person
+        1 * cloudCardClient.findPersonByEmail(person.email) >> person
         0 * cloudCardClient.createPerson(_)
         1 * lastRunPropertyService.updateLastRunTimestamp()
     }
@@ -106,7 +106,7 @@ class CCureIntegrationStorageClientSpec extends Specification {
         integrationClient.putPhoto(identifier, photo)
 
         then:
-        1 * cCureClient.getPersonnelDetailsByEmail("test@example.com") >> personnel
+        1 * cCureClient.getPersonnelDetails(identifier, person.email) >> personnel
         1 * cCureClient.storePhoto(456L, encodedBytes, 1)
     }
 
@@ -121,8 +121,8 @@ class CCureIntegrationStorageClientSpec extends Specification {
         integrationClient.putPhoto(identifier, photo)
 
         then:
-        1 * cCureClient.getPersonnelDetailsByEmail("test@example.com") >> null
-        0 * cCureClient.createPersonnel(_, _, _)
+        1 * cCureClient.getPersonnelDetails(identifier, person.email) >> null
+        0 * cCureClient.createPersonnel(_, _, _, _)
         thrown(FailedPhotoFileException)
     }
 
@@ -137,9 +137,9 @@ class CCureIntegrationStorageClientSpec extends Specification {
         integrationClient.putPhoto(identifier, photo)
 
         then:
-        1 * cCureClient.getPersonnelDetailsByEmail("test@example.com") >> null
-        1 * cCureClient.createPersonnel("John", "Doe", "test@example.com") >> 789L
-        1 * cCureClient.getPersonnelDetailsByEmail("test@example.com") >> new CCurePersonnel(id: 789L, emailAddress: "test@example.com", partitionId: 1)
+        1 * cCureClient.getPersonnelDetails(identifier, person.email) >> null
+        1 * cCureClient.createPersonnel("John", "Doe", person.email, identifier) >> 789L
+        1 * cCureClient.getPersonnelDetails(identifier, person.email) >> new CCurePersonnel(id: 789L, emailAddress: "test@example.com", partitionId: 1)
         1 * cCureClient.storePhoto(789L, encodedBytes, 1)
     }
 
@@ -154,8 +154,8 @@ class CCureIntegrationStorageClientSpec extends Specification {
         integrationClient.putPhoto(identifier, photo)
 
         then:
-        1 * cCureClient.getPersonnelDetailsByEmail("test@example.com") >> null
-        1 * cCureClient.createPersonnel("John", "Doe", "test@example.com") >> null
+        1 * cCureClient.getPersonnelDetails(identifier, person.email) >> null
+        1 * cCureClient.createPersonnel("John", "Doe", person.email, identifier) >> null
         0 * cCureClient.storePhoto(_, _)
         thrown(FailedPhotoFileException)
     }
@@ -172,7 +172,7 @@ class CCureIntegrationStorageClientSpec extends Specification {
         integrationClient.putPhoto(identifier, photo)
 
         then:
-        1 * cCureClient.getPersonnelDetailsByEmail("test@example.com") >> personnel
+        1 * cCureClient.getPersonnelDetails(identifier, person.email) >> personnel
         0 * cCureClient.storePhoto(_, _)
         thrown(FailedPhotoFileException)
     }
@@ -187,7 +187,7 @@ class CCureIntegrationStorageClientSpec extends Specification {
         integrationClient.putPhoto(identifier, photo)
 
         then:
-        1 * cCureClient.getPersonnelDetailsByEmail("test@example.com") >> { throw new RuntimeException("Network error") }
+        1 * cCureClient.getPersonnelDetails(identifier, person.email) >> { throw new RuntimeException("Network error") }
         thrown(FailedPhotoFileException)
     }
 
@@ -201,7 +201,7 @@ class CCureIntegrationStorageClientSpec extends Specification {
         integrationClient.putPhoto(identifier, photo)
 
         then:
-        1 * cCureClient.getPersonnelDetailsByEmail("test@example.com") >> { throw new FailedPhotoFileException("Already a FailedPhotoFileException") }
+        1 * cCureClient.getPersonnelDetails(identifier, person.email) >> { throw new FailedPhotoFileException("Already a FailedPhotoFileException") }
         def exception = thrown(FailedPhotoFileException)
         exception.message == "Already a FailedPhotoFileException"
     }
@@ -216,8 +216,8 @@ class CCureIntegrationStorageClientSpec extends Specification {
 
     def "test init authenticates and processes audit logs"() {
         given:
-        CCurePersonnel personnel1 = new CCurePersonnel(id: 1L, emailAddress: "user1@example.com", partitionId: 1)
-        CCurePersonnel personnel2 = new CCurePersonnel(id: 2L, emailAddress: "user2@example.com", partitionId: 1)
+        CCurePersonnel personnel1 = new CCurePersonnel(id: 1L, emailAddress: "user1@example.com", partitionId: 1, employeeId: "emp123")
+        CCurePersonnel personnel2 = new CCurePersonnel(id: 2L, emailAddress: "user2@example.com", partitionId: 1, employeeId: "emp456")
         List<CCurePersonnel> auditLogs = [personnel1, personnel2]
 
         when:
@@ -226,8 +226,8 @@ class CCureIntegrationStorageClientSpec extends Specification {
         then:
         1 * cCureClient.authenticate()
         1 * cCureClient.queryAuditLogsForNewPeople() >> auditLogs
-        2 * cloudCardClient.findPerson(_) >> null
-        2 * cloudCardClient.createPerson(_)
+        2 * cloudCardClient.findPersonByEmail(_) >> null
+        2 * cloudCardClient.createPerson(_, _)
         1 * cCureClient.subscribeForNewEvents(_)
         2 * lastRunPropertyService.updateLastRunTimestamp()
     }
@@ -251,14 +251,15 @@ class CCureIntegrationStorageClientSpec extends Specification {
             NotificationType: "ObjectCreated",
             NotificationDSO: [
                 ObjectID: 999L,
-                EmailAddress: "newuser@example.com"
+                EmailAddress: "newuser@example.com",
+                "Text1": "emp123"
             ]
         ]
         capturedCallback(payload)
 
         then:
-        1 * cloudCardClient.findPerson("newuser@example.com") >> null
-        1 * cloudCardClient.createPerson("newuser@example.com")
+        1 * cloudCardClient.findPersonByEmail("newuser@example.com") >> null
+        1 * cloudCardClient.createPerson("newuser@example.com", "emp123")
         1 * lastRunPropertyService.updateLastRunTimestamp()
     }
 
@@ -281,14 +282,15 @@ class CCureIntegrationStorageClientSpec extends Specification {
             NotificationType: "ObjectModified",
             NotificationDSO: [
                 ObjectID: 999L,
-                EmailAddress: "user@example.com"
+                EmailAddress: "user@example.com",
+                Text1: "emp123"
             ]
         ]
         capturedCallback(payload)
 
         then:
-        0 * cloudCardClient.findPerson(_)
-        0 * cloudCardClient.createPerson(_)
+        0 * cloudCardClient.findPersonByEmail(_)
+        0 * cloudCardClient.createPerson(_, _)
         0 * lastRunPropertyService.updateLastRunTimestamp()
     }
 }
