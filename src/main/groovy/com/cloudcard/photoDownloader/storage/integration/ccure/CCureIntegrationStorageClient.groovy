@@ -28,6 +28,9 @@ class CCureIntegrationStorageClient implements IntegrationStorageClient {
     @Value('${CCureClient.createPersonnel:false}')
     boolean createCCurePersonnel
 
+    @Value('${CCureClient.createRemotePhotoPerson:false}')
+    boolean createRemotePhotoPerson
+
     @Value('${CCureClient.employeeIdField}')
     String employeeIdField
 
@@ -75,7 +78,7 @@ class CCureIntegrationStorageClient implements IntegrationStorageClient {
                 restService.fetchBytes(photo)
                 putPhoto(personnel.id as String, photo)
             }
-        } else if (!cloudCardPerson) {
+        } else if (!cloudCardPerson && createRemotePhotoPerson) {
             log.trace "$personnel.emailAddress does not exist in RemotePhoto, creating record there"
             cloudCardClient.createPerson(personnel.emailAddress)
         }
