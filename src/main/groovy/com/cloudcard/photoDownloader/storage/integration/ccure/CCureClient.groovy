@@ -67,6 +67,7 @@ class CCureClient {
         throwIfBlank(username, "The CCURE username for the api must be provided in CCureClient.username")
         throwIfBlank(password, "The CCURE password for the api must be provided in CCureClient.password")
         throwIfBlank(clientId, "The CCURE integration client ID must be provided in CCureClient.clientId")
+        throwIfBlank(employeeIdField, "The CCURE integration custom employee ID field name must be provided in CCureClient.employeeIdField")
         apiUrl = "$baseUrl/api"
 
         //CCURE docs say to space out all calls by 1-2 seconds to avoid rate limiting, so this will in enforce a 1
