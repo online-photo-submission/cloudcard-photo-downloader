@@ -146,7 +146,7 @@ class CCureClient {
                 log.trace("Session refreshed. Server UTC: " + response.getBody());
             } else if (response.getStatus() == 401) {
                 log.trace("Session expired or invalid ID used.");
-                init()
+                authenticate()
             }
         } catch (IntegrationRateLimitExceededException e) {
             // ignore, we're already sending enough requests to keep the connection alive
