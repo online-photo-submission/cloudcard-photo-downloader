@@ -176,8 +176,8 @@ class CCureIntegrationStorageClientSpec extends Specification {
         integrationClient.putPhoto(identifier, photo)
 
         then:
-        1 * cCureClient.getPersonnelDetailsByEmail("test@example.com") >> null
-        1 * cCureClient.createPersonnel(null, null, "test@example.com") >> { throw new FailedPhotoFileException("Name fields are missing")}
+        1 * cCureClient.getPersonnelDetails(identifier, person.email) >> null
+        1 * cCureClient.createPersonnel(null, null, "test@example.com", identifier) >> { throw new FailedPhotoFileException("Name fields are missing")}
         0 * cCureClient.storePhoto(_, _)
         thrown(FailedPhotoFileException)
     }
