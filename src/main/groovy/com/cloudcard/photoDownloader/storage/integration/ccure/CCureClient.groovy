@@ -373,74 +373,21 @@ class CCureClient {
      * This is the required workaround because Portraits cannot be deleted via API, per the docs.
      */
     void removePrimaryPhoto(Long personIdentifier) {
-        String imageObjectId = findExistingPhotoId(personIdentifier)
-        if (!imageObjectId) {
-            return
-        }
-
-        disconnectPhotoFromPerson(personIdentifier, imageObjectId)
-    }
-
-    private void disconnectPhotoFromPerson(long personIdentifier, String imageObjectId) {
-// Create a unique name to prevent future naming collisions
-        def timestamp = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(new Date())
-        def uniqueName = "RemovedImage-${personIdentifier}-${timestamp}"
-
-        log.trace "Unassigning image ObjectID: $imageObjectId"
-
-        // Update to disassociate the image, using info from the docs
-        Map<String, Object> updateFields = [
-                "PropertyNames[0]" : "Name",
-                "PropertyNames[1]" : "ParentClassType",
-                "PropertyNames[2]" : "ParentID",
-                "PropertyValues[0]": uniqueName,
-                "PropertyValues[1]": "CCUREIDBadgeData.BadgeLayout", // Dummy class
-                "PropertyValues[2]": "0"                             // Dummy ID
-        ]
-
         HttpResponse<String> response = throttledCall {
-            Unirest.put("${apiUrl}/Objects/Put/SoftwareHouse.NextGen.Common.SecurityObjects.Images/$imageObjectId")
+            Unirest.post("${apiUrl}/Generic/ExecuteCrossfireMethod")
                     .header("session-id", currentSessionId)
                     .header("Content-Type", "application/x-www-form-urlencoded")
-                    .fields(updateFields)
+                    .queryString("requestService", "SoftwareHouse.NextGen.Common.SecurityObjects.Images")
+                    .queryString("methodName", "DeleteImagePrimaryForPerson")
+                    .field("ArgumentValues", "{ \"personId\" : $personIdentifier }")
                     .asString()
         } as HttpResponse<String>
 
-        if (!response.success) {
-            log.error "Failed to unassign photo: ${response.status} - ${response.body}"
+        if (response.success && response.body == "true") {
+            log.trace("Removed primary photo for $personIdentifier")
+        } else {
+            log.warn("Unable to remove photo for $personIdentifier : $response.status")
         }
-
-        log.trace "Successfully disassociated photo from person $personIdentifier"
     }
 
-    private findExistingPhotoId(long personIdentifier) {
-        log.trace "Attempting to find photo to unassign for person: $personIdentifier"
-
-        // Find the ObjectID of the current Primary Image
-        // Use indexed arrays for Arguments and DisplayProperties to ensure CCURE parses them correctly
-        Map<String, Object> findFields = [
-                "TypeFullName"        : "SoftwareHouse.NextGen.Common.SecurityObjects.Images",
-                "DisplayProperties[0]": "ObjectID",
-                "WhereClause"         : "ParentID = ? AND ImageType = ? AND Primary = ?",
-                "Arguments[0]"        : personIdentifier.toString(),
-                "Arguments[1]"        : "1", // 1 = Portrait
-                "Arguments[2]"        : "true"
-        ]
-
-        HttpResponse<String> findResponse = throttledCall {
-            Unirest.post("${apiUrl}/Objects/GetAllWithCriteria")
-                    .header("session-id", currentSessionId)
-                    .header("Content-Type", "application/x-www-form-urlencoded")
-                    .fields(findFields)
-                    .asString()
-        } as HttpResponse<String>
-
-        if (!findResponse.success || findResponse.body == "[]" || findResponse.body == "null") {
-            log.warn "No primary photo found for person $personIdentifier"
-            return null
-        }
-
-        def images = new JsonSlurper().parseText(findResponse.body)
-        return images[0].ObjectID
-    }
 }
