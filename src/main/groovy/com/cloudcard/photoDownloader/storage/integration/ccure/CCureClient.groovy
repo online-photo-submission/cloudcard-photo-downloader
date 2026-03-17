@@ -5,7 +5,6 @@ import com.cloudcard.photoDownloader.FailedPhotoFileException
 import com.cloudcard.photoDownloader.IntegrationRateLimitExceededException
 import com.github.signalr4j.client.hubs.HubConnection
 import com.github.signalr4j.client.hubs.HubProxy
-import groovy.json.JsonSlurper
 import io.github.resilience4j.ratelimiter.RateLimiter
 import io.github.resilience4j.ratelimiter.RateLimiterConfig
 import io.github.resilience4j.ratelimiter.RequestNotPermitted
@@ -24,7 +23,6 @@ import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty
 import org.springframework.scheduling.annotation.Scheduled
 import org.springframework.stereotype.Component
 
-import java.text.SimpleDateFormat
 import java.time.Duration
 import java.time.LocalDateTime
 
@@ -203,7 +201,7 @@ class CCureClient {
         }
     }
 
-    void storePhoto(Long identifier, String base64Image, Long partition) {
+    void storePhoto(Long identifier, String base64Image, Long partition, boolean isPrimaryPortrait) {
         removePrimaryPhoto(identifier)
 
         log.trace "Sending photo to CCURE for $identifier"
@@ -223,9 +221,9 @@ class CCureClient {
 
                 "Children[0].PropertyValues[0]"       : "Portrait_${identifier}",
                 "Children[0].PropertyValues[1]"       : identifier,
-                "Children[0].PropertyValues[2]"       : "1", // 1 = Portrait
+                "Children[0].PropertyValues[2]"       : isPrimaryPortrait ? "1" : "2", // 1 = Portrait, 2 = signature
                 "Children[0].PropertyValues[3]"       : partition?.toString() ?: "1",
-                "Children[0].PropertyValues[4]"       : "true",
+                "Children[0].PropertyValues[4]"       : isPrimaryPortrait ? "true" : "false",
                 "Children[0].PropertyValues[5]"       : base64Image,
                 "Children[0].PropertyValues[6]"       : LocalDateTime.now().format(LastRunPropertyServiceImpl.CCURE_DATE_FORMATTER),
         ]

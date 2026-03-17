@@ -46,7 +46,7 @@ class CCureIntegrationStorageClientSpec extends Specification {
         1 * cloudCardClient.findPersonByEmail("test@example.com") >> person
         1 * restService.fetchBytes(photo)
         1 * cCureClient.getPersonnelDetails(null, person.email) >> personnel
-        1 * cCureClient.storePhoto(personnel.id, encodedBytes, 1)
+        1 * cCureClient.storePhoto(personnel.id, encodedBytes, 1, true)
         1 * lastRunPropertyService.updateLastRunTimestamp()
     }
 
@@ -65,7 +65,7 @@ class CCureIntegrationStorageClientSpec extends Specification {
         then:
         1 * cloudCardClient.findPersonByEmail("test@example.com") >> person
         0 * restService.fetchBytes(_)
-        0 * cCureClient.storePhoto(_, _)
+        0 * cCureClient.storePhoto(_, _, _, _)
         1 * lastRunPropertyService.updateLastRunTimestamp()
     }
 
@@ -108,7 +108,7 @@ class CCureIntegrationStorageClientSpec extends Specification {
 
         then:
         1 * cCureClient.getPersonnelDetails(identifier, person.email) >> personnel
-        1 * cCureClient.storePhoto(456L, encodedBytes, 1)
+        1 * cCureClient.storePhoto(456L, encodedBytes, 1, true)
     }
 
     def "test putPhoto throws exception when CCURE personnel not found and createCCurePersonnel is false"() {
@@ -143,7 +143,7 @@ class CCureIntegrationStorageClientSpec extends Specification {
         1 * cCureClient.getPersonnelDetails(identifier, person.email) >> null
         1 * cCureClient.createPersonnel("John", "Doe", person.email, identifier) >> 789L
         1 * cCureClient.getPersonnelDetails(identifier, person.email) >> new CCurePersonnel(id: 789L, emailAddress: "test@example.com", partitionId: 1)
-        1 * cCureClient.storePhoto(789L, encodedBytes, 1)
+        1 * cCureClient.storePhoto(789L, encodedBytes, 1, true)
     }
 
     def "test putPhoto throws exception when CCURE personnel creation fails"() {
@@ -161,7 +161,7 @@ class CCureIntegrationStorageClientSpec extends Specification {
         then:
         1 * cCureClient.getPersonnelDetails(identifier, person.email) >> null
         1 * cCureClient.createPersonnel("John", "Doe", person.email, identifier) >> null
-        0 * cCureClient.storePhoto(_, _)
+        0 * cCureClient.storePhoto(_, _, _, _)
         thrown(FailedPhotoFileException)
     }
 
@@ -178,7 +178,7 @@ class CCureIntegrationStorageClientSpec extends Specification {
 
         then:
         1 * cCureClient.getPersonnelDetails(identifier, person.email) >> personnel
-        0 * cCureClient.storePhoto(_, _)
+        0 * cCureClient.storePhoto(_, _, _, _)
         thrown(FailedPhotoFileException)
     }
 

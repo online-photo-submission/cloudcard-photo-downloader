@@ -116,14 +116,16 @@ class CCureIntegrationStorageClient implements IntegrationStorageClient {
         try {
             CCurePersonnel cCurePersonnel = cCureClient.getPersonnelDetails(identifier, photo.person.email)
             if (cCurePersonnel?.id) {
-                cCureClient.storePhoto(cCurePersonnel.id, photo.bytesBase64, cCurePersonnel.partitionId)
+                cCureClient.storePhoto(cCurePersonnel.id, photo.bytesBase64, cCurePersonnel.partitionId, true)
+                // TODO: store signature here
             } else if (createCCurePersonnel) {
                 Long id = cCureClient.createPersonnel(photo.person.customFields?[firstNameField], photo.person.customFields?[lastNameField], photo.person.email, identifier)
                 if (!id) {
                     throw new FailedPhotoFileException("Unable to create CCURE personnel record for $photo.person.email")
                 }
                 cCurePersonnel = cCureClient.getPersonnelDetails(identifier, photo.person.email)
-                cCureClient.storePhoto(id, photo.bytesBase64, cCurePersonnel.partitionId)
+                cCureClient.storePhoto(id, photo.bytesBase64, cCurePersonnel.partitionId, true)
+                // TODO: store signature here
             } else {
                 throw new FailedPhotoFileException("CCURE Personnel record not found for $photo.person.email")
             }
