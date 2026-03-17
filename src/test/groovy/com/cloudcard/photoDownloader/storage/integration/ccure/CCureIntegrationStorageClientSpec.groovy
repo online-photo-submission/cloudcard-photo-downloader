@@ -20,6 +20,7 @@ class CCureIntegrationStorageClientSpec extends Specification {
         integrationClient.restService = Mock(RestService)
         integrationClient.lastRunPropertyService = Mock(LastRunPropertyService)
         integrationClient.createCCurePersonnel = false
+        integrationClient.createRemotePhotoPerson = true
         integrationClient.employeeIdField = "Text1"
 
         cCureClient = integrationClient.cCureClient
