@@ -157,8 +157,7 @@ class CCureClient {
 
     Long createPersonnel(String firstName, String lastName, String email) {
         if (!firstName || !lastName) {
-            log.warn("First/Last Name fields were missing for $email; unable to create CCURE Personnel")
-            return null
+            throw new FailedPhotoFileException("First/Last Name fields were missing for $email; unable to create CCURE Personnel")
         }
 
         HttpResponse<String> response = throttledCall {

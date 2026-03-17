@@ -47,7 +47,7 @@ class CCureIntegrationStorageClientSpec extends Specification {
         1 * restService.fetchBytes(photo)
         1 * cCureClient.getPersonnelDetailsByEmail("test@example.com") >> personnel
         1 * cCureClient.storePhoto(personnel.id, encodedBytes, 1)
-        1 * lastRunPropertyService.updateLastRunTimestamp()
+        1 * lastRunPropertyService.updateLastRunTimestamp(_)
     }
 
     def "test pushPhoto with non-approved photo does not push to CCURE"() {
@@ -66,7 +66,7 @@ class CCureIntegrationStorageClientSpec extends Specification {
         1 * cloudCardClient.findPerson("test@example.com") >> person
         0 * restService.fetchBytes(_)
         0 * cCureClient.storePhoto(_, _)
-        1 * lastRunPropertyService.updateLastRunTimestamp()
+        1 * lastRunPropertyService.updateLastRunTimestamp(_)
     }
 
     def "test pushPhoto creates CloudCard person when none exists"() {
@@ -79,7 +79,7 @@ class CCureIntegrationStorageClientSpec extends Specification {
         then:
         1 * cloudCardClient.findPerson("test@example.com") >> null
         1 * cloudCardClient.createPerson("test@example.com")
-        1 * lastRunPropertyService.updateLastRunTimestamp()
+        1 * lastRunPropertyService.updateLastRunTimestamp(_)
     }
 
     def "test pushPhoto ignores record when CloudCard person has no photo"() {
@@ -93,7 +93,7 @@ class CCureIntegrationStorageClientSpec extends Specification {
         then:
         1 * cloudCardClient.findPerson("test@example.com") >> person
         0 * cloudCardClient.createPerson(_)
-        1 * lastRunPropertyService.updateLastRunTimestamp()
+        1 * lastRunPropertyService.updateLastRunTimestamp(_)
     }
 
     def "test putPhoto finds CCURE personnel and stores photo"() {
@@ -157,6 +157,23 @@ class CCureIntegrationStorageClientSpec extends Specification {
         then:
         1 * cCureClient.getPersonnelDetailsByEmail("test@example.com") >> null
         1 * cCureClient.createPersonnel("John", "Doe", "test@example.com") >> null
+        0 * cCureClient.storePhoto(_, _)
+        thrown(FailedPhotoFileException)
+    }
+
+    def "test putPhoto rethrows exception when CCURE personnel creation fails"() {
+        given:
+        String identifier = "emp123"
+        Person person = new Person(email: "test@example.com", customFields: new HashMap<String, Object>())
+        Photo photo = new Photo(id: 1, person: person, bytes: "bytes")
+        integrationClient.createCCurePersonnel = true
+
+        when:
+        integrationClient.putPhoto(identifier, photo)
+
+        then:
+        1 * cCureClient.getPersonnelDetailsByEmail("test@example.com") >> null
+        1 * cCureClient.createPersonnel(null, null, "test@example.com") >> { throw new FailedPhotoFileException("Name fields are missing")}
         0 * cCureClient.storePhoto(_, _)
         thrown(FailedPhotoFileException)
     }
@@ -230,7 +247,7 @@ class CCureIntegrationStorageClientSpec extends Specification {
         2 * cloudCardClient.findPerson(_) >> null
         2 * cloudCardClient.createPerson(_)
         1 * cCureClient.subscribeForNewEvents(_)
-        2 * lastRunPropertyService.updateLastRunTimestamp()
+        2 * lastRunPropertyService.updateLastRunTimestamp(_)
     }
 
     def "test init subscribes to new events and processes ObjectCreated notifications"() {
@@ -260,7 +277,7 @@ class CCureIntegrationStorageClientSpec extends Specification {
         then:
         1 * cloudCardClient.findPerson("newuser@example.com") >> null
         1 * cloudCardClient.createPerson("newuser@example.com")
-        1 * lastRunPropertyService.updateLastRunTimestamp()
+        1 * lastRunPropertyService.updateLastRunTimestamp(_)
     }
 
     def "test init ignores non-ObjectCreated notifications"() {
@@ -290,6 +307,6 @@ class CCureIntegrationStorageClientSpec extends Specification {
         then:
         0 * cloudCardClient.findPerson(_)
         0 * cloudCardClient.createPerson(_)
-        0 * lastRunPropertyService.updateLastRunTimestamp()
+        0 * lastRunPropertyService.updateLastRunTimestamp(_)
     }
 }
