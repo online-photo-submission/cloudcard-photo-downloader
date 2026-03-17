@@ -92,6 +92,26 @@ class CloudCardClient {
         return new ObjectMapper().readValue(response.body, new TypeReference<Person>() {})
     }
 
+    List<AdditionalPhoto> getAdditionalPhotos(Long personId, String type) {
+        String url = "${apiUrl}/people/${personId}/additionalPhotos"
+        if (type) {
+            url += "?type=$type"
+        }
+
+        HttpResponse<String> response = Unirest.get(url)
+                .headers(standardHeaders())
+                .asString()
+
+        if (response.status != 200) {
+            if (response.status >= 500) {
+                log.error("Status ${response.status} returned from CloudCard API when finding additional photos: ${personId}")
+            }
+            return []
+        }
+
+        return new ObjectMapper().readValue(response.body, new TypeReference<List<AdditionalPhoto>>() {})
+    }
+
     Photo updateStatus(Photo photo, String status, String message = null) throws Exception {
         String url = "${apiUrl}/photos/${photo.id}"
 

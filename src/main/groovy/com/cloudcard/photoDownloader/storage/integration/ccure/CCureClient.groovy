@@ -5,6 +5,7 @@ import com.cloudcard.photoDownloader.FailedPhotoFileException
 import com.cloudcard.photoDownloader.IntegrationRateLimitExceededException
 import com.github.signalr4j.client.hubs.HubConnection
 import com.github.signalr4j.client.hubs.HubProxy
+import groovy.json.JsonSlurper
 import io.github.resilience4j.ratelimiter.RateLimiter
 import io.github.resilience4j.ratelimiter.RateLimiterConfig
 import io.github.resilience4j.ratelimiter.RequestNotPermitted
@@ -201,9 +202,19 @@ class CCureClient {
     }
 
     void storePhoto(Long identifier, String base64Image, Long partition, boolean isPrimaryPortrait) {
-        removePrimaryPhoto(identifier)
+        if (isPrimaryPortrait) {
+            removePrimaryPhoto(identifier)
+        } else {
+            def photoId = findExistingSignaturePhotoId(identifier)
+            if (photoId) {
+                deletePhoto(photoId)
+            }
+        }
 
-        log.trace "Sending photo to CCURE for $identifier"
+
+        log.info "Sending photo to CCURE for $identifier"
+
+        String imageType = isPrimaryPortrait ? "1" : "2"  // 1 = Portrait, 2 = signature
 
         Map<String, Object> fields = [
                 "Type"                                : CCurePersonnel.TYPE,
@@ -218,9 +229,9 @@ class CCureClient {
                 "Children[0].PropertyNames[5]"        : "Image",
                 "Children[0].PropertyNames[6]"        : "ImageCaptureDate",
 
-                "Children[0].PropertyValues[0]"       : "Portrait_${identifier}",
+                "Children[0].PropertyValues[0]"       : "Portrait_${imageType}_${identifier}",
                 "Children[0].PropertyValues[1]"       : identifier,
-                "Children[0].PropertyValues[2]"       : isPrimaryPortrait ? "1" : "2", // 1 = Portrait, 2 = signature
+                "Children[0].PropertyValues[2]"       : imageType,
                 "Children[0].PropertyValues[3]"       : partition?.toString() ?: "1",
                 "Children[0].PropertyValues[4]"       : isPrimaryPortrait ? "true" : "false",
                 "Children[0].PropertyValues[5]"       : base64Image,
@@ -388,6 +399,8 @@ class CCureClient {
         log.info("Subscription established.")
     }
 
+    // This accomplishes a delete in 1 call instead of two, but only works on primary photos
+    // Signatures will use a 2-call method, which is slower because of the throttling
     void removePrimaryPhoto(Long personIdentifier) {
         HttpResponse<String> response = throttledCall {
             Unirest.post("${apiUrl}/Generic/ExecuteCrossfireMethod")
@@ -406,4 +419,51 @@ class CCureClient {
         }
     }
 
+    private findExistingSignaturePhotoId(long personIdentifier) {
+        log.trace "Attempting to find photo for person: $personIdentifier"
+
+        // Find the ObjectID of the current Primary Image
+        // Use indexed arrays for Arguments and DisplayProperties to ensure CCURE parses them correctly
+        Map<String, Object> findFields = [
+                "TypeFullName"        : "SoftwareHouse.NextGen.Common.SecurityObjects.Images",
+                "DisplayProperties[0]": "ObjectID",
+                "WhereClause"         : "ParentID = ? AND ImageType = ? AND Primary = ?",
+                "Arguments[0]"        : personIdentifier.toString(),
+                "Arguments[1]"        : "2", // 2 = Signature
+                "Arguments[2]"        : "false"
+        ]
+
+        HttpResponse<String> findResponse = throttledCall {
+            Unirest.post("${apiUrl}/Objects/GetAllWithCriteria")
+                    .header("session-id", currentSessionId)
+                    .header("Content-Type", "application/x-www-form-urlencoded")
+                    .fields(findFields)
+                    .asString()
+        } as HttpResponse<String>
+
+        if (!findResponse.success || findResponse.body == "[]" || findResponse.body == "null") {
+            log.warn "No primary photo found for person $personIdentifier"
+            return null
+        }
+
+        def images = new JsonSlurper().parseText(findResponse.body)
+        return images[0].ObjectID
+    }
+
+    private deletePhoto(Long imageObjectId) {
+        HttpResponse<String> response = throttledCall {
+            Unirest.delete("${apiUrl}/Objects/Delete")
+                    .header("session-id", currentSessionId)
+                    .header("Content-Type", "application/x-www-form-urlencoded")
+                    .queryString("type", "SoftwareHouse.NextGen.Common.SecurityObjects.Images")
+                    .queryString("id", imageObjectId)
+                    .asString()
+        } as HttpResponse<String>
+
+        if (!response.isSuccess()) {
+            log.warn "Unable to delete photo id $imageObjectId"
+        } else {
+            log.info "Deleted photo $imageObjectId"
+        }
+    }
 }

@@ -118,16 +118,14 @@ class CCureIntegrationStorageClient implements IntegrationStorageClient {
         try {
             CCurePersonnel cCurePersonnel = cCureClient.getPersonnelDetails(identifier, photo.person.email)
             if (cCurePersonnel?.id) {
-                cCureClient.storePhoto(cCurePersonnel.id, photo.bytesBase64, cCurePersonnel.partitionId, true)
-                // TODO: store signature here
+                putPhotos(cCurePersonnel, photo)
             } else if (createCCurePersonnel) {
                 Long id = cCureClient.createPersonnel(photo.person.customFields?[firstNameField], photo.person.customFields?[lastNameField], photo.person.email, identifier)
                 if (!id) {
                     throw new FailedPhotoFileException("Unable to create CCURE personnel record for $photo.person.email")
                 }
                 cCurePersonnel = cCureClient.getPersonnelDetails(identifier, photo.person.email)
-                cCureClient.storePhoto(id, photo.bytesBase64, cCurePersonnel.partitionId, true)
-                // TODO: store signature here
+                putPhotos(cCurePersonnel, photo)
             } else {
                 throw new FailedPhotoFileException("CCURE Personnel record not found for $photo.person.email")
             }
@@ -137,6 +135,21 @@ class CCureIntegrationStorageClient implements IntegrationStorageClient {
             log.error("Error while posting photo to CCURE: $ex.localizedMessage")
         }
 
+    }
+
+    // Stores the primary photo, and a signature if we have one
+    void putPhotos(CCurePersonnel cCurePersonnel, Photo photo) {
+        //Store the first photo
+        cCureClient.storePhoto(cCurePersonnel.id, photo.bytesBase64, cCurePersonnel.partitionId, true)
+
+        List<AdditionalPhoto> additionalPhotoList = cloudCardClient.getAdditionalPhotos(photo.person.id, "DRAW")
+
+        additionalPhotoList.each {
+            restService.fetchBytes(it)
+            String bytesBase64 = Base64.getEncoder().encodeToString(it.bytes)
+            log.info "Uploading signature for ${cCurePersonnel.id}"
+            cCureClient.storePhoto(cCurePersonnel.id, bytesBase64, cCurePersonnel.partitionId, false)
+        }
     }
 
     @Override
