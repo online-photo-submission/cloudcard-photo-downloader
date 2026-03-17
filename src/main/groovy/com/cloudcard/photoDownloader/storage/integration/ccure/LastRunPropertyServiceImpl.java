@@ -35,7 +35,7 @@ public class LastRunPropertyServiceImpl implements LastRunPropertyService {
     }
 
     @Override
-    public String updateLastRunTimestamp() {
+    public String getCurrentTimestamp() {
         String formattedDate;
 
         if (useLocalTime) {
@@ -46,11 +46,21 @@ public class LastRunPropertyServiceImpl implements LastRunPropertyService {
             formattedDate = ZonedDateTime.now(ZoneId.of("UTC")).format(CCURE_DATE_FORMATTER);
         }
 
+        return formattedDate;
+    }
+
+    @Override
+    public String updateLastRunTimestamp(String timestamp) {
         Properties props = loadProperties();
-        props.setProperty(TIMESTAMP_KEY, formattedDate);
+        props.setProperty(TIMESTAMP_KEY, timestamp);
 
         saveProperties(props);
-        return formattedDate;
+        return timestamp;
+    }
+
+    @Override
+    public String updateLastRunTimestamp() {
+        return updateLastRunTimestamp(getCurrentTimestamp());
     }
 
     private Properties loadProperties() {
