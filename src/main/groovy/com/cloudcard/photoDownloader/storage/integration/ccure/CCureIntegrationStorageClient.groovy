@@ -81,6 +81,8 @@ class CCureIntegrationStorageClient implements IntegrationStorageClient {
      * @param personnel
      */
     void pushPhoto(CCurePersonnel personnel) {
+        String runTimestamp = lastRunPropertyService.getCurrentTimestamp()
+
         // load person by email
         log.trace("Loading cloudcard record for $personnel.emailAddress")
         Person cloudCardPerson = findCloudCardPerson(personnel)
@@ -96,7 +98,7 @@ class CCureIntegrationStorageClient implements IntegrationStorageClient {
             cloudCardClient.createPerson(personnel.emailAddress, personnel.employeeId)
         }
 
-        lastRunPropertyService.updateLastRunTimestamp()
+        lastRunPropertyService.updateLastRunTimestamp(runTimestamp)
     }
 
     Person findCloudCardPerson(CCurePersonnel personnel) {
@@ -133,7 +135,6 @@ class CCureIntegrationStorageClient implements IntegrationStorageClient {
             throw ex
         } catch (Exception ex) {
             log.error("Error while posting photo to CCURE: $ex.localizedMessage")
-            throw new FailedPhotoFileException("Unable to process record in CCURE.")
         }
 
     }
