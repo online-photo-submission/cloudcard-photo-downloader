@@ -368,10 +368,6 @@ class CCureClient {
         log.info("Subscription established.")
     }
 
-    /**
-     * Unassigns the primary photo (if one exists) by moving it to a dummy parent and renaming it.
-     * This is the required workaround because Portraits cannot be deleted via API, per the docs.
-     */
     void removePrimaryPhoto(Long personIdentifier) {
         HttpResponse<String> response = throttledCall {
             Unirest.post("${apiUrl}/Generic/ExecuteCrossfireMethod")
