@@ -195,7 +195,7 @@ class CCureIntegrationStorageClientSpec extends Specification {
         thrown(FailedPhotoFileException)
     }
 
-    def "test putPhoto wraps generic exceptions in FailedPhotoFileException"() {
+    def "test putPhoto swallows generic exceptions"() {
         given:
         String identifier = "emp123"
         Person person = new Person(email: "test@example.com")
@@ -206,7 +206,6 @@ class CCureIntegrationStorageClientSpec extends Specification {
 
         then:
         1 * cCureClient.getPersonnelDetailsByEmail("test@example.com") >> { throw new RuntimeException("Network error") }
-        thrown(FailedPhotoFileException)
     }
 
     def "test putPhoto rethrows FailedPhotoFileException without wrapping"() {
