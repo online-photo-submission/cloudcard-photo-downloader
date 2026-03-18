@@ -109,6 +109,26 @@ class CCureIntegrationStorageClientSpec extends Specification {
         then:
         1 * cCureClient.getPersonnelDetails(identifier, person.email) >> personnel
         1 * cCureClient.storePhoto(456L, encodedBytes, 1, true)
+        1 * cloudCardClient.getAdditionalPhotos(_, "DRAW") >> []
+        0 * cCureClient.storePhoto(_, _, _, false)
+    }
+
+    def "test putPhoto stores signature images"() {
+        given:
+        String identifier = "emp123"
+        Person person = new Person(email: "test@example.com", customFields: [firstName: "John", lastName: "Doe"])
+        Photo photo = new Photo(id: 1, person: person, bytes: "bytes")
+        CCurePersonnel personnel = new CCurePersonnel(id: 456L, emailAddress: "test@example.com", partitionId: 1)
+
+        when:
+        integrationClient.putPhoto(identifier, photo)
+
+        then:
+        1 * cCureClient.getPersonnelDetails(identifier, person.email) >> personnel
+        1 * cCureClient.storePhoto(456L, encodedBytes, 1, true)
+        1 * cloudCardClient.getAdditionalPhotos(_, "DRAW") >> [new AdditionalPhoto(bytes: "fetchedBytes")]
+        1 * restService.fetchBytes(_)
+        1 * cCureClient.storePhoto(_, _, _, false)
     }
 
     def "test putPhoto throws exception when CCURE personnel not found and createCCurePersonnel is false"() {
@@ -144,6 +164,8 @@ class CCureIntegrationStorageClientSpec extends Specification {
         1 * cCureClient.createPersonnel("John", "Doe", person.email, identifier) >> 789L
         1 * cCureClient.getPersonnelDetails(identifier, person.email) >> new CCurePersonnel(id: 789L, emailAddress: "test@example.com", partitionId: 1)
         1 * cCureClient.storePhoto(789L, encodedBytes, 1, true)
+        1 * cloudCardClient.getAdditionalPhotos(_, "DRAW") >> []
+        0 * cCureClient.storePhoto(_, _, _, false)
     }
 
     def "test putPhoto throws exception when CCURE personnel creation fails"() {
