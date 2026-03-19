@@ -50,6 +50,20 @@ public class LastRunPropertyServiceImpl implements LastRunPropertyService {
     }
 
     @Override
+    public String formatTimestamp(String utcTimestamp) {
+        String formattedDate;
+
+        if (useLocalTime) {
+            ZoneId localZone = ZoneId.of("America/New_York");
+            formattedDate = ZonedDateTime.parse(utcTimestamp).withZoneSameInstant(localZone).format(CCURE_DATE_FORMATTER);
+        } else {
+            formattedDate = ZonedDateTime.parse(utcTimestamp).format(CCURE_DATE_FORMATTER);
+        }
+
+        return formattedDate;
+    }
+
+    @Override
     public String updateLastRunTimestamp(String timestamp) {
         Properties props = loadProperties();
         props.setProperty(TIMESTAMP_KEY, timestamp);

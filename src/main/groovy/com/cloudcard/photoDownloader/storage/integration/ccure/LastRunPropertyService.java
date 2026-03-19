@@ -14,6 +14,11 @@ public interface LastRunPropertyService {
     String getCurrentTimestamp();
 
     /**
+     * @return a formatted string of the provided UTC time.
+     */
+    String formatTimestamp(String utcTimestamp);
+
+    /**
      * Overwrites the timestamp property.
      *
      * @return The formatted timestamp string saved to the file.

@@ -6,9 +6,13 @@ import com.cloudcard.photoDownloader.IntegrationRateLimitExceededException
 import com.github.signalr4j.client.hubs.HubConnection
 import com.github.signalr4j.client.hubs.HubProxy
 import groovy.json.JsonSlurper
+import io.github.resilience4j.core.IntervalFunction
 import io.github.resilience4j.ratelimiter.RateLimiter
 import io.github.resilience4j.ratelimiter.RateLimiterConfig
 import io.github.resilience4j.ratelimiter.RequestNotPermitted
+import io.github.resilience4j.retry.MaxRetriesExceededException
+import io.github.resilience4j.retry.Retry
+import io.github.resilience4j.retry.RetryConfig
 import jakarta.annotation.PostConstruct
 import jakarta.annotation.PreDestroy
 import kong.unirest.core.HttpResponse
@@ -60,6 +64,7 @@ class CCureClient {
     static HubConnection hubConnection
 
     RateLimiter ccureRateLimiter
+    Retry retryMonitor
 
     @PostConstruct
     void init() {
@@ -78,6 +83,15 @@ class CCureClient {
                 .timeoutDuration(Duration.ofSeconds(30))
                 .build()
         this.ccureRateLimiter = RateLimiter.of("ccureApi", config)
+
+        RetryConfig retryConfig = RetryConfig.custom()
+                .maxAttempts(10)
+                .intervalFunction(IntervalFunction.ofExponentialBackoff(1000, 2.0, 10_000))
+                .retryExceptions(IntegrationRateLimitExceededException.class)
+                .failAfterMaxAttempts(true)
+                .build()
+
+        retryMonitor = Retry.of("CCureClient", retryConfig)
     }
 
     @PreDestroy
@@ -102,8 +116,20 @@ class CCureClient {
 
     def throttledCall(Closure apiCall) {
         try {
-            return RateLimiter.decorateCallable(ccureRateLimiter, apiCall).call()
-        } catch (RequestNotPermitted ex) {
+            return Retry.decorateCallable(retryMonitor, {
+                try {
+                    HttpResponse response = RateLimiter.decorateCallable(ccureRateLimiter, apiCall).call() as HttpResponse
+
+                    if (response.status == 429) {
+                        throw new IntegrationRateLimitExceededException()
+                    }
+
+                    return response
+                } catch (RequestNotPermitted ex) {
+                    throw new IntegrationRateLimitExceededException()
+                }
+            }).call()
+        } catch (MaxRetriesExceededException ex) {
             throw new IntegrationRateLimitExceededException()
         }
     }
@@ -127,7 +153,7 @@ class CCureClient {
             currentSessionId =  sessionId;
             return currentSessionId
         } else {
-            throw new RuntimeException("CCURE Login failed: " + response.getStatusText());
+            throw new RuntimeException("CCURE Login failed: ${response.getStatus()} ${response.getStatusText()}");
         }
     }
 
@@ -194,7 +220,7 @@ class CCureClient {
 
         if (matcher.find()) {
             String idString = matcher.group(1)
-            log.trace("Successfully extracted ObjectID: {}", idString)
+            log.trace("Successfully extracted ObjectID for new Personnel: {}", idString)
             return idString.toLong()
         } else {
             log.warn("Could not find ObjectID in response: {}", responseText)
@@ -270,7 +296,9 @@ class CCureClient {
                 responseItems.each {
                     // Ignore any creation records for photos, cards, etc., that may be attached to a person as a secondary object.
                     if (it.SecondaryObjectType == "") {
-                        resultList << getPersonnelDetailsByGuid(it.PrimaryObjectIdentity)
+                        CCurePersonnel personnel = getPersonnelDetailsByGuid(it.PrimaryObjectIdentity)
+                        personnel.timestamp = lastRunPropertyService.formatTimestamp(it.ServerUTC)
+                        resultList << personnel
                     }
                 }
 
@@ -403,7 +431,7 @@ class CCureClient {
 
         if (response.success && response.body == "true") {
             log.trace("Removed primary photo for $personIdentifier")
-        } else {
+        } else if (response.status != 200) {
             log.warn("Unable to remove photo for $personIdentifier : $response.status")
         }
     }
