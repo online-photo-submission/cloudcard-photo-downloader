@@ -8,6 +8,7 @@ import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty
+import org.springframework.scheduling.annotation.Scheduled
 import org.springframework.stereotype.Component
 
 @Component
@@ -37,21 +38,37 @@ class CCureIntegrationStorageClient implements IntegrationStorageClient {
     @Autowired
     LastRunPropertyService lastRunPropertyService
 
+    List<CCurePersonnel> newPersonnelQueue
+    List<String> personnelJustCreated
+
 
     @PostConstruct
     void init() {
-        cCureClient.authenticate()
+        newPersonnelQueue = Collections.synchronizedList(new ArrayList<CCurePersonnel>())
+        personnelJustCreated = Collections.synchronizedList(new ArrayList<String>())
 
-        cCureClient.queryAuditLogsForNewPeople().each {pushPhoto(it)}
+        cCureClient.authenticate()
+        String startUpTime = lastRunPropertyService.getCurrentTimestamp()
+
+        cCureClient.queryAuditLogsForNewPeople().each {{
+            pushPhoto(it)
+            lastRunPropertyService.updateLastRunTimestamp(it.timestamp)
+        }}
+
+        // reset to right before we started processing the backlog
+        lastRunPropertyService.updateLastRunTimestamp(startUpTime)
 
         cCureClient.subscribeForNewEvents((payload) -> {
             if (payload.NotificationType == "ObjectCreated") {
-                log.info("Received notification of personnel creation for ${payload.NotificationDSO.EmailAddress}");
-                CCurePersonnel newPersonnel = new CCurePersonnel(
-                        id: payload.NotificationDSO.ObjectID,
-                        emailAddress: payload.NotificationDSO.EmailAddress
-                )
-                pushPhoto(newPersonnel)
+                if (!personnelJustCreated.remove(payload.NotificationDSO.EmailAddress)) {
+                    log.info("Received notification of personnel creation for ${payload.NotificationDSO.EmailAddress}");
+                    CCurePersonnel newPersonnel = new CCurePersonnel(
+                            id: payload.NotificationDSO.ObjectID,
+                            emailAddress: payload.NotificationDSO.EmailAddress,
+                            timestamp: lastRunPropertyService.getCurrentTimestamp()
+                    )
+                    newPersonnelQueue << newPersonnel
+                }
             }
         })
     }
@@ -61,6 +78,22 @@ class CCureIntegrationStorageClient implements IntegrationStorageClient {
         return "CCURE"
     }
 
+    /*
+    This maintains a single thread to process new personnel notifications one at a time, so we don't overwhelm the
+     CCURE API and get throttled by lots of threads. All the threads just dump new people into the list.
+     Now we have a max of two threads calling the API: 1 from notifications, and 1 from downloader processing.
+     Everything on each side just queues up and processes in line.
+     This runs with a minute of downtime after emptying the list.
+     */
+    @Scheduled(fixedDelay = 60_000)
+    void processNewPersonnelQueue() {
+        while (!newPersonnelQueue.empty) {
+            pushPhoto(newPersonnelQueue.get(0))
+            CCurePersonnel personnel = newPersonnelQueue.remove(0)
+            lastRunPropertyService.updateLastRunTimestamp(personnel.timestamp)
+        }
+    }
+
     /**
      * Given data on a person from CCURE, this looks for a matching person (by email) within CloudCard.
      * If they have a record and an approved photo, we push the photo to CCURE.
@@ -68,8 +101,6 @@ class CCureIntegrationStorageClient implements IntegrationStorageClient {
      * @param personnel
      */
     void pushPhoto(CCurePersonnel personnel) {
-        String runTimestamp = lastRunPropertyService.getCurrentTimestamp()
-
         // load person by email
         log.trace("Loading cloudcard record for $personnel.emailAddress")
         Person cloudCardPerson = cloudCardClient.findPerson(personnel.emailAddress)
@@ -84,8 +115,6 @@ class CCureIntegrationStorageClient implements IntegrationStorageClient {
             log.trace "$personnel.emailAddress does not exist in RemotePhoto, creating record there"
             cloudCardClient.createPerson(personnel.emailAddress)
         }
-
-        lastRunPropertyService.updateLastRunTimestamp(runTimestamp)
     }
 
     @Override
@@ -96,6 +125,7 @@ class CCureIntegrationStorageClient implements IntegrationStorageClient {
             if (cCurePersonnel?.id) {
                 cCureClient.storePhoto(cCurePersonnel.id, photo.bytesBase64, cCurePersonnel.partitionId)
             } else if (createCCurePersonnel) {
+                personnelJustCreated.add(photo.person.email)
                 Long id = cCureClient.createPersonnel(photo.person.customFields?.firstName, photo.person.customFields?.lastName, photo.person.email)
                 if (!id) {
                     throw new FailedPhotoFileException("Unable to create CCURE personnel record for $photo.person.email")

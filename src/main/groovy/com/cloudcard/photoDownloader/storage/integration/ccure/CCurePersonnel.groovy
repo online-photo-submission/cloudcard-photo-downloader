@@ -7,4 +7,5 @@ class CCurePersonnel {
     Long id
     String emailAddress
     Long partitionId
+    String timestamp
 }
