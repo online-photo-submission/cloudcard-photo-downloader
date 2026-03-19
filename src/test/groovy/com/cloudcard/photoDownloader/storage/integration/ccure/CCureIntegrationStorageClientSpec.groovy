@@ -364,7 +364,7 @@ class CCureIntegrationStorageClientSpec extends Specification {
         1 * cCureClient.getPersonnelDetails(person.identifier, person.email) >> null
         1 * cCureClient.createPersonnel("John", "Doe", person.email, person.identifier) >> 789L
         1 * cCureClient.getPersonnelDetails(identifier, person.email) >> new CCurePersonnel(id: 789L, emailAddress: person.email, partitionId: 1, employeeId: identifier)
-        1 * cCureClient.storePhoto(789L, encodedBytes, 1)
+        1 * cCureClient.storePhoto(789L, encodedBytes, 1, true)
         integrationClient.personnelJustCreated.size() == 1
 
         // trigger the incoming notification and ignore it
