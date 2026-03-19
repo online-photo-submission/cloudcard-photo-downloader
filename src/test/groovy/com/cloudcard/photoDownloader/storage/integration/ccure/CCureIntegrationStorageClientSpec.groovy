@@ -27,6 +27,8 @@ class CCureIntegrationStorageClientSpec extends Specification {
         cloudCardClient = integrationClient.cloudCardClient
         restService = integrationClient.restService
         lastRunPropertyService = integrationClient.lastRunPropertyService
+        integrationClient.newPersonnelQueue = new ArrayList<>()
+        integrationClient.personnelJustCreated = new ArrayList<>()
     }
 
     def "test pushPhoto with existing CloudCard person and approved photo"() {
