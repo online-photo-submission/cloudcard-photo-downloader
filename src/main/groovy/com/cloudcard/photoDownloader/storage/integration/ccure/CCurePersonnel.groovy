@@ -8,4 +8,5 @@ class CCurePersonnel {
     String emailAddress
     String employeeId
     Long partitionId
+    String timestamp
 }

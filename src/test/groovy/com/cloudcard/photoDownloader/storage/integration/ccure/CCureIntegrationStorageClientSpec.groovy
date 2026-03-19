@@ -27,6 +27,8 @@ class CCureIntegrationStorageClientSpec extends Specification {
         cloudCardClient = integrationClient.cloudCardClient
         restService = integrationClient.restService
         lastRunPropertyService = integrationClient.lastRunPropertyService
+        integrationClient.newPersonnelQueue = new ArrayList<>()
+        integrationClient.personnelJustCreated = new ArrayList<>()
     }
 
     def "test pushPhoto with existing CloudCard person and approved photo"() {
@@ -47,7 +49,6 @@ class CCureIntegrationStorageClientSpec extends Specification {
         1 * restService.fetchBytes(photo)
         1 * cCureClient.getPersonnelDetails(null, person.email) >> personnel
         1 * cCureClient.storePhoto(personnel.id, encodedBytes, 1, true)
-        1 * lastRunPropertyService.updateLastRunTimestamp(_)
     }
 
     def "test pushPhoto with non-approved photo does not push to CCURE"() {
@@ -66,7 +67,6 @@ class CCureIntegrationStorageClientSpec extends Specification {
         1 * cloudCardClient.findPersonByEmail("test@example.com") >> person
         0 * restService.fetchBytes(_)
         0 * cCureClient.storePhoto(_, _, _, _)
-        1 * lastRunPropertyService.updateLastRunTimestamp(_)
     }
 
     def "test pushPhoto creates CloudCard person when none exists"() {
@@ -79,7 +79,6 @@ class CCureIntegrationStorageClientSpec extends Specification {
         then:
         1 * cloudCardClient.findPersonByEmail("test@example.com") >> null
         1 * cloudCardClient.createPerson(personnel.emailAddress, personnel.employeeId)
-        1 * lastRunPropertyService.updateLastRunTimestamp(_)
     }
 
     def "test pushPhoto ignores record when CloudCard person has no photo"() {
@@ -93,7 +92,6 @@ class CCureIntegrationStorageClientSpec extends Specification {
         then:
         1 * cloudCardClient.findPersonByEmail(person.email) >> person
         0 * cloudCardClient.createPerson(_)
-        1 * lastRunPropertyService.updateLastRunTimestamp(_)
     }
 
     def "test putPhoto finds CCURE personnel and stores photo"() {
@@ -193,6 +191,8 @@ class CCureIntegrationStorageClientSpec extends Specification {
         Person person = new Person(email: "test@example.com", customFields: new HashMap<String, Object>())
         Photo photo = new Photo(id: 1, person: person, bytes: "bytes")
         integrationClient.createCCurePersonnel = true
+        integrationClient.firstNameField = "firstName"
+        integrationClient.lastNameField = "lastName"
 
         when:
         integrationClient.putPhoto(identifier, photo)
@@ -272,10 +272,10 @@ class CCureIntegrationStorageClientSpec extends Specification {
         2 * cloudCardClient.findPersonByEmail(_) >> null
         2 * cloudCardClient.createPerson(_, _)
         1 * cCureClient.subscribeForNewEvents(_)
-        2 * lastRunPropertyService.updateLastRunTimestamp(_)
+        3 * lastRunPropertyService.updateLastRunTimestamp(_)
     }
 
-    def "test init subscribes to new events and processes ObjectCreated notifications"() {
+    def "test init subscribes to new events and adds ObjectCreated notifications to the queue"() {
         given:
         def capturedCallback
 
@@ -301,9 +301,7 @@ class CCureIntegrationStorageClientSpec extends Specification {
         capturedCallback(payload)
 
         then:
-        1 * cloudCardClient.findPersonByEmail("newuser@example.com") >> null
-        1 * cloudCardClient.createPerson("newuser@example.com", "emp123")
-        1 * lastRunPropertyService.updateLastRunTimestamp(_)
+        integrationClient.newPersonnelQueue.size() == 1
     }
 
     def "test init ignores non-ObjectCreated notifications"() {
@@ -335,5 +333,53 @@ class CCureIntegrationStorageClientSpec extends Specification {
         0 * cloudCardClient.findPersonByEmail(_)
         0 * cloudCardClient.createPerson(_, _)
         0 * lastRunPropertyService.updateLastRunTimestamp(_)
+    }
+
+    def "test ignores a notification of a new personnel in CCURE that was just pushed up"() {
+        //setup the callback hook
+        given:
+        def capturedCallback
+        String identifier = "emp123"
+        Person person = new Person(identifier: identifier, email: "test@example.com", customFields: [firstName: "John", lastName: "Doe"])
+        Photo photo = new Photo(id: 1, person: person, bytes: "bytes")
+        integrationClient.createCCurePersonnel = true
+        integrationClient.firstNameField = "firstName"
+        integrationClient.lastNameField = "lastName"
+
+        when:
+        integrationClient.init()
+
+        then:
+        1 * cCureClient.authenticate()
+        1 * cCureClient.queryAuditLogsForNewPeople() >> []
+        1 * cCureClient.subscribeForNewEvents(_) >> { args ->
+            capturedCallback = args[0]
+        }
+
+        //push up a person
+        when:
+        integrationClient.putPhoto(identifier, photo)
+
+        then:
+        1 * cCureClient.getPersonnelDetails(person.identifier, person.email) >> null
+        1 * cCureClient.createPersonnel("John", "Doe", person.email, person.identifier) >> 789L
+        1 * cCureClient.getPersonnelDetails(identifier, person.email) >> new CCurePersonnel(id: 789L, emailAddress: person.email, partitionId: 1, employeeId: identifier)
+        1 * cCureClient.storePhoto(789L, encodedBytes, 1)
+        integrationClient.personnelJustCreated.size() == 1
+
+        // trigger the incoming notification and ignore it
+        when:
+        def payload = [
+                NotificationType: "ObjectCreated",
+                NotificationDSO: [
+                        ObjectID: 789L,
+                        EmailAddress: "test@example.com"
+                ]
+        ]
+        capturedCallback(payload)
+
+        then:
+        integrationClient.personnelJustCreated.size() == 0
+        integrationClient.newPersonnelQueue.size() == 0
     }
 }
