@@ -169,6 +169,8 @@ class CCureIntegrationStorageClientSpec extends Specification {
         Person person = new Person(email: "test@example.com", customFields: new HashMap<String, Object>())
         Photo photo = new Photo(id: 1, person: person, bytes: "bytes")
         integrationClient.createCCurePersonnel = true
+        integrationClient.firstNameField = "firstName"
+        integrationClient.lastNameField = "lastName"
 
         when:
         integrationClient.putPhoto(identifier, photo)
@@ -316,9 +318,11 @@ class CCureIntegrationStorageClientSpec extends Specification {
         given:
         def capturedCallback
         String identifier = "emp123"
-        Person person = new Person(email: "test@example.com", customFields: [firstName: "John", lastName: "Doe"])
+        Person person = new Person(identifier: identifier, email: "test@example.com", customFields: [firstName: "John", lastName: "Doe"])
         Photo photo = new Photo(id: 1, person: person, bytes: "bytes")
         integrationClient.createCCurePersonnel = true
+        integrationClient.firstNameField = "firstName"
+        integrationClient.lastNameField = "lastName"
 
         when:
         integrationClient.init()
@@ -335,9 +339,9 @@ class CCureIntegrationStorageClientSpec extends Specification {
         integrationClient.putPhoto(identifier, photo)
 
         then:
-        1 * cCureClient.getPersonnelDetailsByEmail("test@example.com") >> null
-        1 * cCureClient.createPersonnel("John", "Doe", "test@example.com") >> 789L
-        1 * cCureClient.getPersonnelDetailsByEmail("test@example.com") >> new CCurePersonnel(id: 789L, emailAddress: "test@example.com", partitionId: 1)
+        1 * cCureClient.getPersonnelDetails(person.identifier, person.email) >> null
+        1 * cCureClient.createPersonnel("John", "Doe", person.email, person.identifier) >> 789L
+        1 * cCureClient.getPersonnelDetails(identifier, person.email) >> new CCurePersonnel(id: 789L, emailAddress: person.email, partitionId: 1, employeeId: identifier)
         1 * cCureClient.storePhoto(789L, encodedBytes, 1)
         integrationClient.personnelJustCreated.size() == 1
 
