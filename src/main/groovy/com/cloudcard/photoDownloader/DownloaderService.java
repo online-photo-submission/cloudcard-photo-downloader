@@ -112,8 +112,7 @@ public class DownloaderService {
 
         } catch (Exception e) {
 
-            log.error(e.getMessage());
-            e.printStackTrace();
+            log.error(e.getMessage(), e);
             exitStatus = 1;
 
         } finally {

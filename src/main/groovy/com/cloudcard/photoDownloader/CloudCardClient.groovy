@@ -2,6 +2,8 @@ package com.cloudcard.photoDownloader
 
 import com.fasterxml.jackson.core.type.TypeReference
 import com.fasterxml.jackson.databind.ObjectMapper
+import groovy.json.JsonOutput
+import kong.unirest.core.Empty
 import kong.unirest.core.HttpResponse
 import kong.unirest.core.Unirest
 import org.slf4j.Logger
@@ -110,6 +112,21 @@ class CloudCardClient {
 
         return new ObjectMapper().readValue(response.getBody(), new TypeReference<List<Photo>>() {
         })
+    }
+
+    void remoteLog(List<String> logs) throws Exception {
+        String url = "${apiUrl}/logs"
+        def payload = [logs: logs]
+
+        HttpResponse<Empty> response = Unirest.post(url)
+            .headers(standardHeaders())
+            .body(JsonOutput.toJson(payload))
+            .asEmpty()
+
+        if (response.status != 204) {
+            //Avoid using log methods here!
+            System.err.println("Status ${response.status} returned from CloudCard API when attempting to post logs.")
+        }
     }
 
     void close() {
