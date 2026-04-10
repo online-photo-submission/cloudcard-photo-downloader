@@ -72,8 +72,7 @@ class IntegrationStorageService implements StorageService {
             throw failedPhotoFileException
         } catch (Exception e) {
             log.error("Photo $photo.id for $photo.person.email failed to upload into ${integrationStorageClient.systemName}.")
-            log.error(e.message)
-            e.printStackTrace()
+            log.error(e.message, e)
             return null
         }
 
