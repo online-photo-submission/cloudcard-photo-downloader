@@ -2,6 +2,7 @@ package com.cloudcard.photoDownloader;
 
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
+import org.springframework.boot.builder.SpringApplicationBuilder;
 import org.springframework.scheduling.annotation.EnableScheduling;
 
 @EnableScheduling
@@ -12,7 +13,8 @@ public class Application {
 
     public static void main(String[] args) throws Exception {
 
-        SpringApplication.run(Application.class, args);
-
+        new SpringApplicationBuilder(Application.class)
+                .initializers(new RemoteConfigInitializer())
+                .run(args);
     }
 }
