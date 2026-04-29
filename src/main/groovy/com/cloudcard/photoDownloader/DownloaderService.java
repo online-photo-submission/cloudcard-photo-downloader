@@ -34,6 +34,9 @@ public class DownloaderService {
     @Autowired
     ShellCommandService shellCommandService;
 
+    @Autowired
+    RemoteConfigService remoteConfigService;
+
     @Value("${downloader.delay.milliseconds}")
     private Integer downloaderDelay;
 
@@ -88,6 +91,13 @@ public class DownloaderService {
     public void downloadPhotos() throws Exception {
 
         int exitStatus = 0;
+
+        if (remoteConfigService.isUpdated()) {
+            log.info("New configuration version detected. Restarting application to apply new settings.");
+            Application.restart();
+
+            return;
+        }
 
         try {
 
