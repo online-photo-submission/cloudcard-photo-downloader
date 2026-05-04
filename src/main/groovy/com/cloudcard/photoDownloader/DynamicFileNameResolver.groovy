@@ -46,6 +46,8 @@ class DynamicFileNameResolver implements FileNameResolver {
                 fileName = fileName + new SimpleDateFormat(dateFormat).format(photo.dateCreated)
             } else if (i.equals("identifier")) {
                 fileName = fileName + photo.getPerson().getIdentifier()
+            } else if (i.startsWith("static_")) {
+                fileName = fileName + i.split('_', 2)[1]
             } else {
                 String customFieldValue = customFields.get(i)
                 if (customFieldValue == null || customFieldValue.isEmpty()) {
