@@ -13,7 +13,6 @@ import org.springframework.scheduling.annotation.EnableScheduling;
 public class Application {
     private static final Logger log = LoggerFactory.getLogger(Application.class);
 
-    private static final String API_URL = "https://api.onlinephotosubmission.com/api";
     private static ConfigurableApplicationContext context;
 
     public static void main(String[] args) throws Exception {
