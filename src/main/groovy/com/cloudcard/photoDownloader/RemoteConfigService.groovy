@@ -29,7 +29,7 @@ class RemoteConfigService {
         try {
             return RemotePhotoUtil.getRemoteConfig(apiUrl, integrationName, authToken)
         } finally {
-                RemotePhotoUtil.logout(apiUrl, authToken)
+            RemotePhotoUtil.logout(apiUrl, authToken)
         }
     }
 
