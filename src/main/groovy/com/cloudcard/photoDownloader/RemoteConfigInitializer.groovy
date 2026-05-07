@@ -30,6 +30,11 @@ class RemoteConfigInitializer implements ApplicationContextInitializer<Configura
 
         Integration integration = remoteConfigService.fetchRemoteConfig()
 
+        if (!integration) {
+            log.error("No integration found for $integrationName. Exiting now.")
+            throw new RuntimeException()
+        }
+
         // set the version on startup to establish a baseline
         remoteConfigService.currentVersion = integration.version
 

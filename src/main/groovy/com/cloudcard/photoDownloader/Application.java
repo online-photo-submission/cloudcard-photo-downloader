@@ -37,9 +37,7 @@ public class Application {
                 Thread.sleep(2000);
 
                 log.info("Starting new Spring context...");
-                context = new SpringApplicationBuilder(Application.class)
-                        .initializers(new RemoteConfigInitializer())
-                        .run(sourceArgs);
+                main(sourceArgs);
 
             } catch (Exception e) {
                 log.error("Failed to restart application!", e);
