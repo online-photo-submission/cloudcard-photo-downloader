@@ -34,6 +34,7 @@ rm cloudcard-photo-downloader.*
 mkdir cloudcard-photo-downloader
 cp "build/libs/cloudcard-photo-downloader-$version.jar" "cloudcard-photo-downloader/cloudcard-photo-downloader.jar"
 echo cloudcard.api.accessToken= >cloudcard-photo-downloader/application.properties
+echo cloudcard.integration.name= >>cloudcard-photo-downloader/application.properties
 echo downloader.useRemoteConfigs=true >>cloudcard-photo-downloader/application.properties
 echo "java -jar cloudcard-photo-downloader.jar >> downloader.log" >> cloudcard-photo-downloader/run.bat
 echo "java -jar cloudcard-photo-downloader.jar >> downloader.log" >cloudcard-photo-downloader/run.sh
