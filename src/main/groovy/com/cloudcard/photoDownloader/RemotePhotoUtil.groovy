@@ -62,6 +62,11 @@ class RemotePhotoUtil {
         * @return An Integration object containing the configuration details if successful, null otherwise.
      */
     static Integration getRemoteConfig(String apiUrl, String integrationName, String authToken) throws Exception {
+        if (!integrationName) {
+            log.error("cloudcard.integration.name must not be null or empty if using RemoteConfigs")
+            throw new IllegalArgumentException()
+        }
+
         String url =  apiUrl + "/integrations/$integrationName?findBy=name"
         HttpResponse<String> response = Unirest.get(url).headers(standardHeaders(authToken)).asString()
 

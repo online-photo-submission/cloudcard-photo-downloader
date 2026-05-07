@@ -34,8 +34,11 @@ public class DownloaderService {
     @Autowired
     ShellCommandService shellCommandService;
 
-    @Autowired
+    @Autowired(required = false)
     RemoteConfigService remoteConfigService;
+
+    @Value("${downloader.useRemoteConfigs:false}")
+    private boolean useRemoteConfigs;
 
     @Value("${downloader.delay.milliseconds}")
     private Integer downloaderDelay;
@@ -58,7 +61,7 @@ public class DownloaderService {
     @PostConstruct
     public void init() {
 
-        throwIfTrue(downloaderDelay < photoService.minDownloaderDelay(), "The minimum downloader delay is " + photoService.minDownloaderDelay() + " milliseconds.");
+        throwIfTrue(downloaderDelay < photoService.minDownloaderDelay() && !useRemoteConfigs, "The minimum downloader delay is " + photoService.minDownloaderDelay() + " milliseconds.");
         throwIfTrue(storageService == null, "The Storage Service must be specified.");
         throwIfTrue(summaryService == null, "The Summary Service must be specified.");
 
@@ -92,7 +95,7 @@ public class DownloaderService {
 
         int exitStatus = 0;
 
-        if (remoteConfigService.isUpdated()) {
+        if (useRemoteConfigs && remoteConfigService.isUpdated()) {
             log.info("New configuration version detected. Restarting application to apply new settings.");
             Application.restart();
 

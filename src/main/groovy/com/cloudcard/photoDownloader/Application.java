@@ -18,7 +18,6 @@ public class Application {
 
     public static void main(String[] args) throws Exception {
 
-//        TODO: Allow users to opt out of remote configs.
         context = new SpringApplicationBuilder(Application.class)
                 .initializers(new RemoteConfigInitializer())
                 .run(args);

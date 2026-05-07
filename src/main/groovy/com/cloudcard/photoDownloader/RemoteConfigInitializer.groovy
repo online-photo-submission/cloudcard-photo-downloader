@@ -17,9 +17,13 @@ class RemoteConfigInitializer implements ApplicationContextInitializer<Configura
     void initialize(ConfigurableApplicationContext context) {
         ConfigurableEnvironment env = context.environment
 
+        Boolean useRemoteConfigs = env.getProperty("downloader.useRemoteConfigs", Boolean)
+
+        if (!useRemoteConfigs) return
+
+        String integrationName = env.getProperty("cloudcard.integration.name")
         String pat = env.getProperty("cloudcard.api.accessToken")
         String apiUrl = env.getProperty("cloudcard.api.url")
-        String integrationName = env.getProperty("cloudcard.integration.name")
         RemoteConfigService remoteConfigService = new RemoteConfigService(pat: pat, apiUrl: apiUrl, integrationName: integrationName)
 
         log.info("Initializing RemoteConfigInitializer with API URL: " + apiUrl + ", Integration Name: " + integrationName)
