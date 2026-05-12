@@ -1,0 +1,2 @@
+rootProject.name = 'cloudcard-photo-downloader'
+include 'setup-ui'

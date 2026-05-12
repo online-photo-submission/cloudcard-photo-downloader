@@ -1,0 +1,24 @@
+plugins {
+    id 'groovy'
+    id 'application'
+    id 'org.openjfx.javafxplugin' version '0.1.0'
+}
+
+repositories {
+    mavenCentral()
+}
+
+dependencies {
+    implementation 'org.apache.groovy:groovy'
+    implementation 'org.apache.groovy:groovy-json'
+    implementation 'org.apache.groovy:groovy-json:4.0.26'
+}
+
+javafx {
+    version = '21.0.5'
+    modules = [ 'javafx.controls' ]
+}
+
+application {
+    mainClass = 'com.cloudcard.setup.Main'
+}
