@@ -20,5 +20,5 @@ javafx {
 }
 
 application {
-    mainClass = 'com.cloudcard.setup.Main'
+    mainClass = 'ai.remotephoto.setup.Main'
 }

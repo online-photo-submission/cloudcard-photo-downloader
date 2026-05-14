@@ -1,4 +1,4 @@
-package com.cloudcard.setup
+package ai.remotephoto.setup
 
 import javafx.application.Application
 import javafx.scene.Scene
@@ -11,7 +11,7 @@ class Main extends Application {
     void start(Stage stage) {
         SetupView setupView = new SetupView()
 
-        stage.title = 'CloudCard Setup'
+        stage.title = 'RemotePhoto Downloader Setup'
 
         URL iconUrl = getClass().getResource('/icon.png')
         if (iconUrl) {
@@ -20,7 +20,7 @@ class Main extends Application {
             println 'icon.png not found on classpath'
         }
 
-        stage.scene = new Scene(setupView.buildRoot(), 940, 780)
+        stage.scene = new Scene(setupView.buildRoot(), 1040, 980)
         stage.show()
     }
 

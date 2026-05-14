@@ -1,4 +1,4 @@
-package com.cloudcard.setup
+package ai.remotephoto.setup
 
 import javafx.geometry.Insets
 import javafx.geometry.Pos
@@ -12,20 +12,29 @@ import java.nio.file.Path
 
 class SetupView {
 
-    final TextField apiUrlField = new TextField('https://api.cloudcard.us/api')
-    final PasswordField patField = new PasswordField()
-    final TextField integrationNameField = new TextField('Downloader')
-    final TextField installDirectoryField = new TextField('C:\\Program Files\\CloudCard\\Photo Downloader')
-    final Label serviceStatusLabel = new Label('Unknown')
-    final ToggleGroup remoteConfigToggleGroup = new ToggleGroup()
-    final RadioButton useRemoteConfigRadio = new RadioButton('Use remote config')
-    final RadioButton useLocalConfigRadio = new RadioButton('Use local config')
+    private static final Path APP_HOME = Path.of(System.getProperty('user.dir'))
 
+    DownloaderConfigService downloaderConfigService = new DownloaderConfigService()
+
+    Properties properties = downloaderConfigService.loadProperties(APP_HOME)
+    final Boolean useRemoteConfigs = properties?.getProperty('downloader.useRemoteConfigs', 'true')?.toBoolean()
+
+    final Label serviceStatusLabel = new Label('Unknown')
     final Circle apiStatusIndicator = new Circle(6)
+
+    final TextField apiUrlField = new TextField(properties?.get('cloudcard.api.url') as String ?: 'https://api.cloudcard.us/api')
+    final PasswordField patField = new PasswordField(text: properties?.get('cloudcard.api.accessToken') as String ?: '')
+    final TextField integrationNameField = new TextField(properties?.get('cloudcard.integrationName') as String ?: 'Downloader')
+
+    final ToggleGroup remoteConfigToggleGroup = new ToggleGroup()
+    final RadioButton useRemoteConfigRadio = new RadioButton(selected: useRemoteConfigs, text: 'Use remote config')
+    final RadioButton useLocalConfigRadio = new RadioButton(selected: !useRemoteConfigs, text: 'Use local config')
+
     final TextArea outputArea = new TextArea()
 
     BorderPane buildRoot() {
         BorderPane root = new BorderPane()
+        root.style = '-fx-font-size: 16px;'
         root.padding = new Insets(18)
 
         root.top = buildHeader()
@@ -39,7 +48,7 @@ class SetupView {
         ImageView logo = buildLogo()
 
         Label title = new Label('RemotePhoto Downloader')
-        title.style = '-fx-font-size: 20px; -fx-font-weight: bold;'
+        title.style = '-fx-font-size: 22px; -fx-font-weight: bold;'
 
         Label subtitle = new Label('Configure the downloader & register it as a Windows service.')
 
@@ -65,8 +74,8 @@ class SetupView {
             ? new ImageView(new Image(logoUrl.toExternalForm()))
             : new ImageView()
 
-        logo.fitWidth = 320
-        logo.fitHeight = 90
+        logo.fitWidth = 400
+        logo.fitHeight = 112
         logo.preserveRatio = true
         logo.smooth = true
 
@@ -82,7 +91,6 @@ class SetupView {
         apiUrlField.promptText = 'CloudCard API URL'
         integrationNameField.promptText = 'Integration Name'
         patField.promptText = 'Paste token here'
-        installDirectoryField.promptText = 'Install directory'
 
         form.add(new Label('API URL'), 0, 0)
         form.add(apiUrlField, 1, 0)
@@ -93,12 +101,14 @@ class SetupView {
         form.add(new Label('Persistent Access Token'), 0, 2)
         form.add(patField, 1, 2)
 
-        form.add(new Label('Install Directory'), 0, 3)
-        form.add(installDirectoryField, 1, 3)
+        Label appHomeLabel = new Label(APP_HOME.toString())
+        appHomeLabel.style = '-fx-font-family: monospace;'
+
+        form.add(new Label('Application Home'), 0, 3)
+        form.add(appHomeLabel, 1, 3)
 
         useRemoteConfigRadio.toggleGroup = remoteConfigToggleGroup
         useLocalConfigRadio.toggleGroup = remoteConfigToggleGroup
-        useRemoteConfigRadio.selected = true
 
         HBox remoteConfigRow = new HBox(12, useRemoteConfigRadio, useLocalConfigRadio)
         remoteConfigRow.alignment = Pos.CENTER_LEFT
@@ -108,14 +118,15 @@ class SetupView {
 
         GridPane.setHgrow(apiUrlField, Priority.ALWAYS)
         GridPane.setHgrow(patField, Priority.ALWAYS)
-        GridPane.setHgrow(installDirectoryField, Priority.ALWAYS)
-
+        GridPane.setHgrow(appHomeLabel, Priority.ALWAYS)
         return form
     }
 
     private VBox buildFooter() {
         Button testConnectionButton = new Button('Test Connection')
-        Button installButton = new Button('Save Properties & Install Service')
+//        TODO: Consider moving this to a more sensible "save" location
+        Button savePropertiesButton = new Button('Save Properties')
+        Button installButton = new Button('Install Service')
         Button startButton = new Button('Start Service')
         Button stopButton = new Button('Stop Service')
         Button refreshStatusButton = new Button('Refresh Status')
@@ -134,9 +145,10 @@ class SetupView {
                 updateApiStatusIndicator('ERROR')
             }
         }
-        installButton.onAction = {
-            println("INSTALLING")
-            new DownloaderConfigWriter().write(Path.of(installDirectoryField.text), apiUrlField.text, patField.text, integrationNameField.text, useRemoteConfigRadio.selected)
+        savePropertiesButton.onAction = {
+            downloaderConfigService.writeOrUpdate(APP_HOME, apiUrlField.text, patField.text, integrationNameField.text, useRemoteConfigRadio.selected)
+
+            appendOutput("Saved ${APP_HOME.resolve('application.properties')}")
         }
         startButton.onAction = { appendOutput('TODO: start CloudCardDownloader service') }
         stopButton.onAction = { appendOutput('TODO: stop CloudCardDownloader service') }
@@ -145,12 +157,13 @@ class SetupView {
             appendOutput('TODO: refresh service status')
         }
 
-        HBox buttons = new HBox(10, testConnectionButton, installButton, startButton, stopButton, refreshStatusButton)
+        HBox buttons = new HBox(10, testConnectionButton, savePropertiesButton, installButton, startButton, stopButton, refreshStatusButton)
         buttons.alignment = Pos.CENTER_LEFT
 
         outputArea.editable = false
         outputArea.wrapText = true
         outputArea.promptText = 'Installer output will appear here.'
+        outputArea.style = '-fx-font-size: 12px;'
         VBox.setVgrow(outputArea, Priority.ALWAYS)
 
         VBox footer = new VBox(12, buttons, outputArea)
@@ -172,6 +185,6 @@ class SetupView {
     }
 
     void appendOutput(String message) {
-        outputArea.appendText("${new Date()}  ${message}\n")
+        outputArea.appendText("${new Date()}  ${message}${System.lineSeparator()}")
     }
 }

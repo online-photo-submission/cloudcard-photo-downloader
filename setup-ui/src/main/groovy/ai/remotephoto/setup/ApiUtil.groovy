@@ -1,4 +1,4 @@
-package com.cloudcard.setup
+package ai.remotephoto.setup
 
 import groovy.json.JsonOutput
 import groovy.json.JsonSlurper
