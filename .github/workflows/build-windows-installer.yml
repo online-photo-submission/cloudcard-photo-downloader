@@ -1,0 +1,99 @@
+name: Build Windows Downloader Installer
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'Release/version label for this Windows app image'
+        required: false
+        type: string
+
+jobs:
+  build-windows-app-image:
+    runs-on: windows-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
+        with:
+          java-version: '17'
+          distribution: 'corretto'
+          cache: 'gradle'
+
+      - name: Make Gradle wrapper executable
+        shell: bash
+        run: chmod +x ./gradlew
+
+      - name: Build setup UI distribution
+        shell: powershell
+        run: .\gradlew.bat :setup-ui:clean :setup-ui:jar :setup-ui:installDist -PjavafxPlatform=win
+
+      - name: Stage jpackage input
+        shell: powershell
+        run: |
+          $StagingDir = "build/package-input"
+          $OutputDir = "build/jpackage"
+          $DownloaderDir = "$StagingDir/downloader"
+
+          if (Test-Path $StagingDir) { Remove-Item -Recurse -Force $StagingDir }
+          if (Test-Path $OutputDir) { Remove-Item -Recurse -Force $OutputDir }
+
+          New-Item -ItemType Directory -Force -Path $StagingDir | Out-Null
+          New-Item -ItemType Directory -Force -Path $OutputDir | Out-Null
+          New-Item -ItemType Directory -Force -Path $DownloaderDir | Out-Null
+
+          Copy-Item -Path "setup-ui/build/install/setup-ui/lib/*" -Destination $StagingDir -Recurse -Force
+          
+          # Fix 2: Handles cases where Gradle appends a version tag to the subproject JAR
+          Copy-Item -Path "setup-ui/build/libs/setup-ui-*.jar" -Destination "$StagingDir/setup-ui.jar" -Force -ErrorAction SilentlyContinue
+          if (!(Test-Path "$StagingDir/setup-ui.jar")) {
+              Copy-Item -Path "setup-ui/build/libs/setup-ui.jar" -Destination "$StagingDir/setup-ui.jar" -Force
+          }
+
+          $ReleaseZip = "cloudcard-photo-downloader.zip"
+          $ReleaseExtractDir = "build/release-payload"
+
+          if (!(Test-Path $ReleaseZip)) {
+            throw "Required release payload missing: $ReleaseZip. Run the downloader release process first and place the zip in the repository root."
+          }
+
+          if (Test-Path $ReleaseExtractDir) { Remove-Item -Recurse -Force $ReleaseExtractDir }
+          New-Item -ItemType Directory -Force -Path $ReleaseExtractDir | Out-Null
+
+          Expand-Archive -Path $ReleaseZip -DestinationPath $ReleaseExtractDir -Force
+
+          $DownloaderJar = Get-ChildItem -Path $ReleaseExtractDir -Recurse -Filter "cloudcard-photo-downloader.jar" | Select-Object -First 1
+          $ServyCli = Get-ChildItem -Path $ReleaseExtractDir -Recurse -Filter "servy-cli.exe" | Select-Object -First 1
+
+          if ($null -eq $DownloaderJar) {
+            throw "cloudcard-photo-downloader.jar was not found inside $ReleaseZip."
+          }
+
+          if ($null -eq $ServyCli) {
+            throw "servy-cli.exe was not found inside $ReleaseZip."
+          }
+
+          Copy-Item -Path $DownloaderJar.FullName -Destination "$DownloaderDir/cloudcard-photo-downloader.jar" -Force
+          Copy-Item -Path $ServyCli.FullName -Destination "$StagingDir/servy-cli.exe" -Force
+
+      - name: Build Windows app image
+        shell: powershell
+        run: |
+          jpackage `
+            --type app-image `
+            --name "CloudCard Setup" `
+            --input "build/package-input" `
+            --main-jar "setup-ui.jar" `
+            --main-class "ai.remotephoto.setup.Launcher" `
+            --dest "build/jpackage" `
+            --java-options '-Dapp.home=$APPDIR' `
+            --verbose
+
+      - name: Upload app image artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: CloudCard-Setup-Windows-App-Image-${{ github.event.inputs.version || github.run_number }}
+          path: build/jpackage/CloudCard Setup/
+          retention-days: 7
