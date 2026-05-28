@@ -34,4 +34,8 @@ application-test.properties*
 downloaded-photos
 summary
 
+### setup-ui ###
+/setup-ui/downloader-service.json
+/setup-ui/application.properties*
+
 lib/

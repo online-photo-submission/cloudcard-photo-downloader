@@ -12,9 +12,19 @@ import java.nio.file.Path
 
 class SetupView {
 
-    private static final Path APP_HOME = Path.of(System.getProperty('user.dir'))
+    private static final Path APP_HOME = resolveAppHome()
+
+//    TODO: We have this referenced twice now lol
+    private static final Set<String> MANAGED_PROPERTY_KEYS = [
+        'cloudcard.api.url',
+        'cloudcard.api.accessToken',
+        'cloudcard.integrationName',
+        'downloader.useRemoteConfigs'
+    ] as Set
 
     DownloaderConfigService downloaderConfigService = new DownloaderConfigService()
+//    ServyConfigWriter servyConfigWriter = new ServyConfigWriter()
+//    ServyServiceManager servyServiceManager = new ServyServiceManager()
 
     Properties properties = downloaderConfigService.loadProperties(APP_HOME)
     final Boolean useRemoteConfigs = properties?.getProperty('downloader.useRemoteConfigs', 'true')?.toBoolean()
@@ -29,6 +39,10 @@ class SetupView {
     final ToggleGroup remoteConfigToggleGroup = new ToggleGroup()
     final RadioButton useRemoteConfigRadio = new RadioButton(selected: useRemoteConfigs, text: 'Use remote config')
     final RadioButton useLocalConfigRadio = new RadioButton(selected: !useRemoteConfigs, text: 'Use local config')
+
+    final Label additionalPropertiesLabel = new Label('Advanced Overrides')
+    final TextArea additionalPropertiesArea = new TextArea()
+    final VBox additionalPropertiesBox = new VBox(4)
 
     final TextArea outputArea = new TextArea()
 
@@ -47,18 +61,11 @@ class SetupView {
     private VBox buildHeader() {
         ImageView logo = buildLogo()
 
-        Label title = new Label('RemotePhoto Downloader')
-        title.style = '-fx-font-size: 22px; -fx-font-weight: bold;'
-
-        Label subtitle = new Label('Configure the downloader & register it as a Windows service.')
-
-        VBox titleContent = new VBox(4, title, subtitle)
-        HBox titleRow = new HBox(18, logo, titleContent)
-        titleRow.alignment = Pos.CENTER_LEFT
-        HBox.setHgrow(titleContent, Priority.ALWAYS)
+        HBox titleRow = new HBox(70, logo)
+        titleRow.alignment = Pos.TOP_LEFT
 
         updateApiStatusIndicator('UNKNOWN')
-        HBox statusRow = new HBox(8, new Label('Service Status:'), apiStatusIndicator, serviceStatusLabel)
+        HBox statusRow = new HBox(8, new Label('API Connection:'), apiStatusIndicator, serviceStatusLabel)
         statusRow.alignment = Pos.CENTER_LEFT
         serviceStatusLabel.style = '-fx-font-weight: bold;'
 
@@ -74,8 +81,8 @@ class SetupView {
             ? new ImageView(new Image(logoUrl.toExternalForm()))
             : new ImageView()
 
-        logo.fitWidth = 400
-        logo.fitHeight = 112
+        logo.fitWidth = 350
+        logo.fitHeight = 250
         logo.preserveRatio = true
         logo.smooth = true
 
@@ -116,10 +123,41 @@ class SetupView {
         form.add(new Label('Configuration Mode'), 0, 4)
         form.add(remoteConfigRow, 1, 4)
 
+        configureAdditionalPropertiesControls()
+        loadAdditionalProperties()
+        form.add(additionalPropertiesLabel, 0, 5)
+        form.add(additionalPropertiesBox, 1, 5)
+        GridPane.setValignment(additionalPropertiesLabel, javafx.geometry.VPos.TOP)
+
         GridPane.setHgrow(apiUrlField, Priority.ALWAYS)
         GridPane.setHgrow(patField, Priority.ALWAYS)
         GridPane.setHgrow(appHomeLabel, Priority.ALWAYS)
+        GridPane.setHgrow(additionalPropertiesBox, Priority.ALWAYS)
+        GridPane.setVgrow(additionalPropertiesBox, Priority.ALWAYS)
         return form
+    }
+
+    private void configureAdditionalPropertiesControls() {
+        Label help = new Label('Optional application.properties overrides (note: RemoteConfigs will override these).')
+        help.style = '-fx-font-size: 14px; -fx-text-fill: #6b7280;'
+
+        Label examples = new Label('Example: downloader.fetchStatuses=APPROVED')
+        examples.style = '-fx-font-family: monospace; -fx-font-size: 14px; -fx-text-fill: #6b7280;'
+
+        additionalPropertiesArea.promptText = 'Optional advanced key=value overrides, one per line'
+        additionalPropertiesArea.prefRowCount = 6
+        additionalPropertiesArea.wrapText = false
+
+        additionalPropertiesBox.children.setAll(help, examples, additionalPropertiesArea)
+        VBox.setVgrow(additionalPropertiesArea, Priority.ALWAYS)
+    }
+
+    private void loadAdditionalProperties() {
+        additionalPropertiesArea.text = properties
+            .findAll { key, value -> !MANAGED_PROPERTY_KEYS.contains(key.toString()) }
+            .collect { key, value -> "${key}=${value}" }
+            .sort()
+            .join(System.lineSeparator())
     }
 
     private VBox buildFooter() {
@@ -141,20 +179,58 @@ class SetupView {
                 updateApiStatusIndicator('SUCCESS')
             } catch (Exception e) {
                 appendOutput("ERROR: ${e.message}")
-                serviceStatusLabel.text = 'API Failed'
+                serviceStatusLabel.text = 'Failed'
                 updateApiStatusIndicator('ERROR')
             }
         }
         savePropertiesButton.onAction = {
-            downloaderConfigService.writeOrUpdate(APP_HOME, apiUrlField.text, patField.text, integrationNameField.text, useRemoteConfigRadio.selected)
+            downloaderConfigService.writeOrUpdate(
+                APP_HOME,
+                apiUrlField.text,
+                patField.text,
+                integrationNameField.text,
+                useRemoteConfigRadio.selected,
+                additionalPropertiesArea.text
+            )
 
             appendOutput("Saved ${APP_HOME.resolve('application.properties')}")
+//            Reload the properties to reflect the updated file
+            loadAdditionalProperties()
         }
-        startButton.onAction = { appendOutput('TODO: start CloudCardDownloader service') }
-        stopButton.onAction = { appendOutput('TODO: stop CloudCardDownloader service') }
+        installButton.onAction = {
+//            TODO: Consider if we want to writeOrUpdate before installing.
+//            downloaderConfigService.writeOrUpdate(...)
+
+            Path json = ServyConfigWriter.write(APP_HOME)
+
+            try {
+                appendOutput(ServyServiceManager.install(APP_HOME, json))
+                appendOutput('Installed CloudCardDownloader service.')
+            } catch (Exception e) {
+                appendOutput("Failed to install service: ${e.message}")
+            }
+        }
+        startButton.onAction = {
+            try {
+                appendOutput(ServyServiceManager.start(APP_HOME))
+            } catch (Exception e) {
+                appendOutput("Failed to start service: ${e.message}")
+            }
+        }
+
+        stopButton.onAction = {
+            try {
+                appendOutput(ServyServiceManager.stop(APP_HOME))
+            } catch (Exception e) {
+                appendOutput("Failed to stop service: ${e.message}")
+            }
+        }
         refreshStatusButton.onAction = {
-            serviceStatusLabel.text = 'TODO'
-            appendOutput('TODO: refresh service status')
+            try {
+                appendOutput(ServyServiceManager.refresh(APP_HOME))
+            } catch (Exception e) {
+                appendOutput("Failed to refresh service: ${e.message}")
+            }
         }
 
         HBox buttons = new HBox(10, testConnectionButton, savePropertiesButton, installButton, startButton, stopButton, refreshStatusButton)
@@ -186,5 +262,23 @@ class SetupView {
 
     void appendOutput(String message) {
         outputArea.appendText("${new Date()}  ${message}${System.lineSeparator()}")
+    }
+
+    private static boolean isWindows() {
+        System.getProperty('os.name').toLowerCase().contains('win')
+    }
+
+    private static Path resolveAppHome() {
+        String configuredAppHome = System.getProperty('app.home')
+
+        if (configuredAppHome?.trim()) {
+            return Path.of(configuredAppHome)
+                       .toAbsolutePath()
+                       .normalize()
+        }
+
+        return Path.of(System.getProperty('user.dir'))
+                   .toAbsolutePath()
+                   .normalize()
     }
 }

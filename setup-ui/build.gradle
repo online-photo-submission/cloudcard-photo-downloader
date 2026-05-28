@@ -10,15 +10,18 @@ repositories {
 
 dependencies {
     implementation 'org.apache.groovy:groovy'
-    implementation 'org.apache.groovy:groovy-json'
     implementation 'org.apache.groovy:groovy-json:4.0.26'
 }
 
 javafx {
     version = '21.0.5'
     modules = [ 'javafx.controls' ]
+
+    if (project.hasProperty('javafxPlatform')) {
+        platform = project.property('javafxPlatform')
+    }
 }
 
 application {
-    mainClass = 'ai.remotephoto.setup.Main'
+    mainClass = 'ai.remotephoto.setup.Launcher'
 }
