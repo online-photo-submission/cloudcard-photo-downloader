@@ -103,14 +103,14 @@ class WorkdayClient {
         return new WorkdayResponse(postResponse, documentBuilder.parse(new ByteArrayInputStream(postResponse.body().bytes)))
     }
 
-    void putWorkerPhoto(String workerId, String photoBase64, String fileExtension = ".jpg") {
+    void putWorkerPhoto(String workerId, String photoBase64, String fileName = "WorkerPhoto.jpg") {
         WorkdayResponse putWorkerPhotoResponse = doWorkdayRequest("putWorkerPhoto", """
             <bsvc:Put_Worker_Photo_Request xmlns:bsvc="urn:com.workday/bsvc">
                 <bsvc:Worker_Reference>
                     <bsvc:ID bsvc:type="Employee_ID">$workerId</bsvc:ID>
                 </bsvc:Worker_Reference>
                 <bsvc:Worker_Photo_Data>
-                    <bsvc:Filename>WorkerPhoto${fileExtension}</bsvc:Filename>
+                    <bsvc:Filename>${fileName}</bsvc:Filename>
                     <bsvc:File>$photoBase64</bsvc:File>
                 </bsvc:Worker_Photo_Data>
             </bsvc:Put_Worker_Photo_Request>"""

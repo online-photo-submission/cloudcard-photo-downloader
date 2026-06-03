@@ -215,6 +215,6 @@ class Photo {
 
     @JsonIgnore
     String getFileExtension() {
-        return getExternalURL().toLowerCase().endsWith(".png") ? ".png" : ".jpg";
+        return getExternalURL()?.toLowerCase()?.endsWith(".png") ? ".png" : ".jpg";
     }
 }

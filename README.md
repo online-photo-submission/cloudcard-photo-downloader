@@ -318,6 +318,10 @@ Note you will need to create an API integration in the Administration section of
     - username of an Integration System User account that has, at minimum, `Put` permissions on the `Personal Data: Personal Photo` domain.
 - `WorkdayClient.isu.password`
     - password of the account identified by `WorkdayClient.isu.username`
+- `WorkdayStorageService.useFileNameResolver`
+    - default: `false`
+    - set to `true` if configuring a fileNameResolver to customize the names of the files as uploaded into workday.
+    - NOTE: the file name is widely viewable in workday, so ensure it does NOT contain sensitive information. The default fileName is `WorkerPhoto.jpg`
 
 ### File Name Resolver Settings
 

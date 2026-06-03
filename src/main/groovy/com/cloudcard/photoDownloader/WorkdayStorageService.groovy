@@ -7,6 +7,7 @@ import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 
 import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.beans.factory.annotation.Value
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty
 import org.springframework.stereotype.Service
 
@@ -21,6 +22,9 @@ class WorkdayStorageService implements StorageService {
 
     static final Logger log = LoggerFactory.getLogger(WorkdayStorageService.class);
 
+    @Value('${WorkdayStorageService.useFileNameResolver')
+    boolean useFileNameResolver = false
+
     @Autowired
     @SuppressWarnings("SpringJavaInjectionPointsAutowiringInspection")
     FileNameResolver fileNameResolver;
@@ -30,9 +34,9 @@ class WorkdayStorageService implements StorageService {
 
     @PostConstruct
     void init() {
-        throwIfTrue(fileNameResolver == null, "The File Name Resolver must be specified.");
+        throwIfTrue(useFileNameResolver && fileNameResolver == null, "The File Name Resolver must be specified.");
 
-        log.info("   File Name Resolver : $fileNameResolver.class.simpleName")
+        log.info("   File Name Resolver : ${useFileNameResolver ? fileNameResolver.class.simpleName : "NOT USED"}")
     }
 
     StorageResults save(Collection<Photo> photos) {
@@ -56,32 +60,37 @@ class WorkdayStorageService implements StorageService {
 
         log.info("Uploading to Workday: $photo.id for person: $photo.person.email")
 
-        String accountId = resolveAccountId(photo)
+        String accountId = photo.person.identifier
         String photoBase64 = getBytesBase64(photo)
+        String baseName = resolveBaseName(photo)
 
-        if (!accountId || !photoBase64) {
+        if (!accountId || !photoBase64 || !baseName) {
             return null
         }
 
+        PhotoFile photoFile = new PhotoFile(baseName, "${baseName}${photo.fileExtension}", photo.id)
+
         try {
-            workdayClient.putWorkerPhoto(accountId, photoBase64, photo.fileExtension)
+            workdayClient.putWorkerPhoto(accountId, photoBase64, photoFile.fileName)
         } catch (Exception e) {
             log.error("Photo $photo.id for $photo.person.email failed to upload into Workday.")
             return null
         }
 
-        return new PhotoFile(accountId, null, photo.id)
+        return photoFile
     }
 
-    String resolveAccountId(Photo photo) {
-        String accountId = fileNameResolver.getBaseName(photo);
+    String resolveBaseName(Photo photo) {
+        if (!useFileNameResolver) return "WorkerPhoto"
 
-        if (!accountId) {
-            log.error("We could not resolve the accountId for '$photo.person.email' with ID number '$photo.person.identifier', so photo $photo.id cannot be uploaded to Workday.")
+        String baseName = fileNameResolver.getBaseName(photo);
+
+        if (!baseName) {
+            log.error("We could not resolve the baseName for '$photo.person.email' with ID number '$photo.person.identifier', so photo $photo.id cannot be uploaded to Workday.")
             return null
         }
 
-        return accountId
+        return baseName
     }
 
     String getBytesBase64(Photo photo) {
