@@ -22,7 +22,7 @@ class WorkdayStorageService implements StorageService {
 
     static final Logger log = LoggerFactory.getLogger(WorkdayStorageService.class);
 
-    @Value('${WorkdayStorageService.useFileNameResolver')
+    @Value('${WorkdayStorageService.useFileNameResolver}')
     boolean useFileNameResolver = false
 
     @Autowired
