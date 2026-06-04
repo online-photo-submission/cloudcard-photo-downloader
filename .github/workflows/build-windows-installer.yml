@@ -45,7 +45,6 @@ jobs:
 
           Copy-Item -Path "setup-ui/build/install/setup-ui/lib/*" -Destination $StagingDir -Recurse -Force
           
-          # Fix 2: Handles cases where Gradle appends a version tag to the subproject JAR
           Copy-Item -Path "setup-ui/build/libs/setup-ui-*.jar" -Destination "$StagingDir/setup-ui.jar" -Force -ErrorAction SilentlyContinue
           if (!(Test-Path "$StagingDir/setup-ui.jar")) {
               Copy-Item -Path "setup-ui/build/libs/setup-ui.jar" -Destination "$StagingDir/setup-ui.jar" -Force
@@ -81,6 +80,15 @@ jobs:
           Copy-Item -Path $DownloaderJar.FullName -Destination "$DownloaderDir/cloudcard-photo-downloader.jar" -Force
           Copy-Item -Path $ServyDir.FullName -Destination $StagingDir -Recurse -Force
 
+          $LauncherConfigDir = "build/jpackage-launchers"
+          if (Test-Path $LauncherConfigDir) { Remove-Item -Recurse -Force $LauncherConfigDir }
+          New-Item -ItemType Directory -Force -Path $LauncherConfigDir | Out-Null
+
+          @(
+            "main-jar=downloader/cloudcard-photo-downloader.jar"
+            "win-console=true"
+          ) | Set-Content -Path "$LauncherConfigDir/downloader-launcher.properties" -Encoding UTF8
+
       - name: Build Windows app image
         shell: powershell
         run: |
@@ -91,7 +99,8 @@ jobs:
             --main-jar "setup-ui.jar" `
             --main-class "ai.remotephoto.setup.Launcher" `
             --dest "build/jpackage" `
-            --java-options '-Dapp.home=$APPDIR' `
+            --java-options "-Dapp.home=`$APPDIR" `
+            --add-launcher "CloudCard Downloader=build/jpackage-launchers/downloader-launcher.properties" `
             --verbose
 
       - name: Upload app image artifact
