@@ -81,9 +81,8 @@ class ServyServiceManager {
 
 //    TODO: Do we need this? It is odd.
     private static String servyExecutable(Path appHome) {
-        return appHome
-            .resolve('servy-cli.exe')
-            .toString()
+        return appHome.resolve('servy').resolve('servy-cli.exe')
+                      .toString()
     }
 
     private static boolean isWindows() {

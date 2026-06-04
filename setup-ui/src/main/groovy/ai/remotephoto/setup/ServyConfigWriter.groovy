@@ -10,18 +10,20 @@ class ServyConfigWriter {
     static final String SERVICE_NAME = 'CloudCardDownloader'
 
     static Path write(Path appHome) {
+        Path downloaderHome = appHome.resolve('downloader')
+
         Map config = [
             Name                     : SERVICE_NAME,
             DisplayName              : 'RemotePhoto Downloader',
             Description              : 'Downloads photos from RemotePhoto.',
             ExecutablePath           : resolveJavaExecutable(),
-            StartupDirectory         : appHome.toString(),
+            StartupDirectory         : downloaderHome.toString(),
             Parameters               : '-jar cloudcard-photo-downloader.jar',
             StartupType              : 2,
             Priority                 : 2,
             EnableConsoleUI          : false,
-            StdoutPath               : appHome.resolve('downloader.out.log').toString(),
-            StderrPath               : appHome.resolve('downloader.err.log').toString(),
+            StdoutPath               : downloaderHome.resolve('downloader.out.log').toString(),
+            StderrPath               : downloaderHome.resolve('downloader.err.log').toString(),
             EnableSizeRotation       : false,
             EnableDateRotation       : false,
             EnableHealthMonitoring   : false,
