@@ -7,6 +7,9 @@ on:
         required: false
         type: string
 
+env:
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
+
 jobs:
   build-windows-app-image:
     runs-on: windows-latest
@@ -20,7 +23,6 @@ jobs:
         with:
           java-version: '17'
           distribution: 'corretto'
-          cache: 'gradle'
 
       - name: Make Gradle wrapper executable
         shell: bash
@@ -80,8 +82,8 @@ jobs:
           }
 
           Copy-Item -Path $DownloaderJar.FullName -Destination "$DownloaderDir/cloudcard-photo-downloader.jar" -Force
-          Copy-Item -Path $ServyDir.FullName -Destination "$StagingDir/servy" -Recurse -Force
-
+          Copy-Item -Path $ServyDir.FullName -Destination $StagingDir -Recurse -Force
+          
       - name: Build Windows app image
         shell: powershell
         run: |
