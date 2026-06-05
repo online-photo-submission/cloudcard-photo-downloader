@@ -34,14 +34,12 @@ jobs:
         run: |
           $StagingDir = "build/package-input"
           $OutputDir = "build/jpackage"
-          $DownloaderDir = "$StagingDir/downloader"
 
           if (Test-Path $StagingDir) { Remove-Item -Recurse -Force $StagingDir }
           if (Test-Path $OutputDir) { Remove-Item -Recurse -Force $OutputDir }
 
           New-Item -ItemType Directory -Force -Path $StagingDir | Out-Null
           New-Item -ItemType Directory -Force -Path $OutputDir | Out-Null
-          New-Item -ItemType Directory -Force -Path $DownloaderDir | Out-Null
 
           Copy-Item -Path "setup-ui/build/install/setup-ui/lib/*" -Destination $StagingDir -Recurse -Force
           
@@ -77,36 +75,42 @@ jobs:
             throw "servy-cli.exe was not found inside $($ServyDir.FullName)."
           }
 
-          Copy-Item -Path $DownloaderJar.FullName -Destination "$DownloaderDir/cloudcard-photo-downloader.jar" -Force
+          Copy-Item -Path $DownloaderJar.FullName -Destination "$StagingDir/cloudcard-photo-downloader.jar" -Force
           Copy-Item -Path $ServyDir.FullName -Destination $StagingDir -Recurse -Force
 
           $LauncherConfigDir = "build/jpackage-launchers"
           if (Test-Path $LauncherConfigDir) { Remove-Item -Recurse -Force $LauncherConfigDir }
           New-Item -ItemType Directory -Force -Path $LauncherConfigDir | Out-Null
-
-          @(  
-            "main-jar=downloader/cloudcard-photo-downloader.jar"
-            "main-class=org.springframework.boot.loader.launch.JarLauncher"
-            "win-console=true"
-          ) | Set-Content -Path "$LauncherConfigDir/downloader-launcher.properties" -Encoding UTF8
+          
+          # Build the additional launcher for the setup wizard UI.
+          @(
+            "main-jar=setup-ui.jar"
+            "main-class=ai.remotephoto.setup.Launcher"
+            "win-console=false"
+          ) | Set-Content -Path "$LauncherConfigDir/setup-wizard-launcher.properties" -Encoding ascii
+          
+          Write-Host "=== setup-wizard-launcher.properties ==="
+          Get-Content "$LauncherConfigDir/setup-wizard-launcher.properties"
+          Write-Host "========================================"
 
       - name: Build Windows app image
         shell: powershell
         run: |
           jpackage `
             --type app-image `
-            --name "CloudCard Setup" `
+            --name "CloudCard Downloader" `
             --input "build/package-input" `
-            --main-jar "setup-ui.jar" `
-            --main-class "ai.remotephoto.setup.Launcher" `
+            --main-jar "cloudcard-photo-downloader.jar" `
+            --main-class "org.springframework.boot.loader.launch.JarLauncher" `
             --dest "build/jpackage" `
+            --runtime-image "$env:JAVA_HOME" `
             --java-options "-Dapp.home=`$APPDIR" `
-            --add-launcher "CloudCard Downloader=build/jpackage-launchers/downloader-launcher.properties" `
+            --add-launcher "CloudCard Setup=build/jpackage-launchers/setup-wizard-launcher.properties" `
             --verbose
 
       - name: Upload app image artifact
         uses: actions/upload-artifact@v4
         with:
           name: CloudCard-Setup-Windows-App-Image-${{ github.event.inputs.version || github.run_number }}
-          path: build/jpackage/CloudCard Setup/
+          path: build/jpackage/CloudCard Downloader/
           retention-days: 7
