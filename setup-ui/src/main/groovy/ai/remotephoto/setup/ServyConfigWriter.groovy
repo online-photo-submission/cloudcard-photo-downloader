@@ -18,7 +18,7 @@ class ServyConfigWriter {
             Description              : 'Downloads photos from RemotePhoto.',
             ExecutablePath           : resolveDownloaderExecutable(appHome),
             StartupDirectory         : downloaderHome.toString(),
-            Parameters               : '-jar cloudcard-photo-downloader.jar',
+            Parameters               : resolveParameters(appHome),
             StartupType              : 2,
             Priority                 : 2,
             EnableConsoleUI          : false,
@@ -44,15 +44,29 @@ class ServyConfigWriter {
     }
 
     private static String resolveDownloaderExecutable(Path appHome) {
-        if (isWindows()) {
-            Path launcher = appHome.parent?.resolve('CloudCard Downloader.exe')
-
-            if (launcher && Files.exists(launcher)) {
-                return launcher.toString()
-            }
+        if (hasPackagedDownloaderLauncher(appHome)) {
+            return appHome.parent.resolve('CloudCard Downloader.exe').toString()
         }
 
         return resolveJavaExecutable()
+    }
+
+    private static String resolveParameters(Path appHome) {
+        if (hasPackagedDownloaderLauncher(appHome)) {
+            return ''
+        }
+
+        return '-jar cloudcard-photo-downloader.jar'
+    }
+
+    private static boolean hasPackagedDownloaderLauncher(Path appHome) {
+        if (!isWindows()) {
+            return false
+        }
+
+        Path launcher = appHome.parent?.resolve('CloudCard Downloader.exe')
+
+        return launcher && Files.exists(launcher)
     }
 
     private static String resolveJavaExecutable() {
