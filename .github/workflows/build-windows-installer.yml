@@ -47,6 +47,12 @@ jobs:
           if (!(Test-Path "$StagingDir/setup-ui.jar")) {
               Copy-Item -Path "setup-ui/build/libs/setup-ui.jar" -Destination "$StagingDir/setup-ui.jar" -Force
           }
+          
+          if (Test-Path "rp.ico") {
+              Copy-Item -Path "rp.ico" -Destination $StagingDir -Force
+          } else {
+              Write-Warning "rp.ico missing from repo root! Using default Windows icon."
+          }
 
           $ReleaseZip = "cloudcard-photo-downloader.zip"
           $ReleaseExtractDir = "build/release-payload"
@@ -88,6 +94,7 @@ jobs:
             "main-class=ai.remotephoto.setup.Launcher"
             "win-console=false"
             "win-shortcut=true"
+            "icon=rp.ico"
           ) | Set-Content -Path "$LauncherConfigDir/setup-wizard-launcher.properties" -Encoding ascii
           
           Write-Host "=== setup-wizard-launcher.properties ==="
@@ -106,9 +113,8 @@ jobs:
             --dest "build/jpackage" `
             --runtime-image "$env:JAVA_HOME" `
             --java-options "-Dapp.home=`$APPDIR" `
+            --icon "build/package-input/rp.ico" `
             --add-launcher "CloudCard Setup=build/jpackage-launchers/setup-wizard-launcher.properties" `
-            --win-menu `
-            --win-shortcut `
             --verbose
 
           Write-Host "=== jpackage output ==="
