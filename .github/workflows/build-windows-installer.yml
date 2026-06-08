@@ -8,7 +8,7 @@ on:
         type: string
 
 jobs:
-  build-windows-app-image:
+  build-windows-msi:
     runs-on: windows-latest
 
     steps:
@@ -87,17 +87,18 @@ jobs:
             "main-jar=setup-ui.jar"
             "main-class=ai.remotephoto.setup.Launcher"
             "win-console=false"
+            "win-shortcut=true"
           ) | Set-Content -Path "$LauncherConfigDir/setup-wizard-launcher.properties" -Encoding ascii
           
           Write-Host "=== setup-wizard-launcher.properties ==="
           Get-Content "$LauncherConfigDir/setup-wizard-launcher.properties"
           Write-Host "========================================"
 
-      - name: Build Windows app image
+      - name: Build Windows MSI
         shell: powershell
         run: |
           jpackage `
-            --type app-image `
+            --type msi `
             --name "CloudCard Downloader" `
             --input "build/package-input" `
             --main-jar "cloudcard-photo-downloader.jar" `
@@ -106,11 +107,17 @@ jobs:
             --runtime-image "$env:JAVA_HOME" `
             --java-options "-Dapp.home=`$APPDIR" `
             --add-launcher "CloudCard Setup=build/jpackage-launchers/setup-wizard-launcher.properties" `
+            --win-menu `
+            --win-shortcut `
             --verbose
 
-      - name: Upload app image artifact
+          Write-Host "=== jpackage output ==="
+          Get-ChildItem -Path "build/jpackage" -Recurse
+          Write-Host "======================="
+
+      - name: Upload MSI artifact
         uses: actions/upload-artifact@v4
         with:
-          name: CloudCard-Setup-Windows-App-Image-${{ github.event.inputs.version || github.run_number }}
-          path: build/jpackage/CloudCard Downloader/
+          name: CloudCard-Downloader-Windows-MSI-${{ github.event.inputs.version || github.run_number }}
+          path: build/jpackage/*.msi
           retention-days: 7

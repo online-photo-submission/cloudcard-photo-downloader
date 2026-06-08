@@ -167,6 +167,7 @@ class SetupView {
         Button installButton = new Button('Install Service')
         Button startButton = new Button('Start Service')
         Button stopButton = new Button('Stop Service')
+//        TODO: Actually display the status
         Button refreshStatusButton = new Button('Refresh Status')
 
         testConnectionButton.onAction = {
