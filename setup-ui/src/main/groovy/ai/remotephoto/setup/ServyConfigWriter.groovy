@@ -1,7 +1,6 @@
 package ai.remotephoto.setup
 
 import groovy.json.JsonOutput
-
 import java.nio.file.Files
 import java.nio.file.Path
 
@@ -10,18 +9,26 @@ class ServyConfigWriter {
     static final String SERVICE_NAME = 'CloudCardDownloader'
 
     static Path write(Path appHome) {
+        // Define paths relative to the internal app folder layout
+        Path downloaderDir = appHome.resolve('downloader')
+        Path jarPath = downloaderDir.resolve('cloudcard-photo-downloader.jar')
+        Path configPath = downloaderDir.resolve('application.properties')
+
         Map config = [
             Name                     : SERVICE_NAME,
             DisplayName              : 'RemotePhoto Downloader',
             Description              : 'Downloads photos from RemotePhoto.',
-            ExecutablePath           : resolveDownloaderExecutable(appHome),
-            StartupDirectory         : appHome.toString(),
-            Parameters               : resolveParameters(appHome),
+            ExecutablePath           : resolveJavaExecutable(),
+            // CRITICAL: Set the execution working directory to the internal downloader/ subfolder
+            // This allows Spring Boot to natively resolve relative folder hooks (like logs/)
+            StartupDirectory         : downloaderDir.toString(),
+            // Pass absolute file reference mappings to fully isolate execution parameters
+            Parameters               : "-jar \"${jarPath.toAbsolutePath()}\" --spring.config.location=\"${configPath.toAbsolutePath()}\"",
             StartupType              : 2,
             Priority                 : 2,
             EnableConsoleUI          : false,
-            StdoutPath               : appHome.resolve('downloader.out.log').toString(),
-            StderrPath               : appHome.resolve('downloader.err.log').toString(),
+            StdoutPath               : downloaderDir.resolve('downloader.out.log').toString(),
+            StderrPath               : downloaderDir.resolve('downloader.err.log').toString(),
             EnableSizeRotation       : false,
             EnableDateRotation       : false,
             EnableHealthMonitoring   : false,
@@ -39,32 +46,6 @@ class ServyConfigWriter {
         )
 
         return jsonFile
-    }
-
-    private static String resolveDownloaderExecutable(Path appHome) {
-        if (hasPackagedDownloaderLauncher(appHome)) {
-            return appHome.parent.resolve('CloudCard Downloader.exe').toString()
-        }
-
-        return resolveJavaExecutable()
-    }
-
-    private static String resolveParameters(Path appHome) {
-        if (hasPackagedDownloaderLauncher(appHome)) {
-            return ''
-        }
-
-        return '-jar cloudcard-photo-downloader.jar'
-    }
-
-    private static boolean hasPackagedDownloaderLauncher(Path appHome) {
-        if (!isWindows()) {
-            return false
-        }
-
-        Path launcher = appHome.parent?.resolve('CloudCard Downloader.exe')
-
-        return launcher && Files.exists(launcher)
     }
 
     private static String resolveJavaExecutable() {

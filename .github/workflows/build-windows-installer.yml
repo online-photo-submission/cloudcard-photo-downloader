@@ -34,26 +34,25 @@ jobs:
         run: |
           $StagingDir = "build/package-input"
           $OutputDir = "build/jpackage"
+          $DownloaderDir = "$StagingDir/downloader"
 
           if (Test-Path $StagingDir) { Remove-Item -Recurse -Force $StagingDir }
           if (Test-Path $OutputDir) { Remove-Item -Recurse -Force $OutputDir }
 
           New-Item -ItemType Directory -Force -Path $StagingDir | Out-Null
           New-Item -ItemType Directory -Force -Path $OutputDir | Out-Null
+          New-Item -ItemType Directory -Force -Path $DownloaderDir | Out-Null
 
+          # 1. Copy over setup wizard dependencies
           Copy-Item -Path "setup-ui/build/install/setup-ui/lib/*" -Destination $StagingDir -Recurse -Force
           
+          # 2. Stage the main setup UI jar cleanly into root
           Copy-Item -Path "setup-ui/build/libs/setup-ui-*.jar" -Destination "$StagingDir/setup-ui.jar" -Force -ErrorAction SilentlyContinue
           if (!(Test-Path "$StagingDir/setup-ui.jar")) {
               Copy-Item -Path "setup-ui/build/libs/setup-ui.jar" -Destination "$StagingDir/setup-ui.jar" -Force
           }
-          
-          if (Test-Path "rp.ico") {
-              Copy-Item -Path "rp.ico" -Destination $StagingDir -Force
-          } else {
-              Write-Warning "rp.ico missing from repo root! Using default Windows icon."
-          }
 
+          # 3. Handle payloads from the release zip
           $ReleaseZip = "cloudcard-photo-downloader.zip"
           $ReleaseExtractDir = "build/release-payload"
 
@@ -74,56 +73,42 @@ jobs:
           }
 
           if ($null -eq $ServyDir) {
-            throw "servy directory was not found inside $ReleaseZip. Expected the release zip to contain external/servy copied into cloudcard-photo-downloader/servy."
+            throw "servy directory was not found inside $ReleaseZip."
           }
 
           if (!(Test-Path "$($ServyDir.FullName)\servy-cli.exe")) {
             throw "servy-cli.exe was not found inside $($ServyDir.FullName)."
           }
 
-          Copy-Item -Path $DownloaderJar.FullName -Destination "$StagingDir/cloudcard-photo-downloader.jar" -Force
+          # 4. Clean structural placement mapping (Zero duplicated jars)
+          Copy-Item -Path $DownloaderJar.FullName -Destination "$DownloaderDir/cloudcard-photo-downloader.jar" -Force
           Copy-Item -Path $ServyDir.FullName -Destination $StagingDir -Recurse -Force
 
-          $LauncherConfigDir = "build/jpackage-launchers"
-          if (Test-Path $LauncherConfigDir) { Remove-Item -Recurse -Force $LauncherConfigDir }
-          New-Item -ItemType Directory -Force -Path $LauncherConfigDir | Out-Null
-          
-          # Build the additional launcher for the setup wizard UI.
-          @(
-            "main-jar=setup-ui.jar"
-            "main-class=ai.remotephoto.setup.Launcher"
-            "win-console=false"
-            "win-shortcut=true"
-            "icon=rp.ico"
-          ) | Set-Content -Path "$LauncherConfigDir/setup-wizard-launcher.properties" -Encoding ascii
-          
-          Write-Host "=== setup-wizard-launcher.properties ==="
-          Get-Content "$LauncherConfigDir/setup-wizard-launcher.properties"
-          Write-Host "========================================"
+          # 5. Stage branding icon inside input so jpackage can catch it
+          if (Test-Path "app-icon.ico") {
+              Copy-Item -Path "app-icon.ico" -Destination $StagingDir -Force
+          }
 
       - name: Build Windows MSI
         shell: powershell
         run: |
           jpackage `
             --type msi `
-            --name "CloudCard Downloader" `
+            --name "CloudCard Setup" `
             --input "build/package-input" `
-            --main-jar "cloudcard-photo-downloader.jar" `
-            --main-class "org.springframework.boot.loader.launch.JarLauncher" `
+            --main-jar "setup-ui.jar" `
+            --main-class "ai.remotephoto.setup.Launcher" `
             --dest "build/jpackage" `
             --runtime-image "$env:JAVA_HOME" `
             --java-options "-Dapp.home=`$APPDIR" `
-            --icon "build/package-input/rp.ico" `
-            --add-launcher "CloudCard Setup=build/jpackage-launchers/setup-wizard-launcher.properties" `
+            --icon "build/package-input/app-icon.ico" `
+            --win-shortcut `
+            --win-menu `
             --verbose
-
-          Write-Host "=== jpackage output ==="
-          Get-ChildItem -Path "build/jpackage" -Recurse
-          Write-Host "======================="
 
       - name: Upload MSI artifact
         uses: actions/upload-artifact@v4
         with:
-          name: CloudCard-Downloader-Windows-MSI-${{ github.event.inputs.version || github.run_number }}
+          name: CloudCard-Setup-Windows-MSI-${{ github.event.inputs.version || github.run_number }}
           path: build/jpackage/*.msi
           retention-days: 7
