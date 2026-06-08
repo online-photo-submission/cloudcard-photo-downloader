@@ -85,8 +85,8 @@ jobs:
           Copy-Item -Path $ServyDir.FullName -Destination $StagingDir -Recurse -Force
 
           # 5. Stage branding icon inside input so jpackage can catch it
-          if (Test-Path "app-icon.ico") {
-              Copy-Item -Path "app-icon.ico" -Destination $StagingDir -Force
+          if (Test-Path "rp.ico") {
+              Copy-Item -Path "rp.ico" -Destination $StagingDir -Force
           }
 
       - name: Build Windows MSI
@@ -101,7 +101,7 @@ jobs:
             --dest "build/jpackage" `
             --runtime-image "$env:JAVA_HOME" `
             --java-options "-Dapp.home=`$APPDIR" `
-            --icon "build/package-input/app-icon.ico" `
+            --icon "build/package-input/rp.ico" `
             --win-shortcut `
             --win-menu `
             --verbose
