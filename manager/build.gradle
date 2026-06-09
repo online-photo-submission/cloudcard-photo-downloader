@@ -23,5 +23,5 @@ javafx {
 }
 
 application {
-    mainClass = 'ai.remotephoto.setup.Launcher'
+    mainClass = 'ai.remotephoto.downloader.manager.Launcher'
 }

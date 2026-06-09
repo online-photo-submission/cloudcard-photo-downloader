@@ -33,6 +33,7 @@ rm cloudcard-photo-downloader.*
 # package
 mkdir cloudcard-photo-downloader
 cp "build/libs/cloudcard-photo-downloader-$version.jar" "cloudcard-photo-downloader/cloudcard-photo-downloader.jar"
+# TODO: do we want to keep doing this?
 cp -R external/. cloudcard-photo-downloader/
 echo cloudcard.api.accessToken= >cloudcard-photo-downloader/application.properties
 echo cloudcard.integration.name= >>cloudcard-photo-downloader/application.properties

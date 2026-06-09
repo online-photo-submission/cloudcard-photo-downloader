@@ -1,0 +1,20 @@
+{
+    "Name": "CloudCardDownloader",
+    "DisplayName": "RemotePhoto Downloader",
+    "Description": "Downloads photos from RemotePhoto.",
+    "ExecutablePath": "/Users/jonathan/.sdkman/candidates/java/17.0.13-amzn/bin/java",
+    "StartupDirectory": "/Users/jonathan/Dev/cloudcard-photo-downloader/setup-ui",
+    "Parameters": "-jar cloudcard-photo-downloader.jar",
+    "StartupType": 2,
+    "Priority": 2,
+    "EnableConsoleUI": false,
+    "StdoutPath": "/Users/jonathan/Dev/cloudcard-photo-downloader/setup-ui/downloader.out.log",
+    "StderrPath": "/Users/jonathan/Dev/cloudcard-photo-downloader/setup-ui/downloader.err.log",
+    "EnableSizeRotation": false,
+    "EnableDateRotation": false,
+    "EnableHealthMonitoring": false,
+    "RecoveryAction": 1,
+    "MaxRestartAttempts": 3,
+    "StartTimeout": 10,
+    "StopTimeout": 5
+}

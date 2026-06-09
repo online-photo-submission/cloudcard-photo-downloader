@@ -1,4 +1,4 @@
-package ai.remotephoto.setup
+package ai.remotephoto.downloader.manager
 
 import javafx.geometry.Insets
 import javafx.geometry.Pos

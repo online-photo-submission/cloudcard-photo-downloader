@@ -1,4 +1,4 @@
-package ai.remotephoto.setup
+package ai.remotephoto.downloader.manager
 
 import java.nio.file.Path
 
@@ -49,7 +49,6 @@ class ServyServiceManager {
         return 'Stopped service.'
     }
 
-//    TODO: Capture the refreshed status or consider polling this every 5 seconds while the UI is open!
     static String refresh(Path appHome) {
         List<String> command = [
             servyExecutable(appHome),
@@ -57,15 +56,15 @@ class ServyServiceManager {
             '--name', ServyConfigWriter.SERVICE_NAME
         ]
 
-        if(!isWindows()) return command.join(' ')
+        if (!isWindows()) return command.join(' ')
 
-        run(appHome, command)
+        String output = run(appHome, command)
+        String status = output?.trim()
 
-//        TODO: This is dumb! It doesn't say what the actual status is lol
-        return 'Refreshed service.'
+        return status ? "Service status:\n${status}" : 'Service status command completed, but Servy returned no output.'
     }
 
-    private static void run(Path workingDir, List<String> command) {
+    private static String run(Path workingDir, List<String> command) {
         Process process = new ProcessBuilder(command)
             .directory(workingDir.toFile())
             .redirectErrorStream(true)
@@ -75,8 +74,10 @@ class ServyServiceManager {
         int exitCode = process.waitFor()
 
         if (exitCode != 0) {
-            throw new RuntimeException(output)
+            throw new RuntimeException(output ?: "Command failed with exit code ${exitCode}: ${command.join(' ')}")
         }
+
+        return output
     }
 
 //    TODO: Do we need this? It is odd.

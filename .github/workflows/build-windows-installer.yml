@@ -16,7 +16,7 @@ jobs:
         uses: actions/checkout@v4
 
       - name: Set up JDK 17
-        uses: actions/setup-java@v4
+        uses: actions/manager-java@v4
         with:
           java-version: '17'
           distribution: 'corretto'
@@ -25,9 +25,9 @@ jobs:
         shell: bash
         run: chmod +x ./gradlew
 
-      - name: Build setup UI distribution
+      - name: Build manager UI distribution
         shell: powershell
-        run: .\gradlew.bat :setup-ui:clean :setup-ui:jar :setup-ui:installDist -PjavafxPlatform=win
+        run: .\gradlew.bat :manager:clean :manager:jar :manager:installDist -PjavafxPlatform=win
 
       - name: Stage jpackage input
         shell: powershell
@@ -41,13 +41,13 @@ jobs:
           New-Item -ItemType Directory -Force -Path $StagingDir | Out-Null
           New-Item -ItemType Directory -Force -Path $OutputDir | Out-Null
 
-          # 1. Copy over setup wizard dependencies
-          Copy-Item -Path "setup-ui/build/install/setup-ui/lib/*" -Destination $StagingDir -Recurse -Force
+          # 1. Copy over manager wizard dependencies
+          Copy-Item -Path "manager/build/install/manager/lib/*" -Destination $StagingDir -Recurse -Force
           
-          # 2. Stage the main setup UI jar cleanly into root
-          Copy-Item -Path "setup-ui/build/libs/setup-ui-*.jar" -Destination "$StagingDir/setup-ui.jar" -Force -ErrorAction SilentlyContinue
-          if (!(Test-Path "$StagingDir/setup-ui.jar")) {
-              Copy-Item -Path "setup-ui/build/libs/setup-ui.jar" -Destination "$StagingDir/setup-ui.jar" -Force
+          # 2. Stage the main manager UI jar cleanly into root
+          Copy-Item -Path "manager/build/libs/manager-*.jar" -Destination "$StagingDir/manager.jar" -Force -ErrorAction SilentlyContinue
+          if (!(Test-Path "$StagingDir/manager.jar")) {
+              Copy-Item -Path "manager/build/libs/manager.jar" -Destination "$StagingDir/manager.jar" -Force
           }
 
           # 3. Handle payloads from the release zip
@@ -92,10 +92,10 @@ jobs:
         run: |
           jpackage `
             --type msi `
-            --name "CloudCard Setup" `
+            --name "RemotePhoto Downloader" `
             --input "build/package-input" `
-            --main-jar "setup-ui.jar" `
-            --main-class "ai.remotephoto.setup.Launcher" `
+            --main-jar "manager.jar" `
+            --main-class "ai.remotephoto.downloader.manager.Launcher" `
             --dest "build/jpackage" `
             --runtime-image "$env:JAVA_HOME" `
             --java-options "-Dapp.home=`$APPDIR" `
@@ -107,6 +107,6 @@ jobs:
       - name: Upload MSI artifact
         uses: actions/upload-artifact@v4
         with:
-          name: CloudCard-Setup-Windows-MSI-${{ github.event.inputs.version || github.run_number }}
+          name: RemotePhoto-Downloader-Windows-MSI-${{ github.event.inputs.version || github.run_number }}
           path: build/jpackage/*.msi
           retention-days: 7

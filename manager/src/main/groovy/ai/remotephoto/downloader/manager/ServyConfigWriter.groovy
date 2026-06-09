@@ -1,4 +1,4 @@
-package ai.remotephoto.setup
+package ai.remotephoto.downloader.manager
 
 import groovy.json.JsonOutput
 import java.nio.file.Files
@@ -9,26 +9,21 @@ class ServyConfigWriter {
     static final String SERVICE_NAME = 'CloudCardDownloader'
 
     static Path write(Path appHome) {
-        // Define paths relative to the internal app folder layout
-        Path downloaderDir = appHome.resolve('downloader')
-        Path jarPath = downloaderDir.resolve('cloudcard-photo-downloader.jar')
-        Path configPath = downloaderDir.resolve('application.properties')
+        Path logsDir = appHome.resolve('logs')
+        Files.createDirectories(logsDir)
 
         Map config = [
             Name                     : SERVICE_NAME,
             DisplayName              : 'RemotePhoto Downloader',
             Description              : 'Downloads photos from RemotePhoto.',
             ExecutablePath           : resolveJavaExecutable(),
-            // CRITICAL: Set the execution working directory to the internal downloader/ subfolder
-            // This allows Spring Boot to natively resolve relative folder hooks (like logs/)
             StartupDirectory         : appHome.toString(),
-            // Pass absolute file reference mappings to fully isolate execution parameters
             Parameters               : '-jar cloudcard-photo-downloader.jar',
             StartupType              : 2,
             Priority                 : 2,
             EnableConsoleUI          : false,
-            StdoutPath               : appHome.resolve('downloader.out.log').toString(),
-            StderrPath               : appHome.resolve('downloader.err.log').toString(),
+            StdoutPath               : logsDir.resolve('downloader.out.log').toString(),
+            StderrPath               : logsDir.resolve('downloader.err.log').toString(),
             EnableSizeRotation       : false,
             EnableDateRotation       : false,
             EnableHealthMonitoring   : false,
