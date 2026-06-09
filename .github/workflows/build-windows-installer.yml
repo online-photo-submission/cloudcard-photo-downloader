@@ -34,14 +34,12 @@ jobs:
         run: |
           $StagingDir = "build/package-input"
           $OutputDir = "build/jpackage"
-          $DownloaderDir = "$StagingDir/downloader"
 
           if (Test-Path $StagingDir) { Remove-Item -Recurse -Force $StagingDir }
           if (Test-Path $OutputDir) { Remove-Item -Recurse -Force $OutputDir }
 
           New-Item -ItemType Directory -Force -Path $StagingDir | Out-Null
           New-Item -ItemType Directory -Force -Path $OutputDir | Out-Null
-          New-Item -ItemType Directory -Force -Path $DownloaderDir | Out-Null
 
           # 1. Copy over setup wizard dependencies
           Copy-Item -Path "setup-ui/build/install/setup-ui/lib/*" -Destination $StagingDir -Recurse -Force
@@ -80,8 +78,8 @@ jobs:
             throw "servy-cli.exe was not found inside $($ServyDir.FullName)."
           }
 
-          # 4. Clean structural placement mapping (Zero duplicated jars)
-          Copy-Item -Path $DownloaderJar.FullName -Destination "$DownloaderDir/cloudcard-photo-downloader.jar" -Force
+          # 4. Stage downloader jar at app root so it shares application.properties
+          Copy-Item -Path $DownloaderJar.FullName -Destination "$StagingDir/cloudcard-photo-downloader.jar" -Force
           Copy-Item -Path $ServyDir.FullName -Destination $StagingDir -Recurse -Force
 
           # 5. Stage branding icon inside input so jpackage can catch it

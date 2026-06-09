@@ -21,14 +21,14 @@ class ServyConfigWriter {
             ExecutablePath           : resolveJavaExecutable(),
             // CRITICAL: Set the execution working directory to the internal downloader/ subfolder
             // This allows Spring Boot to natively resolve relative folder hooks (like logs/)
-            StartupDirectory         : downloaderDir.toString(),
+            StartupDirectory         : appHome.toString(),
             // Pass absolute file reference mappings to fully isolate execution parameters
-            Parameters               : "-jar \"${jarPath.toAbsolutePath()}\" --spring.config.location=\"${configPath.toAbsolutePath()}\"",
+            Parameters               : '-jar cloudcard-photo-downloader.jar',
             StartupType              : 2,
             Priority                 : 2,
             EnableConsoleUI          : false,
-            StdoutPath               : downloaderDir.resolve('downloader.out.log').toString(),
-            StderrPath               : downloaderDir.resolve('downloader.err.log').toString(),
+            StdoutPath               : appHome.resolve('downloader.out.log').toString(),
+            StderrPath               : appHome.resolve('downloader.err.log').toString(),
             EnableSizeRotation       : false,
             EnableDateRotation       : false,
             EnableHealthMonitoring   : false,
