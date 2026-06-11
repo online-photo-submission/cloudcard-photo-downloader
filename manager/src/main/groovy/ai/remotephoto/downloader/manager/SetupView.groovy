@@ -7,6 +7,7 @@ import javafx.scene.image.Image
 import javafx.scene.image.ImageView
 import javafx.scene.layout.*
 import javafx.scene.shape.Circle
+import javafx.concurrent.Task
 
 import java.nio.file.Path
 
@@ -45,6 +46,8 @@ class SetupView {
     final VBox additionalPropertiesBox = new VBox(4)
 
     final TextArea outputArea = new TextArea()
+    final ProgressIndicator busyIndicator = new ProgressIndicator()
+    final Label busyLabel = new Label('')
 
     BorderPane buildRoot() {
         BorderPane root = new BorderPane()
@@ -256,42 +259,46 @@ class SetupView {
         stopButton.styleClass.add('danger-button')
         refreshStatusButton.styleClass.add('secondary-button')
 
+        busyIndicator.visible = false
+        busyIndicator.managed = false
+        busyIndicator.prefWidth = 18
+        busyIndicator.prefHeight = 18
+        busyIndicator.progress = ProgressIndicator.INDETERMINATE_PROGRESS
+        busyLabel.styleClass.add('muted')
+        busyLabel.visible = false
+        busyLabel.managed = false
+
         applyConfigurationButton.onAction = {
-            try {
+            runBackground('Applying configuration') {
                 saveConfiguration()
                 Path json = ServyConfigWriter.write(APP_HOME)
-                appendOutput(ServyServiceManager.install(APP_HOME, json))
-                appendOutput('Applied configuration and installed CloudCardDownloader service.')
-            } catch (Exception e) {
-                appendOutput("Failed to apply configuration: ${e.message}")
+                String installOutput = ServyServiceManager.install(APP_HOME, json)
+                return "${installOutput}\nApplied configuration and installed CloudCardDownloader service."
             }
         }
 
         startButton.onAction = {
-            try {
-                appendOutput(ServyServiceManager.start(APP_HOME))
-            } catch (Exception e) {
-                appendOutput("Failed to start service: ${e.message}")
+            runBackground('Starting service') {
+                ServyServiceManager.start(APP_HOME)
             }
         }
 
         stopButton.onAction = {
-            try {
-                appendOutput(ServyServiceManager.stop(APP_HOME))
-            } catch (Exception e) {
-                appendOutput("Failed to stop service: ${e.message}")
+            runBackground('Stopping service') {
+                ServyServiceManager.stop(APP_HOME)
             }
         }
 
         refreshStatusButton.onAction = {
-            try {
-                appendOutput(ServyServiceManager.refresh(APP_HOME))
-            } catch (Exception e) {
-                appendOutput("Failed to refresh service: ${e.message}")
+            runBackground('Refreshing service status') {
+                ServyServiceManager.refresh(APP_HOME)
             }
         }
 
-        HBox buttons = new HBox(10, applyConfigurationButton, startButton, stopButton, refreshStatusButton)
+        HBox busyRow = new HBox(8, busyIndicator, busyLabel)
+        busyRow.alignment = Pos.CENTER_LEFT
+
+        HBox buttons = new HBox(10, applyConfigurationButton, startButton, stopButton, refreshStatusButton, busyRow)
         buttons.alignment = Pos.CENTER_LEFT
 
         return card('Downloader Service', buttons)
@@ -305,6 +312,45 @@ class SetupView {
         VBox.setVgrow(outputArea, Priority.ALWAYS)
 
         return card('Activity Log', outputArea)
+    }
+    private void runBackground(String actionName, Closure<String> work) {
+        busyIndicator.visible = true
+        busyIndicator.managed = true
+        busyLabel.text = "${actionName}..."
+        busyLabel.visible = true
+        busyLabel.managed = true
+
+        Task<String> task = new Task<String>() {
+            @Override
+            protected String call() {
+                return work.call()
+            }
+        }
+
+        task.setOnSucceeded {
+            busyIndicator.visible = false
+            busyIndicator.managed = false
+            busyLabel.visible = false
+            busyLabel.managed = false
+
+            if (task.value?.trim()) {
+                appendOutput(task.value.trim())
+            }
+        }
+
+        task.setOnFailed {
+            busyIndicator.visible = false
+            busyIndicator.managed = false
+            busyLabel.visible = false
+            busyLabel.managed = false
+
+            Throwable exception = task.exception
+            appendOutput("${actionName} failed: ${exception?.message ?: 'Unknown error'}")
+        }
+
+        Thread worker = new Thread(task)
+        worker.daemon = true
+        worker.start()
     }
     private void testConnection() {
         ApiUtil apiClient = new ApiUtil()
