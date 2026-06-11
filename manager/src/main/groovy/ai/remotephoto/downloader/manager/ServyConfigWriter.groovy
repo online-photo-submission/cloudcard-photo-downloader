@@ -6,7 +6,7 @@ import java.nio.file.Path
 
 class ServyConfigWriter {
 
-    static final String SERVICE_NAME = 'CloudCardDownloader'
+    static final String SERVICE_NAME = 'RemotePhoto-Downloader'
 
     static Path write(Path appHome) {
         Path logsDir = appHome.resolve('logs')

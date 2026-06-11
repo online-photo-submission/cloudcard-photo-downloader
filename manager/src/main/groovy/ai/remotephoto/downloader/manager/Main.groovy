@@ -11,7 +11,7 @@ class Main extends Application {
     void start(Stage stage) {
         SetupView setupView = new SetupView()
 
-        stage.title = 'RemotePhoto Downloader Setup'
+        stage.title = 'RemotePhoto Downloader Manager'
 
         URL iconUrl = getClass().getResource('/icon.png')
         if (iconUrl) {

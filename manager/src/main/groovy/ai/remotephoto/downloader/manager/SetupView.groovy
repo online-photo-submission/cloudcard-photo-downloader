@@ -23,8 +23,6 @@ class SetupView {
     ] as Set
 
     DownloaderConfigService downloaderConfigService = new DownloaderConfigService()
-//    ServyConfigWriter servyConfigWriter = new ServyConfigWriter()
-//    ServyServiceManager servyServiceManager = new ServyServiceManager()
 
     Properties properties = downloaderConfigService.loadProperties(APP_HOME)
     final Boolean useRemoteConfigs = properties?.getProperty('downloader.useRemoteConfigs', 'true')?.toBoolean()
@@ -34,11 +32,13 @@ class SetupView {
 
     final TextField apiUrlField = new TextField(properties?.get('cloudcard.api.url') as String ?: 'https://api.cloudcard.us/api')
     final PasswordField patField = new PasswordField(text: properties?.get('cloudcard.api.accessToken') as String ?: '')
+    final TextField visiblePatField = new TextField(text: properties?.get('cloudcard.api.accessToken') as String ?: '')
+    final Button revealTokenButton = new Button()
     final TextField integrationNameField = new TextField(properties?.get('cloudcard.integrationName') as String ?: 'Downloader')
 
     final ToggleGroup remoteConfigToggleGroup = new ToggleGroup()
-    final RadioButton useRemoteConfigRadio = new RadioButton(selected: useRemoteConfigs, text: 'Use remote config')
-    final RadioButton useLocalConfigRadio = new RadioButton(selected: !useRemoteConfigs, text: 'Use local config')
+    final RadioButton useRemoteConfigRadio = new RadioButton(selected: useRemoteConfigs, text: 'Remote [Recommended]')
+    final RadioButton useLocalConfigRadio = new RadioButton(selected: !useRemoteConfigs, text: 'Local [Requires Advanced Settings]')
 
     final Label additionalPropertiesLabel = new Label('Advanced Overrides')
     final TextArea additionalPropertiesArea = new TextArea()
@@ -48,12 +48,22 @@ class SetupView {
 
     BorderPane buildRoot() {
         BorderPane root = new BorderPane()
-        root.style = '-fx-font-size: 16px;'
+        root.styleClass.add('root-pane')
+
+
+        URL stylesheet = getClass().getResource('/manager.css')
+
+        if (stylesheet) {
+            root.stylesheets.add(stylesheet.toExternalForm())
+        }
+
         root.padding = new Insets(18)
 
+        VBox content = new VBox(14, buildConnectionCard(), buildApplicationCard(), buildAdvancedOverridesCard(), buildServiceCard(), buildActivityLogCard())
+        VBox.setVgrow(content, Priority.ALWAYS)
+
         root.top = buildHeader()
-        root.center = buildForm()
-        root.bottom = buildFooter()
+        root.center = content
 
         return root
     }
@@ -66,8 +76,9 @@ class SetupView {
 
         updateApiStatusIndicator('UNKNOWN')
         HBox statusRow = new HBox(8, new Label('API Connection:'), apiStatusIndicator, serviceStatusLabel)
+        statusRow.styleClass.add('status-row')
         statusRow.alignment = Pos.CENTER_LEFT
-        serviceStatusLabel.style = '-fx-font-weight: bold;'
+        serviceStatusLabel.styleClass.add('status-label')
 
         VBox header = new VBox(10, titleRow, statusRow)
         header.padding = new Insets(0, 0, 18, 0)
@@ -81,23 +92,61 @@ class SetupView {
             ? new ImageView(new Image(logoUrl.toExternalForm()))
             : new ImageView()
 
-        logo.fitWidth = 350
-        logo.fitHeight = 250
+        logo.fitWidth = 320
+        logo.fitHeight = 110
         logo.preserveRatio = true
         logo.smooth = true
 
         return logo
     }
 
-    private GridPane buildForm() {
+    private ImageView icon(String name) {
+        URL iconUrl = getClass().getResource("/${name}.png")
+
+        ImageView icon = iconUrl
+            ? new ImageView(new Image(iconUrl.toExternalForm()))
+            : new ImageView()
+
+        icon.fitWidth = 16
+        icon.fitHeight = 16
+        icon.preserveRatio = true
+        icon.smooth = true
+
+        return icon
+    }
+
+    private VBox buildConnectionCard() {
         GridPane form = new GridPane()
         form.hgap = 12
         form.vgap = 12
-        form.padding = new Insets(0, 0, 18, 0)
 
         apiUrlField.promptText = 'CloudCard API URL'
         integrationNameField.promptText = 'Integration Name'
         patField.promptText = 'Paste token here'
+        visiblePatField.promptText = 'Paste token here'
+        visiblePatField.visible = false
+        visiblePatField.managed = false
+        visiblePatField.textProperty().bindBidirectional(patField.textProperty())
+
+        revealTokenButton.focusTraversable = false
+        revealTokenButton.styleClass.add('icon-button')
+        revealTokenButton.graphic = icon('eye')
+        revealTokenButton.onAction = {
+            boolean currentlyVisible = visiblePatField.visible
+
+            visiblePatField.visible = !currentlyVisible
+            visiblePatField.managed = !currentlyVisible
+            patField.visible = currentlyVisible
+            patField.managed = currentlyVisible
+            revealTokenButton.graphic = icon(currentlyVisible ? 'eye' : 'eye-off')
+        }
+
+        Button testConnectionButton = new Button('Test Connection')
+        testConnectionButton.graphic = icon('link')
+        testConnectionButton.styleClass.add('secondary-button')
+        testConnectionButton.onAction = {
+            testConnection()
+        }
 
         form.add(new Label('API URL'), 0, 0)
         form.add(apiUrlField, 1, 0)
@@ -105,14 +154,29 @@ class SetupView {
         form.add(new Label('Integration Name'), 0, 1)
         form.add(integrationNameField, 1, 1)
 
+        StackPane tokenStack = new StackPane(patField, visiblePatField)
+        HBox.setHgrow(tokenStack, Priority.ALWAYS)
+
+        HBox tokenRow = new HBox(10, tokenStack, revealTokenButton, testConnectionButton)
+        tokenRow.alignment = Pos.CENTER_LEFT
+
         form.add(new Label('Persistent Access Token'), 0, 2)
-        form.add(patField, 1, 2)
+        form.add(tokenRow, 1, 2)
+
+        GridPane.setHgrow(apiUrlField, Priority.ALWAYS)
+        GridPane.setHgrow(patField, Priority.ALWAYS)
+        GridPane.setHgrow(tokenRow, Priority.ALWAYS)
+
+        return card('Connection', form)
+    }
+
+    private VBox buildApplicationCard() {
+        GridPane form = new GridPane()
+        form.hgap = 12
+        form.vgap = 12
 
         Label appHomeLabel = new Label(APP_HOME.toString())
-        appHomeLabel.style = '-fx-font-family: monospace;'
-
-        form.add(new Label('Application Home'), 0, 3)
-        form.add(appHomeLabel, 1, 3)
+        appHomeLabel.styleClass.add('monospace')
 
         useRemoteConfigRadio.toggleGroup = remoteConfigToggleGroup
         useLocalConfigRadio.toggleGroup = remoteConfigToggleGroup
@@ -120,29 +184,45 @@ class SetupView {
         HBox remoteConfigRow = new HBox(12, useRemoteConfigRadio, useLocalConfigRadio)
         remoteConfigRow.alignment = Pos.CENTER_LEFT
 
-        form.add(new Label('Configuration Mode'), 0, 4)
-        form.add(remoteConfigRow, 1, 4)
+        form.add(new Label('Application Home'), 0, 0)
+        form.add(appHomeLabel, 1, 0)
+        form.add(new Label('Configuration Mode'), 0, 1)
+        form.add(remoteConfigRow, 1, 1)
 
+        GridPane.setHgrow(appHomeLabel, Priority.ALWAYS)
+
+        return card('Application', form)
+    }
+
+    private TitledPane buildAdvancedOverridesCard() {
         configureAdditionalPropertiesControls()
         loadAdditionalProperties()
-        form.add(additionalPropertiesLabel, 0, 5)
-        form.add(additionalPropertiesBox, 1, 5)
-        GridPane.setValignment(additionalPropertiesLabel, javafx.geometry.VPos.TOP)
 
-        GridPane.setHgrow(apiUrlField, Priority.ALWAYS)
-        GridPane.setHgrow(patField, Priority.ALWAYS)
-        GridPane.setHgrow(appHomeLabel, Priority.ALWAYS)
-        GridPane.setHgrow(additionalPropertiesBox, Priority.ALWAYS)
-        GridPane.setVgrow(additionalPropertiesBox, Priority.ALWAYS)
-        return form
+        TitledPane advancedPane = new TitledPane('Advanced Settings', additionalPropertiesBox)
+        advancedPane.expanded = false
+        advancedPane.collapsible = true
+        advancedPane.animated = true
+        advancedPane.styleClass.add('advanced-pane')
+
+        return advancedPane
+    }
+
+    private VBox card(String title, Region content) {
+        Label titleLabel = new Label(title)
+        titleLabel.styleClass.add('section-title')
+
+        VBox card = new VBox(10, titleLabel, content)
+        card.styleClass.add('card')
+
+        return card
     }
 
     private void configureAdditionalPropertiesControls() {
-        Label help = new Label('Optional application.properties overrides (note: RemoteConfigs will override these).')
-        help.style = '-fx-font-size: 14px; -fx-text-fill: #6b7280;'
+        Label help = new Label('Optional application.properties overrides (note: Remote Configurations will override these).')
+        help.styleClass.add('muted')
 
         Label examples = new Label('Example: downloader.fetchStatuses=APPROVED')
-        examples.style = '-fx-font-family: monospace; -fx-font-size: 14px; -fx-text-fill: #6b7280;'
+        examples.styleClass.addAll('muted', 'monospace')
 
         additionalPropertiesArea.promptText = 'Optional advanced key=value overrides, one per line'
         additionalPropertiesArea.prefRowCount = 6
@@ -160,57 +240,33 @@ class SetupView {
             .join(System.lineSeparator())
     }
 
-    private VBox buildFooter() {
-        Button testConnectionButton = new Button('Test Connection')
-//        TODO: Consider moving this to a more sensible "save" location
-        Button savePropertiesButton = new Button('Save Properties')
-        Button installButton = new Button('Install Service')
-        Button startButton = new Button('Start Service')
-        Button stopButton = new Button('Stop Service')
-//        TODO: Actually display the status
-        Button refreshStatusButton = new Button('Refresh Status')
+    private VBox buildServiceCard() {
+        Button applyConfigurationButton = new Button('Apply Configuration')
+        Button startButton = new Button('Start')
+        Button stopButton = new Button('Stop')
+        Button refreshStatusButton = new Button('Refresh')
 
-        testConnectionButton.onAction = {
-            ApiUtil apiClient = new ApiUtil()
+        applyConfigurationButton.graphic = icon('settings')
+        startButton.graphic = icon('play')
+        stopButton.graphic = icon('stop-circle')
+        refreshStatusButton.graphic = icon('refresh-cw')
 
+        applyConfigurationButton.styleClass.add('primary-button')
+        startButton.styleClass.add('success-button')
+        stopButton.styleClass.add('danger-button')
+        refreshStatusButton.styleClass.add('secondary-button')
+
+        applyConfigurationButton.onAction = {
             try {
-                AuthenticationToken token = apiClient.authenticate(patField.text, apiUrlField.text)
-                appendOutput("Successfully authenticated as ${token.username}!")
-                serviceStatusLabel.text = 'API Connected'
-                updateApiStatusIndicator('SUCCESS')
-            } catch (Exception e) {
-                appendOutput("ERROR: ${e.message}")
-                serviceStatusLabel.text = 'Failed'
-                updateApiStatusIndicator('ERROR')
-            }
-        }
-        savePropertiesButton.onAction = {
-            downloaderConfigService.writeOrUpdate(
-                APP_HOME,
-                apiUrlField.text,
-                patField.text,
-                integrationNameField.text,
-                useRemoteConfigRadio.selected,
-                additionalPropertiesArea.text
-            )
-
-            appendOutput("Saved ${APP_HOME.resolve('application.properties')}")
-//            Reload the properties to reflect the updated file
-            loadAdditionalProperties()
-        }
-        installButton.onAction = {
-//            TODO: Consider if we want to writeOrUpdate before installing.
-//            downloaderConfigService.writeOrUpdate(...)
-
-            Path json = ServyConfigWriter.write(APP_HOME)
-
-            try {
+                saveConfiguration()
+                Path json = ServyConfigWriter.write(APP_HOME)
                 appendOutput(ServyServiceManager.install(APP_HOME, json))
-                appendOutput('Installed CloudCardDownloader service.')
+                appendOutput('Applied configuration and installed CloudCardDownloader service.')
             } catch (Exception e) {
-                appendOutput("Failed to install service: ${e.message}")
+                appendOutput("Failed to apply configuration: ${e.message}")
             }
         }
+
         startButton.onAction = {
             try {
                 appendOutput(ServyServiceManager.start(APP_HOME))
@@ -226,6 +282,7 @@ class SetupView {
                 appendOutput("Failed to stop service: ${e.message}")
             }
         }
+
         refreshStatusButton.onAction = {
             try {
                 appendOutput(ServyServiceManager.refresh(APP_HOME))
@@ -234,30 +291,63 @@ class SetupView {
             }
         }
 
-        HBox buttons = new HBox(10, testConnectionButton, savePropertiesButton, installButton, startButton, stopButton, refreshStatusButton)
+        HBox buttons = new HBox(10, applyConfigurationButton, startButton, stopButton, refreshStatusButton)
         buttons.alignment = Pos.CENTER_LEFT
 
-        outputArea.editable = false
-        outputArea.wrapText = true
-        outputArea.promptText = 'Installer output will appear here.'
-        outputArea.style = '-fx-font-size: 12px;'
-        VBox.setVgrow(outputArea, Priority.ALWAYS)
-
-        VBox footer = new VBox(12, buttons, outputArea)
-        footer.padding = new Insets(12, 0, 0, 0)
-        return footer
+        return card('Downloader Service', buttons)
     }
 
+    private VBox buildActivityLogCard() {
+        outputArea.editable = false
+        outputArea.wrapText = true
+        outputArea.promptText = 'Activity output will appear here.'
+        outputArea.styleClass.addAll('activity-log', 'monospace')
+        VBox.setVgrow(outputArea, Priority.ALWAYS)
+
+        return card('Activity Log', outputArea)
+    }
+    private void testConnection() {
+        ApiUtil apiClient = new ApiUtil()
+
+        try {
+            AuthenticationToken token = apiClient.authenticate(patField.text, apiUrlField.text)
+            appendOutput("Successfully authenticated as ${token.username}!")
+            serviceStatusLabel.text = 'API Connected'
+            updateApiStatusIndicator('SUCCESS')
+        } catch (Exception e) {
+            appendOutput("ERROR: ${e.message}")
+            serviceStatusLabel.text = 'Failed'
+            updateApiStatusIndicator('ERROR')
+        }
+    }
+
+    private void saveConfiguration() {
+        downloaderConfigService.writeOrUpdate(
+            APP_HOME,
+            apiUrlField.text,
+            patField.text,
+            integrationNameField.text,
+            useRemoteConfigRadio.selected,
+            additionalPropertiesArea.text
+        )
+
+        appendOutput("Saved ${APP_HOME.resolve('application.properties')}")
+        loadAdditionalProperties()
+    }
+
+
     private void updateApiStatusIndicator(String status) {
+        apiStatusIndicator.styleClass.removeAll('status-success', 'status-error', 'status-unknown')
+
         switch (status) {
             case 'SUCCESS':
-                apiStatusIndicator.style = '-fx-fill: #22c55e;'
+                apiStatusIndicator.styleClass.add('status-success')
                 break
             case 'ERROR':
-                apiStatusIndicator.style = '-fx-fill: #ef4444;'
+                apiStatusIndicator.styleClass.add('status-error')
                 break
             default:
-                apiStatusIndicator.style = '-fx-fill: #9ca3af;'
+                apiStatusIndicator.styleClass.add('status-unknown')
         }
     }
 
