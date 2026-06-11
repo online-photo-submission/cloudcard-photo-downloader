@@ -87,6 +87,13 @@ jobs:
               Copy-Item -Path "rp.ico" -Destination $StagingDir -Force
           }
 
+          # 6. Stage user-facing help README at app root
+          if (!(Test-Path "MANAGER.README.txt")) {
+            throw "MANAGER.README.txt missing from repository root. The manager Help button expects this file at app/README.txt."
+          }
+
+          Copy-Item -Path "MANAGER.README.txt" -Destination "$StagingDir/MANAGER.README.txt" -Force
+
       - name: Build Windows MSI
         shell: powershell
         run: |

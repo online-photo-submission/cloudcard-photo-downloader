@@ -78,7 +78,14 @@ class SetupView {
     private VBox buildHeader() {
         ImageView logo = buildLogo()
 
-        HBox titleRow = new HBox(70, logo)
+        Button helpButton = new Button('Help')
+        helpButton.styleClass.add('outline-button')
+        helpButton.onAction = {
+            openHelpFile()
+        }
+        Region headerSpacer = new Region()
+        HBox.setHgrow(headerSpacer, Priority.ALWAYS)
+        HBox titleRow = new HBox(12, logo, headerSpacer, helpButton)
         titleRow.alignment = Pos.TOP_LEFT
 
         updateApiStatusIndicator('UNKNOWN')
@@ -343,6 +350,27 @@ class SetupView {
         VBox.setVgrow(outputArea, Priority.ALWAYS)
 
         return card('Console Output', outputArea, openLogsButton)
+    }
+
+    private void openHelpFile() {
+        try {
+            Path readmeFile = APP_HOME.resolve('MANAGER.README.txt')
+
+            if (!Files.exists(readmeFile)) {
+                appendOutput("MANAGER.README.txt was not found: ${readmeFile}")
+                return
+            }
+
+            if (!Desktop.isDesktopSupported()) {
+                appendOutput("Opening help files is not supported on this system: ${readmeFile}")
+                return
+            }
+
+            Desktop.desktop.open(readmeFile.toFile())
+            appendOutput("Opened help file: ${readmeFile}")
+        } catch (Exception e) {
+            appendOutput("Failed to open help file: ${e.message}")
+        }
     }
 
     private void openLogFolder() {

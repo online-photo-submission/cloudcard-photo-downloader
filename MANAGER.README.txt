@@ -1,0 +1,93 @@
+  ____                      _       ____  _           _
+ |  _ \ ___ _ __ ___   ___ | |_ ___|  _ \| |__   ___ | |_ ___
+ | |_) / _ \ '_ ` _ \ / _ \| __/ _ \ |_) | '_ \ / _ \| __/ _ \
+ |  _ <  __/ | | | | | (_) | ||  __/  __/| | | | (_) | || (_) |
+ |_| \_\___|_| |_| |_|\___/ \__\___|_|   |_| |_|\___/ \__\___/
+
+======================================================================
+REMOTEPHOTO DOWNLOADER MANAGER - USER GUIDE
+======================================================================
+
+Welcome to the RemotePhoto Downloader Manager. This utility configures
+and manages the background service responsible for pulling photos down
+from your CloudCard integration.
+
+Follow the steps below to connect your integration and get the background
+service running smoothly.
+
+
+1. CORE CONFIGURATION
+----------------------------------------------------------------------
+To establish a secure connection to the cloud backend, you must fill
+out the required credential fields at the top of the interface:
+
+* API URL:
+  The endpoint for the photo service database.
+  Default: https://api.cloudcard.us/api/
+
+* INTEGRATION NAME:
+  The unique identifier assigned to your specific photo ingestion setup.
+
+* PERSISTENT ACCESS TOKEN:
+  The secure key authorizing this local machine to pull data.
+  - Click the 'Eye' icon to toggle token visibility.
+  - Click 'Test Connection' to verify your credentials work before
+    attempting to start the service.
+
+
+2. ENVIRONMENT & SETTINGS
+----------------------------------------------------------------------
+* APPLICATION HOME:
+  The directory path where the core downloader binary and its system files
+  reside. This path is automatically detected but can be modified if
+  your deployment requires a custom folder structure.
+
+* CONFIGURATION MODE:
+  - Remote [Recommended]: Pulls deployment settings dynamically from
+    the cloud configuration panel.
+  - Local [Advanced]: Forces the service to rely strictly on localized
+    rules and property profiles.
+
+
+3. ADVANCED SETTINGS OVERRIDES
+----------------------------------------------------------------------
+Expanding the "Advanced Settings" section reveals a text area for entering
+custom key-value environment overrides (e.g., Turkey=hobbit).
+
+* Note: Remote configurations will override these local declarations
+  unless explicitly configured otherwise.
+* Syntax Example: downloader.fetchStatuses=APPROVED
+
+
+4. RUNNING THE DOWNLOADER SERVICE
+----------------------------------------------------------------------
+Once your configuration fields are completely populated, navigate to the
+"Downloader Service" control block to launch the application engine:
+
+Step 1: Click [ Apply Configuration ]
+        This writes your active parameters out to the local configuration
+        files and registers/updates the background service framework.
+
+Step 2: Click [ Start ]
+        Launches the active background worker process. The status orb at
+        the top of the application will shift to reflect the live state.
+
+* Additional Controls:
+  - [ Stop ]: Halts the background worker process cleanly.
+  - [ Refresh ]: Polls the operating system to query the active status
+    of the background service framework.
+
+
+5. DIAGNOSTICS & TROUBLESHOOTING
+----------------------------------------------------------------------
+If the downloader stalls or throws a communication error:
+
+1. Look down at the "Console Output" panel. It provides a real-time
+   stream of commands executing directly inside the manager application.
+2. Click the [ Open Logs Folder ] button located in the Console
+   header. This will instantly launch Windows File Explorer directly to
+   the output directory containing the deep-dive system log files.
+
+======================================================================
+Need Additional Help? Contact support@remotephoto.ai for assistance
+======================================================================
