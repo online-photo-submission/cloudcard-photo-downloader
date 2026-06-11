@@ -8,14 +8,17 @@ import javafx.scene.image.ImageView
 import javafx.scene.layout.*
 import javafx.scene.shape.Circle
 import javafx.concurrent.Task
+import javafx.scene.Node
 
 import java.nio.file.Path
+import java.awt.Desktop
+import java.nio.file.Files
 
 class SetupView {
 
     private static final Path APP_HOME = resolveAppHome()
 
-//    TODO: We have this referenced twice now lol
+//    TODO: We have this referenced twice now lol. It's a weaker part of it.
     private static final Set<String> MANAGED_PROPERTY_KEYS = [
         'cloudcard.api.url',
         'cloudcard.api.accessToken',
@@ -31,6 +34,7 @@ class SetupView {
     final Label serviceStatusLabel = new Label('Unknown')
     final Circle apiStatusIndicator = new Circle(6)
 
+//    TODO: Make this a dropdown? That requires maintaining it / adding new ones, but would reduce error bois.
     final TextField apiUrlField = new TextField(properties?.get('cloudcard.api.url') as String ?: 'https://api.cloudcard.us/api')
     final PasswordField patField = new PasswordField(text: properties?.get('cloudcard.api.accessToken') as String ?: '')
     final TextField visiblePatField = new TextField(text: properties?.get('cloudcard.api.accessToken') as String ?: '')
@@ -211,10 +215,31 @@ class SetupView {
     }
 
     private VBox card(String title, Region content) {
+        return card(title, content, null)
+    }
+
+    private VBox card(String title, Region content, Node titleAccessory) {
+        return card(title, content, titleAccessory, true)
+    }
+
+    private VBox card(String title, Region content, Node titleAccessory, boolean alignAccessoryRight) {
         Label titleLabel = new Label(title)
         titleLabel.styleClass.add('section-title')
+        Region spacer = new Region()
+        HBox.setHgrow(spacer, Priority.ALWAYS)
 
-        VBox card = new VBox(10, titleLabel, content)
+        HBox titleRow
+
+        if (titleAccessory && alignAccessoryRight) {
+            titleRow = new HBox(10, titleLabel, spacer, titleAccessory)
+        } else if (titleAccessory) {
+            titleRow = new HBox(10, titleLabel, titleAccessory, spacer)
+        } else {
+            titleRow = new HBox(10, titleLabel, spacer)
+        }
+
+        titleRow.alignment = Pos.CENTER_LEFT
+        VBox card = new VBox(10, titleRow, content)
         card.styleClass.add('card')
 
         return card
@@ -228,7 +253,7 @@ class SetupView {
         examples.styleClass.addAll('muted', 'monospace')
 
         additionalPropertiesArea.promptText = 'Optional advanced key=value overrides, one per line'
-        additionalPropertiesArea.prefRowCount = 6
+        additionalPropertiesArea.prefRowCount = 10
         additionalPropertiesArea.wrapText = false
 
         additionalPropertiesBox.children.setAll(help, examples, additionalPropertiesArea)
@@ -249,7 +274,7 @@ class SetupView {
         Button stopButton = new Button('Stop')
         Button refreshStatusButton = new Button('Refresh')
 
-        applyConfigurationButton.graphic = icon('settings')
+        applyConfigurationButton.graphic = icon('save')
         startButton.graphic = icon('play')
         stopButton.graphic = icon('stop-circle')
         refreshStatusButton.graphic = icon('refresh-cw')
@@ -298,21 +323,45 @@ class SetupView {
         HBox busyRow = new HBox(8, busyIndicator, busyLabel)
         busyRow.alignment = Pos.CENTER_LEFT
 
-        HBox buttons = new HBox(10, applyConfigurationButton, startButton, stopButton, refreshStatusButton, busyRow)
+        HBox buttons = new HBox(10, applyConfigurationButton, startButton, stopButton, refreshStatusButton)
         buttons.alignment = Pos.CENTER_LEFT
 
-        return card('Downloader Service', buttons)
+        return card('Downloader Service', buttons, busyRow, false)
     }
 
     private VBox buildActivityLogCard() {
+        Button openLogsButton = new Button('Open Logs Folder')
+        openLogsButton.graphic = icon('code')
+        openLogsButton.styleClass.add('outline-button')
+        openLogsButton.onAction = {
+            openLogFolder()
+        }
+
         outputArea.editable = false
         outputArea.wrapText = true
-        outputArea.promptText = 'Activity output will appear here.'
         outputArea.styleClass.addAll('activity-log', 'monospace')
         VBox.setVgrow(outputArea, Priority.ALWAYS)
 
-        return card('Activity Log', outputArea)
+        return card('Console Output', outputArea, openLogsButton)
     }
+
+    private void openLogFolder() {
+        try {
+            Path logsDir = APP_HOME.resolve('logs')
+            Files.createDirectories(logsDir)
+
+            if (!Desktop.isDesktopSupported()) {
+                appendOutput("Opening folders is not supported on this system: ${logsDir}")
+                return
+            }
+
+            Desktop.desktop.open(logsDir.toFile())
+            appendOutput("Opened log folder: ${logsDir}")
+        } catch (Exception e) {
+            appendOutput("Failed to open log folder: ${e.message}")
+        }
+    }
+
     private void runBackground(String actionName, Closure<String> work) {
         busyIndicator.visible = true
         busyIndicator.managed = true

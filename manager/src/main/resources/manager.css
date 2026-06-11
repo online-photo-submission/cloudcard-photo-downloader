@@ -236,3 +236,18 @@
 .advanced-pane:focused > .title {
     -fx-color: transparent;
 }
+
+.outline-button {
+    -fx-background-color: transparent;
+    -fx-text-fill: #cbd5e1;
+    -fx-border-color: #475569;
+    -fx-border-width: 1;
+    -fx-border-radius: 8;
+    -fx-background-radius: 8;
+}
+
+.outline-button:hover {
+    -fx-background-color: rgba(148, 163, 184, 0.12);
+    -fx-border-color: #64748b;
+    -fx-text-fill: #f8fafc;
+}
