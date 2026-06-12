@@ -221,7 +221,7 @@ class SetupView {
         TitledPane advancedPane = new TitledPane('Advanced Settings', additionalPropertiesBox)
         advancedPane.expanded = false
         advancedPane.collapsible = true
-        advancedPane.animated = true
+        advancedPane.animated = false
         advancedPane.styleClass.add('advanced-pane')
 
         return advancedPane

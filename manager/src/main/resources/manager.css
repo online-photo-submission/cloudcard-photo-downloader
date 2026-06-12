@@ -25,7 +25,7 @@
     -fx-border-radius: 12;
     -fx-background-radius: 12;
     -fx-padding: 16;
-    -fx-effect: dropshadow(gaussian, rgba(0, 0, 0, 0.22), 14, 0.20, 0, 4);
+    -fx-effect: none;
 }
 
 .section-title {
@@ -60,7 +60,7 @@
 .password-field:focused,
 .text-area:focused {
     -fx-border-color: #3b82f6;
-    -fx-effect: dropshadow(gaussian, rgba(59, 130, 246, 0.25), 10, 0.25, 0, 0);
+    -fx-effect: none;
 }
 
 .text-area .content {
