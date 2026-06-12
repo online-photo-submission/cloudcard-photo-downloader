@@ -3,6 +3,11 @@
  | |_) / _ \ '_ ` _ \ / _ \| __/ _ \ |_) | '_ \ / _ \| __/ _ \
  |  _ <  __/ | | | | | (_) | ||  __/  __/| | | | (_) | || (_) |
  |_| \_\___|_| |_| |_|\___/ \__\___|_|   |_| |_|\___/ \__\___/
+  ____                      _                 _
+ |  _ \  _____      ___ __ | | ___   __ _  __| | ___ _ __
+ | | | |/ _ \ \ /\ / / '_ \| |/ _ \ / _` |/ _` |/ _ \ '_ \
+ | |_| | (_) \ V  V /| | | | | (_) | (_| | (_| |  __/ | |_|
+ |____/ \___/ \_/\_/ |_| |_|_|\___/ \__,_|\__,_|\___|_|
 
 ======================================================================
 REMOTEPHOTO DOWNLOADER MANAGER - USER GUIDE
@@ -13,34 +18,42 @@ and manages the background service responsible for pulling photos down
 from your organization in RemotePhoto.
 
 Follow the steps below to connect your integration and get the background
-service running smoothly.
+service running.
 
-// TODO: we need to add links to documentation and support pages (like for getting a PAT).
+For the latest downloader documentation, see https://help.remotephoto.ai/downloader
+
 1. CORE CONFIGURATION
 ----------------------------------------------------------------------
-To establish a secure connection to the cloud backend, you must fill
-out the required credential fields at the top of the interface:
+To establish a secure connection to the API, you must fill out the
+required credential fields at the top of the interface:
 
 * API URL:
   The endpoint for the photo service database.
-  Default: https://api.cloudcard.us/api/
+  Default:
+   -https://api.cloudcard.us/api/              [CloudCard US]
+
+  Other options:
+   - https://test-api.onlinephotosubmission.com/api/  [TEST]
+   - https://api.cloudcard.ca/api/                    [Canada]
+   - https://api.onlinephoto.touchnet.com/api/        [TouchNet]
+   - https://api.atrium.cloudcard.us/api/             [Atrium]
+   - https://api.itc.remotephoto.ca/api/              [ITC Systems]
 
 * INTEGRATION NAME:
   The unique identifier assigned to your specific photo ingestion setup.
+  - This is required if fetching remote configurations from the RemotePhoto API.
 
 * PERSISTENT ACCESS TOKEN:
-  The secure key authorizing this local machine to pull data.
-  - Click the 'Eye' icon to toggle token visibility.
-  - Click 'Test Connection' to verify your credentials work before
-    attempting to start the service.
+  The secure key authorizing the application to pull data from the RemotePhoto API.
+  - In RemotePhoto, create a service account with SERVICE & OFFICE roles and generate a
+    Persistent Access token.
 
 
 2. ENVIRONMENT & SETTINGS
 ----------------------------------------------------------------------
 * APPLICATION HOME:
   The directory path where the core downloader binary and its system files
-  reside. This path is automatically detected but can be modified if
-  your deployment requires a custom folder structure.
+  reside. This path is automatically detected and should not normally be modified.
 
 * CONFIGURATION MODE:
   - Remote [Recommended]: Pulls deployment settings dynamically from
@@ -52,11 +65,12 @@ out the required credential fields at the top of the interface:
 3. ADVANCED SETTINGS OVERRIDES
 ----------------------------------------------------------------------
 Expanding the "Advanced Settings" section reveals a text area for entering
-custom key-value environment overrides (e.g., Turkey=hobbit).
+custom key-value environment overrides.
 
 * Note: Remote configurations will override these local declarations
   unless explicitly configured otherwise.
-* Syntax Example: downloader.fetchStatuses=APPROVED
+* Syntax Example: downloader.fetchStatuses=APPROVED,READY_FOR_DOWNLOAD
+* For more information, check out the Downloader README.md on GitHub: https://github.com/online-photo-submission/cloudcard-photo-downloader#configuration
 
 
 4. RUNNING THE DOWNLOADER SERVICE
@@ -69,8 +83,8 @@ Step 1: Click [ Apply Configuration ]
         files and registers/updates the background service framework.
 
 Step 2: Click [ Start ]
-        Launches the active background worker process. The status orb at
-        the top of the application will shift to reflect the live state.
+        Launches the active background worker process. The status spinner
+        at the top of the application will shift to reflect the live state.
 
 * Additional Controls:
   - [ Stop ]: Halts the background worker process cleanly.

@@ -1,4 +1,4 @@
-package ai.remotephoto.downloader.manager
+package ai.remotephoto.downloader.manager.service
 
 import groovy.json.JsonOutput
 import java.nio.file.Files

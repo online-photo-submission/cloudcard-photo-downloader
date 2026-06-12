@@ -1,4 +1,4 @@
-package ai.remotephoto.downloader.manager
+package ai.remotephoto.downloader.manager.config
 
 import java.nio.file.Files
 import java.nio.file.Path
@@ -10,7 +10,7 @@ class DownloaderConfigService {
     private static final Set<String> MANAGED_KEYS = [
         'cloudcard.api.url',
         'cloudcard.api.accessToken',
-        'cloudcard.integrationName',
+        'cloudcard.integration.name',
         'downloader.useRemoteConfigs'
     ] as Set
 
@@ -24,7 +24,7 @@ class DownloaderConfigService {
 
         put(props, 'cloudcard.api.url', apiUrl)
         put(props, 'cloudcard.api.accessToken', persistentAccessToken)
-        put(props, 'cloudcard.integrationName', integrationName)
+        put(props, 'cloudcard.integration.name', integrationName)
         put(props, 'downloader.useRemoteConfigs', useRemoteConfig?.toString())
 
         removeAdditionalProperties(props)

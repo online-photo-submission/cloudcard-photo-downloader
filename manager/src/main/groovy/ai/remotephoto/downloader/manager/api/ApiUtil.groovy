@@ -1,4 +1,4 @@
-package ai.remotephoto.downloader.manager
+package ai.remotephoto.downloader.manager.api
 
 import groovy.json.JsonOutput
 import groovy.json.JsonSlurper

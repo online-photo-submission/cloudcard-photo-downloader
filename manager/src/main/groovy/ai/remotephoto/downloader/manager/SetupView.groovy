@@ -1,5 +1,10 @@
 package ai.remotephoto.downloader.manager
 
+import ai.remotephoto.downloader.manager.api.ApiUtil
+import ai.remotephoto.downloader.manager.api.AuthenticationToken
+import ai.remotephoto.downloader.manager.config.DownloaderConfigService
+import ai.remotephoto.downloader.manager.service.ServyConfigWriter
+import ai.remotephoto.downloader.manager.service.ServyServiceManager
 import javafx.geometry.Insets
 import javafx.geometry.Pos
 import javafx.scene.control.*
@@ -22,7 +27,7 @@ class SetupView {
     private static final Set<String> MANAGED_PROPERTY_KEYS = [
         'cloudcard.api.url',
         'cloudcard.api.accessToken',
-        'cloudcard.integrationName',
+        'cloudcard.integration.name',
         'downloader.useRemoteConfigs'
     ] as Set
 
@@ -39,7 +44,7 @@ class SetupView {
     final PasswordField patField = new PasswordField(text: properties?.get('cloudcard.api.accessToken') as String ?: '')
     final TextField visiblePatField = new TextField(text: properties?.get('cloudcard.api.accessToken') as String ?: '')
     final Button revealTokenButton = new Button()
-    final TextField integrationNameField = new TextField(properties?.get('cloudcard.integrationName') as String ?: 'Downloader')
+    final TextField integrationNameField = new TextField(properties?.get('cloudcard.integration.name') as String ?: 'Downloader')
 
     final ToggleGroup remoteConfigToggleGroup = new ToggleGroup()
     final RadioButton useRemoteConfigRadio = new RadioButton(selected: useRemoteConfigs, text: 'Remote [Recommended]')
