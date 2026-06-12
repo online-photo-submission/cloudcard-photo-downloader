@@ -251,3 +251,8 @@
     -fx-border-color: #64748b;
     -fx-text-fill: #f8fafc;
 }
+
+.main-scroll-pane,
+.main-scroll-pane > .viewport {
+    -fx-background-color: transparent;
+}

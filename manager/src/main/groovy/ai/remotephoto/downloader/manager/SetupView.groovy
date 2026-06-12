@@ -70,8 +70,14 @@ class SetupView {
         VBox.setVgrow(content, Priority.ALWAYS)
 
         root.top = buildHeader()
-        root.center = content
 
+        ScrollPane scrollPane = new ScrollPane(content)
+        scrollPane.fitToWidth = true
+        scrollPane.hbarPolicy = ScrollPane.ScrollBarPolicy.NEVER
+        scrollPane.vbarPolicy = ScrollPane.ScrollBarPolicy.ALWAYS
+        scrollPane.styleClass.add('main-scroll-pane')
+
+        root.center = scrollPane
         return root
     }
 
@@ -261,6 +267,7 @@ class SetupView {
 
         additionalPropertiesArea.promptText = 'Optional advanced key=value overrides, one per line'
         additionalPropertiesArea.prefRowCount = 10
+        additionalPropertiesArea.minHeight = 40
         additionalPropertiesArea.wrapText = false
 
         additionalPropertiesBox.children.setAll(help, examples, additionalPropertiesArea)
@@ -346,6 +353,9 @@ class SetupView {
 
         outputArea.editable = false
         outputArea.wrapText = true
+        outputArea.minHeight = 180
+        outputArea.prefHeight = 220
+
         outputArea.styleClass.addAll('activity-log', 'monospace')
         VBox.setVgrow(outputArea, Priority.ALWAYS)
 

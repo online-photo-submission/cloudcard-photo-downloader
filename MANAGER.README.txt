@@ -10,12 +10,12 @@ REMOTEPHOTO DOWNLOADER MANAGER - USER GUIDE
 
 Welcome to the RemotePhoto Downloader Manager. This utility configures
 and manages the background service responsible for pulling photos down
-from your CloudCard integration.
+from your organization in RemotePhoto.
 
 Follow the steps below to connect your integration and get the background
 service running smoothly.
 
-
+// TODO: we need to add links to documentation and support pages (like for getting a PAT).
 1. CORE CONFIGURATION
 ----------------------------------------------------------------------
 To establish a secure connection to the cloud backend, you must fill
