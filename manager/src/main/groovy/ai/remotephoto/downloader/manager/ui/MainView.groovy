@@ -1,11 +1,7 @@
 package ai.remotephoto.downloader.manager.ui
 
-import ai.remotephoto.downloader.manager.api.ApiUtil
-import ai.remotephoto.downloader.manager.api.AuthenticationToken
 import ai.remotephoto.downloader.manager.service.DownloaderConfigService
-import ai.remotephoto.downloader.manager.service.ServyConfigWriter
-import ai.remotephoto.downloader.manager.service.ServyServiceManager
-import javafx.concurrent.Task
+import javafx.beans.value.ChangeListener
 import javafx.geometry.Insets
 import javafx.geometry.Pos
 import javafx.scene.Node
@@ -23,7 +19,6 @@ class MainView {
 
     private static final Path APP_HOME = DesktopUtility.resolveAppHome()
 
-    // Status Indicators
     final Label serviceStatusLabel = new Label('Unknown')
     final Circle apiStatusIndicator = new Circle(6)
 
@@ -55,6 +50,8 @@ class MainView {
 
         // Have the model to load the file data.
         viewModel.loadConfiguration(APP_HOME, downloaderConfigService)
+
+        syncRadioButtons()
     }
 
     BorderPane buildCoreLayout() {
@@ -100,7 +97,6 @@ class MainView {
         HBox titleRow = new HBox(12, logo, headerSpacer, helpButton)
         titleRow.alignment = Pos.TOP_LEFT
 
-        updateApiStatusIndicator('UNKNOWN')
         HBox statusRow = new HBox(8, new Label('API Connection:'), apiStatusIndicator, serviceStatusLabel)
         statusRow.styleClass.add('status-row')
         statusRow.alignment = Pos.CENTER_LEFT
@@ -141,7 +137,7 @@ class MainView {
         testConnectionButton.graphic = AssetFactory.icon('link')
         testConnectionButton.styleClass.add('secondary-button')
         testConnectionButton.onAction = {
-            testConnection()
+            viewModel.testConnection()
         }
 
         form.add(new Label('API URL'), 0, 0)
@@ -191,49 +187,6 @@ class MainView {
     }
 
     private TitledPane buildAdvancedOverridesCard() {
-        configureAdditionalPropertiesControls()
-
-        TitledPane advancedPane = new TitledPane('Advanced Settings', additionalPropertiesBox)
-        advancedPane.expanded = false
-        advancedPane.collapsible = true
-        advancedPane.animated = false
-        advancedPane.styleClass.add('advanced-pane')
-
-        return advancedPane
-    }
-
-    private VBox card(String title, Region content) {
-        return card(title, content, null)
-    }
-
-    private VBox card(String title, Region content, Node titleAccessory) {
-        return card(title, content, titleAccessory, true)
-    }
-
-    private VBox card(String title, Region content, Node titleAccessory, boolean alignAccessoryRight) {
-        Label titleLabel = new Label(title)
-        titleLabel.styleClass.add('section-title')
-        Region spacer = new Region()
-        HBox.setHgrow(spacer, Priority.ALWAYS)
-
-        HBox titleRow
-
-        if (titleAccessory && alignAccessoryRight) {
-            titleRow = new HBox(10, titleLabel, spacer, titleAccessory)
-        } else if (titleAccessory) {
-            titleRow = new HBox(10, titleLabel, titleAccessory, spacer)
-        } else {
-            titleRow = new HBox(10, titleLabel, spacer)
-        }
-
-        titleRow.alignment = Pos.CENTER_LEFT
-        VBox card = new VBox(10, titleRow, content)
-        card.styleClass.add('card')
-
-        return card
-    }
-
-    private void configureAdditionalPropertiesControls() {
         Label help = new Label('Optional application.properties overrides (note: Remote Configurations will override these).')
         help.styleClass.add('muted')
 
@@ -247,6 +200,14 @@ class MainView {
 
         additionalPropertiesBox.children.setAll(help, examples, advancedPropertiesArea)
         VBox.setVgrow(advancedPropertiesArea, Priority.ALWAYS)
+
+        TitledPane advancedPane = new TitledPane('Advanced Settings', additionalPropertiesBox)
+        advancedPane.expanded = false
+        advancedPane.collapsible = true
+        advancedPane.animated = false
+        advancedPane.styleClass.add('advanced-pane')
+
+        return advancedPane
     }
 
     private VBox buildServiceCard() {
@@ -271,30 +232,19 @@ class MainView {
         busyLabel.styleClass.add('muted')
 
         applyConfigurationButton.onAction = {
-            runBackground('Applying configuration') {
-                saveConfiguration()
-                Path json = ServyConfigWriter.write(APP_HOME)
-                String installOutput = ServyServiceManager.install(APP_HOME, json)
-                return "${installOutput}\nApplied configuration and installed CloudCardDownloader service."
-            }
+            viewModel.applyConfiguration(APP_HOME, downloaderConfigService)
         }
 
         startButton.onAction = {
-            runBackground('Starting service') {
-                ServyServiceManager.start(APP_HOME)
-            }
+            viewModel.startService(APP_HOME)
         }
 
         stopButton.onAction = {
-            runBackground('Stopping service') {
-                ServyServiceManager.stop(APP_HOME)
-            }
+            viewModel.stopService(APP_HOME)
         }
 
         refreshStatusButton.onAction = {
-            runBackground('Refreshing service status') {
-                ServyServiceManager.refresh(APP_HOME)
-            }
+            viewModel.refreshServiceStatus(APP_HOME)
         }
 
         HBox busyRow = new HBox(8, busyIndicator, busyLabel)
@@ -323,62 +273,6 @@ class MainView {
         return card('Console Output', outputArea, openLogsButton)
     }
 
-    private void runBackground(String actionName, Closure<String> work) {
-        // Declaring the state updates the UI automatically through bindings
-        viewModel.isProcessing.set(true)
-        viewModel.processingMessage.set("${actionName}...")
-
-        Task<String> task = new Task<String>() {
-            @Override protected String call() { return work.call() }
-        }
-
-        task.setOnSucceeded {
-            viewModel.isProcessing.set(false) // Automatically hides indicator
-            if (task.value?.trim()) viewModel.log(task.value.trim())
-        }
-
-        task.setOnFailed {
-            viewModel.isProcessing.set(false) // Automatically hides indicator
-            viewModel.log("${actionName} failed: ${task.exception?.message ?: 'Unknown error'}")
-        }
-
-        Thread worker = new Thread(task)
-        worker.daemon = true
-        worker.start()
-    }
-
-    private void testConnection() {
-        ApiUtil apiClient = new ApiUtil()
-
-        try {
-            AuthenticationToken token = apiClient.authenticate(patField.text, apiUrlField.text)
-            viewModel.log("Successfully authenticated as ${token.username}!")
-            serviceStatusLabel.text = 'API Connected'
-            updateApiStatusIndicator('SUCCESS')
-        } catch (Exception e) {
-            viewModel.log("ERROR: ${e.message}")
-            serviceStatusLabel.text = 'Failed'
-            updateApiStatusIndicator('ERROR')
-        }
-    }
-
-    private void saveConfiguration() {
-        downloaderConfigService.writeOrUpdate(
-            APP_HOME,
-            apiUrlField.text,
-            patField.text,
-            integrationNameField.text,
-            useRemoteConfigRadio.selected,
-            advancedPropertiesArea.text
-        )
-
-        viewModel.log("Saved ${APP_HOME.resolve('application.properties')}")
-
-        // Reload the properties so the user can see invalid ones were automatically removed.
-        viewModel.loadConfiguration(APP_HOME, downloaderConfigService)
-    }
-
-
     private void updateApiStatusIndicator(String status) {
         apiStatusIndicator.styleClass.removeAll('status-success', 'status-error', 'status-unknown')
 
@@ -399,19 +293,68 @@ class MainView {
         integrationNameField.textProperty().bindBidirectional(viewModel.integrationName)
         patField.textProperty().bindBidirectional(viewModel.accessToken)
         advancedPropertiesArea.textProperty().bindBidirectional(viewModel.advancedProperties)
+    }
 
-        useRemoteConfigRadio.selectedProperty().bindBidirectional(viewModel.useRemoteConfigs)
+    private void syncRadioButtons() {
+        if (viewModel.useRemoteConfigs.get()) {
+            remoteConfigToggleGroup.selectToggle(useRemoteConfigRadio)
+        } else {
+            remoteConfigToggleGroup.selectToggle(useLocalConfigRadio)
+        }
 
-        // Local configs radio button must always be the exact opposite of the remote button
-        useLocalConfigRadio.selectedProperty().bind(useRemoteConfigRadio.selectedProperty().not())
+        remoteConfigToggleGroup.selectedToggleProperty().addListener({ obs, oldToggle, newToggle ->
+            if (newToggle != null) {
+                viewModel.useRemoteConfigs.set(newToggle == useRemoteConfigRadio)
+            }
+        } as ChangeListener)
     }
 
     private void bindStatusIndicators() {
+        serviceStatusLabel.textProperty().bind(viewModel.apiStatusText)
+
+        viewModel.apiStatusState.addListener({ observable, oldValue, newValue ->
+            updateApiStatusIndicator(newValue)
+        } as ChangeListener<String>)
+
+        updateApiStatusIndicator(viewModel.apiStatusState.get())
+
         busyIndicator.visibleProperty().bind(viewModel.isProcessing)
         busyIndicator.managedProperty().bind(viewModel.isProcessing)
 
         busyLabel.textProperty().bind(viewModel.processingMessage)
         busyLabel.visibleProperty().bind(viewModel.isProcessing)
         busyLabel.managedProperty().bind(viewModel.isProcessing)
+    }
+
+    /* Private Card Builders */
+    private static VBox card(String title, Region content) {
+        return card(title, content, null)
+    }
+
+    private static VBox card(String title, Region content, Node titleAccessory) {
+        return card(title, content, titleAccessory, true)
+    }
+
+    private static VBox card(String title, Region content, Node titleAccessory, boolean alignAccessoryRight) {
+        Label titleLabel = new Label(title)
+        titleLabel.styleClass.add('section-title')
+        Region spacer = new Region()
+        HBox.setHgrow(spacer, Priority.ALWAYS)
+
+        HBox titleRow
+
+        if (titleAccessory && alignAccessoryRight) {
+            titleRow = new HBox(10, titleLabel, spacer, titleAccessory)
+        } else if (titleAccessory) {
+            titleRow = new HBox(10, titleLabel, titleAccessory, spacer)
+        } else {
+            titleRow = new HBox(10, titleLabel, spacer)
+        }
+
+        titleRow.alignment = Pos.CENTER_LEFT
+        VBox card = new VBox(10, titleRow, content)
+        card.styleClass.add('card')
+
+        return card
     }
 }
