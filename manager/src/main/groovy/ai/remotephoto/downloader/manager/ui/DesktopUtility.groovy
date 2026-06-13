@@ -5,6 +5,20 @@ import java.nio.file.Path
 
 class DesktopUtility {
 
+    static Path resolveAppHome() {
+        String configuredAppHome = System.getProperty('app.home')
+
+        if (configuredAppHome?.trim()) {
+            return Path.of(configuredAppHome)
+                .toAbsolutePath()
+                .normalize()
+        }
+
+        return Path.of(System.getProperty('user.dir'))
+            .toAbsolutePath()
+            .normalize()
+    }
+
     static String openHelpFile(Path appHome) {
         Path readmeFile = appHome.resolve('MANAGER.README.txt')
 
@@ -31,5 +45,6 @@ class DesktopUtility {
         }
         Desktop.desktop.open(path.toFile())
     }
+
 
 }

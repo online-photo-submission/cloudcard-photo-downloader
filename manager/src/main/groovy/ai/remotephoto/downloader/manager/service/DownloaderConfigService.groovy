@@ -1,4 +1,4 @@
-package ai.remotephoto.downloader.manager.config
+package ai.remotephoto.downloader.manager.service
 
 import java.nio.file.Files
 import java.nio.file.Path
@@ -7,7 +7,8 @@ class DownloaderConfigService {
 
     private static final String PROPERTIES_FILE_NAME = 'application.properties'
 
-    private static final Set<String> MANAGED_KEYS = [
+//    TODO: I'm not obsessed with this being the source of truth for this list, but at least it only occurs once.
+    static final Set<String> MANAGED_KEYS = [
         'cloudcard.api.url',
         'cloudcard.api.accessToken',
         'cloudcard.integration.name',

@@ -1,5 +1,6 @@
 package ai.remotephoto.downloader.manager
 
+import ai.remotephoto.downloader.manager.ui.MainView
 import javafx.application.Application
 import javafx.scene.Scene
 import javafx.scene.image.Image
@@ -20,7 +21,7 @@ class Main extends Application {
             println 'icon.png not found on classpath'
         }
 
-        stage.scene = new Scene(mainView.buildRoot(), 1040, 980)
+        stage.scene = new Scene(mainView.buildCoreLayout(), 1040, 980)
         stage.show()
     }
 

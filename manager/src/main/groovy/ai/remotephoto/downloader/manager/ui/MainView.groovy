@@ -1,12 +1,10 @@
-package ai.remotephoto.downloader.manager
+package ai.remotephoto.downloader.manager.ui
 
 import ai.remotephoto.downloader.manager.api.ApiUtil
 import ai.remotephoto.downloader.manager.api.AuthenticationToken
-import ai.remotephoto.downloader.manager.config.DownloaderConfigService
+import ai.remotephoto.downloader.manager.service.DownloaderConfigService
 import ai.remotephoto.downloader.manager.service.ServyConfigWriter
 import ai.remotephoto.downloader.manager.service.ServyServiceManager
-import ai.remotephoto.downloader.manager.ui.AssetFactory
-import ai.remotephoto.downloader.manager.ui.DesktopUtility
 import javafx.concurrent.Task
 import javafx.geometry.Insets
 import javafx.geometry.Pos
@@ -20,43 +18,50 @@ import java.nio.file.Path
 
 class MainView {
 
-    private static final Path APP_HOME = resolveAppHome()
-
-//    TODO: We have this referenced twice now lol. It's a weaker part of it.
-    private static final Set<String> MANAGED_PROPERTY_KEYS = [
-        'cloudcard.api.url',
-        'cloudcard.api.accessToken',
-        'cloudcard.integration.name',
-        'downloader.useRemoteConfigs'
-    ] as Set
-
     DownloaderConfigService downloaderConfigService = new DownloaderConfigService()
+    MainViewModel viewModel = new MainViewModel()
 
-    Properties properties = downloaderConfigService.loadProperties(APP_HOME)
-    final Boolean useRemoteConfigs = properties?.getProperty('downloader.useRemoteConfigs', 'true')?.toBoolean()
+    private static final Path APP_HOME = DesktopUtility.resolveAppHome()
 
+    // Status Indicators
     final Label serviceStatusLabel = new Label('Unknown')
     final Circle apiStatusIndicator = new Circle(6)
 
-    final TextField apiUrlField = new TextField(properties?.get('cloudcard.api.url') as String ?: 'https://api.cloudcard.us/api')
-    final PasswordField patField = new PasswordField(text: properties?.get('cloudcard.api.accessToken') as String ?: '')
-    final TextField visiblePatField = new TextField(text: properties?.get('cloudcard.api.accessToken') as String ?: '')
+    final TextField apiUrlField = new TextField()
+    final PasswordField patField = new PasswordField()
+    final TextField visiblePatField = new TextField()
     final Button revealTokenButton = new Button()
-    final TextField integrationNameField = new TextField(properties?.get('cloudcard.integration.name') as String ?: 'Downloader')
+    final TextField integrationNameField = new TextField()
 
     final ToggleGroup remoteConfigToggleGroup = new ToggleGroup()
-    final RadioButton useRemoteConfigRadio = new RadioButton(selected: useRemoteConfigs, text: 'Remote [Recommended]')
-    final RadioButton useLocalConfigRadio = new RadioButton(selected: !useRemoteConfigs, text: 'Local [Requires Advanced Settings]')
+    final RadioButton useRemoteConfigRadio = new RadioButton('Remote [Recommended]')
+    final RadioButton useLocalConfigRadio = new RadioButton('Local [Requires Advanced Settings]')
 
-    final Label additionalPropertiesLabel = new Label('Advanced Overrides')
-    final TextArea additionalPropertiesArea = new TextArea()
+    final TextArea advancedPropertiesArea = new TextArea()
     final VBox additionalPropertiesBox = new VBox(4)
-
-    final TextArea outputArea = new TextArea()
     final ProgressIndicator busyIndicator = new ProgressIndicator()
     final Label busyLabel = new Label('')
 
-    BorderPane buildRoot() {
+    final TextArea outputArea = new TextArea()
+
+    MainView() {
+        // Build the actual visuals (text boxes, grids, cards)
+        buildCoreLayout()
+
+        // Bind the visual text boxes to the ViewModel properties
+        bindFormFields()
+
+        bindStatusIndicators()
+
+        // Have the model to load the file data.
+        viewModel.loadConfiguration(APP_HOME, downloaderConfigService)
+    }
+
+    BorderPane buildCoreLayout() {
+        viewModel.logConsumer = { String message ->
+            outputArea.appendText("${new Date()}  ${message}${System.lineSeparator()}")
+        }
+        
         BorderPane root = new BorderPane()
         root.styleClass.add('root-pane')
 
@@ -105,36 +110,6 @@ class MainView {
         header.padding = new Insets(0, 0, 18, 0)
         return header
     }
-
-//    private ImageView buildLogo() {
-//        URL logoUrl = getClass().getResource('/logo.png')
-//
-//        ImageView logo = logoUrl
-//            ? new ImageView(new Image(logoUrl.toExternalForm()))
-//            : new ImageView()
-//
-//        logo.fitWidth = 320
-//        logo.fitHeight = 110
-//        logo.preserveRatio = true
-//        logo.smooth = true
-//
-//        return logo
-//    }
-//
-//    private ImageView AssetFactory.icon(String name) {
-//        URL iconUrl = getClass().getResource("/${name}.png")
-//
-//        ImageView icon = iconUrl
-//            ? new ImageView(new Image(iconUrl.toExternalForm()))
-//            : new ImageView()
-//
-//        icon.fitWidth = 16
-//        icon.fitHeight = 16
-//        icon.preserveRatio = true
-//        icon.smooth = true
-//
-//        return icon
-//    }
 
     private VBox buildConnectionCard() {
         GridPane form = new GridPane()
@@ -217,7 +192,6 @@ class MainView {
 
     private TitledPane buildAdvancedOverridesCard() {
         configureAdditionalPropertiesControls()
-        loadAdditionalProperties()
 
         TitledPane advancedPane = new TitledPane('Advanced Settings', additionalPropertiesBox)
         advancedPane.expanded = false
@@ -266,21 +240,13 @@ class MainView {
         Label examples = new Label('Example: downloader.fetchStatuses=APPROVED')
         examples.styleClass.addAll('muted', 'monospace')
 
-        additionalPropertiesArea.promptText = 'Optional advanced key=value overrides, one per line'
-        additionalPropertiesArea.prefRowCount = 10
-        additionalPropertiesArea.minHeight = 40
-        additionalPropertiesArea.wrapText = false
+        advancedPropertiesArea.promptText = 'Optional advanced key=value overrides, one per line'
+        advancedPropertiesArea.prefRowCount = 10
+        advancedPropertiesArea.minHeight = 40
+        advancedPropertiesArea.wrapText = false
 
-        additionalPropertiesBox.children.setAll(help, examples, additionalPropertiesArea)
-        VBox.setVgrow(additionalPropertiesArea, Priority.ALWAYS)
-    }
-
-    private void loadAdditionalProperties() {
-        additionalPropertiesArea.text = properties
-            .findAll { key, value -> !MANAGED_PROPERTY_KEYS.contains(key.toString()) }
-            .collect { key, value -> "${key}=${value}" }
-            .sort()
-            .join(System.lineSeparator())
+        additionalPropertiesBox.children.setAll(help, examples, advancedPropertiesArea)
+        VBox.setVgrow(advancedPropertiesArea, Priority.ALWAYS)
     }
 
     private VBox buildServiceCard() {
@@ -299,14 +265,10 @@ class MainView {
         stopButton.styleClass.add('danger-button')
         refreshStatusButton.styleClass.add('secondary-button')
 
-        busyIndicator.visible = false
-        busyIndicator.managed = false
         busyIndicator.prefWidth = 18
         busyIndicator.prefHeight = 18
         busyIndicator.progress = ProgressIndicator.INDETERMINATE_PROGRESS
         busyLabel.styleClass.add('muted')
-        busyLabel.visible = false
-        busyLabel.managed = false
 
         applyConfigurationButton.onAction = {
             runBackground('Applying configuration') {
@@ -362,54 +324,39 @@ class MainView {
     }
 
     private void runBackground(String actionName, Closure<String> work) {
-        busyIndicator.visible = true
-        busyIndicator.managed = true
-        busyLabel.text = "${actionName}..."
-        busyLabel.visible = true
-        busyLabel.managed = true
+        // Declaring the state updates the UI automatically through bindings
+        viewModel.isProcessing.set(true)
+        viewModel.processingMessage.set("${actionName}...")
 
         Task<String> task = new Task<String>() {
-            @Override
-            protected String call() {
-                return work.call()
-            }
+            @Override protected String call() { return work.call() }
         }
 
         task.setOnSucceeded {
-            busyIndicator.visible = false
-            busyIndicator.managed = false
-            busyLabel.visible = false
-            busyLabel.managed = false
-
-            if (task.value?.trim()) {
-                appendOutput(task.value.trim())
-            }
+            viewModel.isProcessing.set(false) // Automatically hides indicator
+            if (task.value?.trim()) viewModel.log(task.value.trim())
         }
 
         task.setOnFailed {
-            busyIndicator.visible = false
-            busyIndicator.managed = false
-            busyLabel.visible = false
-            busyLabel.managed = false
-
-            Throwable exception = task.exception
-            appendOutput("${actionName} failed: ${exception?.message ?: 'Unknown error'}")
+            viewModel.isProcessing.set(false) // Automatically hides indicator
+            viewModel.log("${actionName} failed: ${task.exception?.message ?: 'Unknown error'}")
         }
 
         Thread worker = new Thread(task)
         worker.daemon = true
         worker.start()
     }
+
     private void testConnection() {
         ApiUtil apiClient = new ApiUtil()
 
         try {
             AuthenticationToken token = apiClient.authenticate(patField.text, apiUrlField.text)
-            appendOutput("Successfully authenticated as ${token.username}!")
+            viewModel.log("Successfully authenticated as ${token.username}!")
             serviceStatusLabel.text = 'API Connected'
             updateApiStatusIndicator('SUCCESS')
         } catch (Exception e) {
-            appendOutput("ERROR: ${e.message}")
+            viewModel.log("ERROR: ${e.message}")
             serviceStatusLabel.text = 'Failed'
             updateApiStatusIndicator('ERROR')
         }
@@ -422,11 +369,13 @@ class MainView {
             patField.text,
             integrationNameField.text,
             useRemoteConfigRadio.selected,
-            additionalPropertiesArea.text
+            advancedPropertiesArea.text
         )
 
-        appendOutput("Saved ${APP_HOME.resolve('application.properties')}")
-        loadAdditionalProperties()
+        viewModel.log("Saved ${APP_HOME.resolve('application.properties')}")
+
+        // Reload the properties so the user can see invalid ones were automatically removed.
+        viewModel.loadConfiguration(APP_HOME, downloaderConfigService)
     }
 
 
@@ -445,25 +394,24 @@ class MainView {
         }
     }
 
-    void appendOutput(String message) {
-        outputArea.appendText("${new Date()}  ${message}${System.lineSeparator()}")
+    private void bindFormFields() {
+        apiUrlField.textProperty().bindBidirectional(viewModel.apiUrl)
+        integrationNameField.textProperty().bindBidirectional(viewModel.integrationName)
+        patField.textProperty().bindBidirectional(viewModel.accessToken)
+        advancedPropertiesArea.textProperty().bindBidirectional(viewModel.advancedProperties)
+
+        useRemoteConfigRadio.selectedProperty().bindBidirectional(viewModel.useRemoteConfigs)
+
+        // Local configs radio button must always be the exact opposite of the remote button
+        useLocalConfigRadio.selectedProperty().bind(useRemoteConfigRadio.selectedProperty().not())
     }
 
-    private static boolean isWindows() {
-        System.getProperty('os.name').toLowerCase().contains('win')
-    }
+    private void bindStatusIndicators() {
+        busyIndicator.visibleProperty().bind(viewModel.isProcessing)
+        busyIndicator.managedProperty().bind(viewModel.isProcessing)
 
-    private static Path resolveAppHome() {
-        String configuredAppHome = System.getProperty('app.home')
-
-        if (configuredAppHome?.trim()) {
-            return Path.of(configuredAppHome)
-                       .toAbsolutePath()
-                       .normalize()
-        }
-
-        return Path.of(System.getProperty('user.dir'))
-                   .toAbsolutePath()
-                   .normalize()
+        busyLabel.textProperty().bind(viewModel.processingMessage)
+        busyLabel.visibleProperty().bind(viewModel.isProcessing)
+        busyLabel.managedProperty().bind(viewModel.isProcessing)
     }
 }
