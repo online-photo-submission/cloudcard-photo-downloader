@@ -1,4 +1,4 @@
-package ai.remotephoto.downloader.manager.ui
+package ai.remotephoto.downloader.manager.desktop
 import java.awt.Desktop
 import java.nio.file.Files
 import java.nio.file.Path

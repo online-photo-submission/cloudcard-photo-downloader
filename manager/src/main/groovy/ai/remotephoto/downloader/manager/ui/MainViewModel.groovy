@@ -2,9 +2,9 @@ package ai.remotephoto.downloader.manager.ui
 
 import ai.remotephoto.downloader.manager.api.ApiUtil
 import ai.remotephoto.downloader.manager.api.AuthenticationToken
-import ai.remotephoto.downloader.manager.service.DownloaderConfigService
-import ai.remotephoto.downloader.manager.service.ServyConfigWriter
-import ai.remotephoto.downloader.manager.service.ServyServiceManager
+import ai.remotephoto.downloader.manager.config.DownloaderConfigUtility
+import ai.remotephoto.downloader.manager.servy.ServyConfigWriter
+import ai.remotephoto.downloader.manager.servy.ServyServiceManager
 import javafx.application.Platform
 import javafx.beans.property.BooleanProperty
 import javafx.beans.property.SimpleBooleanProperty
@@ -15,6 +15,7 @@ import javafx.concurrent.Task
 import java.nio.file.Path
 
 class MainViewModel {
+    DownloaderConfigUtility configService = new DownloaderConfigUtility()
 
     // 1. Form Data Fields
     final StringProperty apiUrl = new SimpleStringProperty()
@@ -40,9 +41,9 @@ class MainViewModel {
         logConsumer.call(message)
     }
 
-    void applyConfiguration(Path appHome, DownloaderConfigService configService) {
+    void applyConfiguration(Path appHome) {
         runBackground('Applying configuration') {
-            saveConfiguration(appHome, configService)
+            saveConfiguration(appHome)
             Path json = ServyConfigWriter.write(appHome)
             String installOutput = ServyServiceManager.install(appHome, json)
             return "${installOutput}\nApplied configuration and installed downloader service."
@@ -98,7 +99,7 @@ class MainViewModel {
         worker.start()
     }
 
-    void saveConfiguration(Path appHome, DownloaderConfigService configService) {
+    void saveConfiguration(Path appHome) {
         configService.writeOrUpdate(
             appHome,
             apiUrl.get(),
@@ -111,16 +112,16 @@ class MainViewModel {
         log("Saved ${appHome.resolve('application.properties')}")
 
         // Reload the properties so the user can see invalid ones were automatically removed.
-        loadConfiguration(appHome, configService)
+        loadConfiguration(appHome)
     }
 
-    void loadConfiguration(Path appHome, DownloaderConfigService configService) {
+    void loadConfiguration(Path appHome) {
         Properties props = configService.loadProperties(appHome)
 
 
-        Set<String> rules = DownloaderConfigService.MANAGED_KEYS
+        Set<String> rules = DownloaderConfigUtility.MANAGED_KEYS
 
-        String overrides = props.findAll { key, val -> !rules.contains(key.toString()) }
+        String properties = props.findAll { key, val -> !rules.contains(key.toString()) }
             .collect { key, val -> "${key}=${val}" }
             .sort()
             .join(System.lineSeparator())
@@ -131,7 +132,7 @@ class MainViewModel {
             integrationName.set(props.getProperty('cloudcard.integration.name', 'Downloader'))
             accessToken.set(props.getProperty('cloudcard.api.accessToken', ''))
             useRemoteConfigs.set(props.getProperty('downloader.useRemoteConfigs', 'true').toBoolean())
-            advancedProperties.set(overrides)
+            advancedProperties.set(properties)
         }
     }
 

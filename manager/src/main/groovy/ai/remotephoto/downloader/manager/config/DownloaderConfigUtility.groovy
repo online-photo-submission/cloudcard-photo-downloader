@@ -1,9 +1,9 @@
-package ai.remotephoto.downloader.manager.service
+package ai.remotephoto.downloader.manager.config
 
 import java.nio.file.Files
 import java.nio.file.Path
 
-class DownloaderConfigService {
+class DownloaderConfigUtility {
 
     private static final String PROPERTIES_FILE_NAME = 'application.properties'
 

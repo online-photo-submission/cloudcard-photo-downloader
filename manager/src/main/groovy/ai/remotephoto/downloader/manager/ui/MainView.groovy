@@ -1,6 +1,6 @@
 package ai.remotephoto.downloader.manager.ui
 
-import ai.remotephoto.downloader.manager.service.DownloaderConfigService
+import ai.remotephoto.downloader.manager.desktop.DesktopUtility
 import javafx.beans.value.ChangeListener
 import javafx.geometry.Insets
 import javafx.geometry.Pos
@@ -14,7 +14,6 @@ import java.nio.file.Path
 
 class MainView {
 
-    DownloaderConfigService downloaderConfigService = new DownloaderConfigService()
     MainViewModel viewModel = new MainViewModel()
 
     private static final Path APP_HOME = DesktopUtility.resolveAppHome()
@@ -49,7 +48,7 @@ class MainView {
         bindStatusIndicators()
 
         // Have the model to load the file data.
-        viewModel.loadConfiguration(APP_HOME, downloaderConfigService)
+        viewModel.loadConfiguration(APP_HOME)
 
         syncRadioButtons()
     }
@@ -71,7 +70,7 @@ class MainView {
 
         root.padding = new Insets(18)
 
-        VBox content = new VBox(14, buildConnectionCard(), buildApplicationCard(), buildAdvancedOverridesCard(), buildServiceCard(), buildActivityLogCard())
+        VBox content = new VBox(14, buildConnectionCard(), buildApplicationCard(), buildAdvancedPropertiesCard(), buildServiceCard(), buildActivityLogCard())
         VBox.setVgrow(content, Priority.ALWAYS)
 
         root.top = buildHeader()
@@ -186,14 +185,14 @@ class MainView {
         return card('Application', form)
     }
 
-    private TitledPane buildAdvancedOverridesCard() {
-        Label help = new Label('Optional application.properties overrides (note: Remote Configurations will override these).')
+    private TitledPane buildAdvancedPropertiesCard() {
+        Label help = new Label('Optional application.properties (note: Remote Configurations will override any duplicates).')
         help.styleClass.add('muted')
 
         Label examples = new Label('Example: downloader.fetchStatuses=APPROVED')
         examples.styleClass.addAll('muted', 'monospace')
 
-        advancedPropertiesArea.promptText = 'Optional advanced key=value overrides, one per line'
+        advancedPropertiesArea.promptText = 'Optional advanced key=value properties, one per line'
         advancedPropertiesArea.prefRowCount = 10
         advancedPropertiesArea.minHeight = 40
         advancedPropertiesArea.wrapText = false
@@ -232,7 +231,7 @@ class MainView {
         busyLabel.styleClass.add('muted')
 
         applyConfigurationButton.onAction = {
-            viewModel.applyConfiguration(APP_HOME, downloaderConfigService)
+            viewModel.applyConfiguration(APP_HOME)
         }
 
         startButton.onAction = {
