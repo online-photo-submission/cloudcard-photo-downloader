@@ -5,21 +5,20 @@ import ai.remotephoto.downloader.manager.api.AuthenticationToken
 import ai.remotephoto.downloader.manager.config.DownloaderConfigService
 import ai.remotephoto.downloader.manager.service.ServyConfigWriter
 import ai.remotephoto.downloader.manager.service.ServyServiceManager
+import ai.remotephoto.downloader.manager.ui.AssetFactory
+import ai.remotephoto.downloader.manager.ui.DesktopUtility
+import javafx.concurrent.Task
 import javafx.geometry.Insets
 import javafx.geometry.Pos
+import javafx.scene.Node
 import javafx.scene.control.*
-import javafx.scene.image.Image
 import javafx.scene.image.ImageView
 import javafx.scene.layout.*
 import javafx.scene.shape.Circle
-import javafx.concurrent.Task
-import javafx.scene.Node
 
 import java.nio.file.Path
-import java.awt.Desktop
-import java.nio.file.Files
 
-class SetupView {
+class MainView {
 
     private static final Path APP_HOME = resolveAppHome()
 
@@ -39,7 +38,6 @@ class SetupView {
     final Label serviceStatusLabel = new Label('Unknown')
     final Circle apiStatusIndicator = new Circle(6)
 
-//    TODO: Make this a dropdown? That requires maintaining it / adding new ones, but would reduce error bois.
     final TextField apiUrlField = new TextField(properties?.get('cloudcard.api.url') as String ?: 'https://api.cloudcard.us/api')
     final PasswordField patField = new PasswordField(text: properties?.get('cloudcard.api.accessToken') as String ?: '')
     final TextField visiblePatField = new TextField(text: properties?.get('cloudcard.api.accessToken') as String ?: '')
@@ -87,13 +85,11 @@ class SetupView {
     }
 
     private VBox buildHeader() {
-        ImageView logo = buildLogo()
+        ImageView logo = AssetFactory.buildLogo()
 
         Button helpButton = new Button('Help')
         helpButton.styleClass.add('outline-button')
-        helpButton.onAction = {
-            openHelpFile()
-        }
+        helpButton.onAction = { DesktopUtility.openHelpFile(APP_HOME) }
         Region headerSpacer = new Region()
         HBox.setHgrow(headerSpacer, Priority.ALWAYS)
         HBox titleRow = new HBox(12, logo, headerSpacer, helpButton)
@@ -110,35 +106,35 @@ class SetupView {
         return header
     }
 
-    private ImageView buildLogo() {
-        URL logoUrl = getClass().getResource('/logo.png')
-
-        ImageView logo = logoUrl
-            ? new ImageView(new Image(logoUrl.toExternalForm()))
-            : new ImageView()
-
-        logo.fitWidth = 320
-        logo.fitHeight = 110
-        logo.preserveRatio = true
-        logo.smooth = true
-
-        return logo
-    }
-
-    private ImageView icon(String name) {
-        URL iconUrl = getClass().getResource("/${name}.png")
-
-        ImageView icon = iconUrl
-            ? new ImageView(new Image(iconUrl.toExternalForm()))
-            : new ImageView()
-
-        icon.fitWidth = 16
-        icon.fitHeight = 16
-        icon.preserveRatio = true
-        icon.smooth = true
-
-        return icon
-    }
+//    private ImageView buildLogo() {
+//        URL logoUrl = getClass().getResource('/logo.png')
+//
+//        ImageView logo = logoUrl
+//            ? new ImageView(new Image(logoUrl.toExternalForm()))
+//            : new ImageView()
+//
+//        logo.fitWidth = 320
+//        logo.fitHeight = 110
+//        logo.preserveRatio = true
+//        logo.smooth = true
+//
+//        return logo
+//    }
+//
+//    private ImageView AssetFactory.icon(String name) {
+//        URL iconUrl = getClass().getResource("/${name}.png")
+//
+//        ImageView icon = iconUrl
+//            ? new ImageView(new Image(iconUrl.toExternalForm()))
+//            : new ImageView()
+//
+//        icon.fitWidth = 16
+//        icon.fitHeight = 16
+//        icon.preserveRatio = true
+//        icon.smooth = true
+//
+//        return icon
+//    }
 
     private VBox buildConnectionCard() {
         GridPane form = new GridPane()
@@ -155,7 +151,7 @@ class SetupView {
 
         revealTokenButton.focusTraversable = false
         revealTokenButton.styleClass.add('icon-button')
-        revealTokenButton.graphic = icon('eye')
+        revealTokenButton.graphic = AssetFactory.icon('eye')
         revealTokenButton.onAction = {
             boolean currentlyVisible = visiblePatField.visible
 
@@ -163,11 +159,11 @@ class SetupView {
             visiblePatField.managed = !currentlyVisible
             patField.visible = currentlyVisible
             patField.managed = currentlyVisible
-            revealTokenButton.graphic = icon(currentlyVisible ? 'eye' : 'eye-off')
+            revealTokenButton.graphic = AssetFactory.icon(currentlyVisible ? 'eye' : 'eye-off')
         }
 
         Button testConnectionButton = new Button('Test Connection')
-        testConnectionButton.graphic = icon('link')
+        testConnectionButton.graphic = AssetFactory.icon('link')
         testConnectionButton.styleClass.add('secondary-button')
         testConnectionButton.onAction = {
             testConnection()
@@ -293,10 +289,10 @@ class SetupView {
         Button stopButton = new Button('Stop')
         Button refreshStatusButton = new Button('Refresh')
 
-        applyConfigurationButton.graphic = icon('save')
-        startButton.graphic = icon('play')
-        stopButton.graphic = icon('stop-circle')
-        refreshStatusButton.graphic = icon('refresh-cw')
+        applyConfigurationButton.graphic = AssetFactory.icon('save')
+        startButton.graphic = AssetFactory.icon('play')
+        stopButton.graphic = AssetFactory.icon('stop-circle')
+        refreshStatusButton.graphic = AssetFactory.icon('refresh-cw')
 
         applyConfigurationButton.styleClass.add('primary-button')
         startButton.styleClass.add('success-button')
@@ -350,11 +346,9 @@ class SetupView {
 
     private VBox buildActivityLogCard() {
         Button openLogsButton = new Button('Open Logs Folder')
-        openLogsButton.graphic = icon('code')
+        openLogsButton.graphic = AssetFactory.icon('code')
         openLogsButton.styleClass.add('outline-button')
-        openLogsButton.onAction = {
-            openLogFolder()
-        }
+        openLogsButton.onAction = { DesktopUtility.openLogFolder(APP_HOME) }
 
         outputArea.editable = false
         outputArea.wrapText = true
@@ -365,44 +359,6 @@ class SetupView {
         VBox.setVgrow(outputArea, Priority.ALWAYS)
 
         return card('Console Output', outputArea, openLogsButton)
-    }
-
-    private void openHelpFile() {
-        try {
-            Path readmeFile = APP_HOME.resolve('MANAGER.README.txt')
-
-            if (!Files.exists(readmeFile)) {
-                appendOutput("MANAGER.README.txt was not found: ${readmeFile}")
-                return
-            }
-
-            if (!Desktop.isDesktopSupported()) {
-                appendOutput("Opening help files is not supported on this system: ${readmeFile}")
-                return
-            }
-
-            Desktop.desktop.open(readmeFile.toFile())
-            appendOutput("Opened help file: ${readmeFile}")
-        } catch (Exception e) {
-            appendOutput("Failed to open help file: ${e.message}")
-        }
-    }
-
-    private void openLogFolder() {
-        try {
-            Path logsDir = APP_HOME.resolve('logs')
-            Files.createDirectories(logsDir)
-
-            if (!Desktop.isDesktopSupported()) {
-                appendOutput("Opening folders is not supported on this system: ${logsDir}")
-                return
-            }
-
-            Desktop.desktop.open(logsDir.toFile())
-            appendOutput("Opened log folder: ${logsDir}")
-        } catch (Exception e) {
-            appendOutput("Failed to open log folder: ${e.message}")
-        }
     }
 
     private void runBackground(String actionName, Closure<String> work) {

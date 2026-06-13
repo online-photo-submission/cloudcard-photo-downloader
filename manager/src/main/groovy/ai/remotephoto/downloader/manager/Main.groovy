@@ -9,7 +9,7 @@ class Main extends Application {
 
     @Override
     void start(Stage stage) {
-        SetupView setupView = new SetupView()
+        MainView mainView = new MainView()
 
         stage.title = 'RemotePhoto Downloader Manager'
 
@@ -20,7 +20,7 @@ class Main extends Application {
             println 'icon.png not found on classpath'
         }
 
-        stage.scene = new Scene(setupView.buildRoot(), 1040, 980)
+        stage.scene = new Scene(mainView.buildRoot(), 1040, 980)
         stage.show()
     }
 
