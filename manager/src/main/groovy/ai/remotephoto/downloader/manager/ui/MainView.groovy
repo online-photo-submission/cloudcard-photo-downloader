@@ -39,17 +39,13 @@ class MainView {
     final TextArea outputArea = new TextArea()
 
     MainView() {
-        // Build the actual visuals (text boxes, grids, cards)
         buildCoreLayout()
-
-        // Bind the visual text boxes to the ViewModel properties
         bindFormFields()
-
         bindStatusIndicators()
 
-        // Have the model to load the file data.
         viewModel.loadConfiguration(APP_HOME)
 
+        // we have to sync the radio buttons after the configuration is loaded.
         syncRadioButtons()
     }
 
