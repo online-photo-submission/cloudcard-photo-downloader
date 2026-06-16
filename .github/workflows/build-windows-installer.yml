@@ -1,11 +1,6 @@
 name: Build Windows Downloader Installer
 on:
   workflow_dispatch:
-    inputs:
-      version:
-        description: 'MSI app version (e.g., 1.0.123.1). Leave blank to auto-suffix the project version.'
-        required: false
-        type: string
 
 jobs:
   build-windows-msi:
@@ -97,26 +92,18 @@ jobs:
       - name: Build Windows MSI
         shell: powershell
         run: |
-          # 1. Pull the base version from gradle (e.g., "1.0.123" or "1.0.123-SNAPSHOT")
-          $RawVersion = ./gradlew properties -q | Select-String "^version:" | ForEach-Object {
-          $_.ToString().Split(":")[1].Trim()
+          # Use the Gradle project version for the MSI version.
+          $AppVersion = ./gradlew properties -q | Select-String "^version:" | ForEach-Object {
+            $_.ToString().Split(":")[1].Trim()
           }
-        
-          # 2. Strip any non-numeric suffixes (like -SNAPSHOT or -RC1) to protect jpackage
-          $BaseVersion = $RawVersion -replace '-.*$', ''
-          
-          # 3. Fall back to manual input if provided, otherwise compute: BaseVersion.RunNumber
-          $AppVersion = "${{ github.event.inputs.version }}"
-          if ([string]::IsNullOrWhiteSpace($AppVersion)) {
-          $AppVersion = "${BaseVersion}.${{ github.run_number }}"
-          }
-        
-          # 4. Strict validation check
+
+          # jpackage/MSI expects a numeric app version, so remove suffixes such as -SNAPSHOT.
+          $AppVersion = $AppVersion -replace '-.*$', ''
+
           if ($AppVersion -notmatch '^\d+\.\d+\.\d+(\.\d+)?$') {
-          throw "Computed version '$AppVersion' is invalid for Windows MSI format."
+            throw "Gradle version '$AppVersion' is invalid for Windows MSI format. Use 3 or 4 numeric parts, for example 1.0.123 or 1.0.123.4."
           }
-        
-          # 5. Export to environment for the artifact upload step
+
           "APP_VERSION=$AppVersion" >> $env:GITHUB_ENV
           jpackage `
             --type msi `
