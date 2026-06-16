@@ -15,7 +15,7 @@ dependencies {
 
 javafx {
     version = '21.0.5'
-    modules = [ 'javafx.controls' ]
+    modules = [ 'javafx.controls', 'javafx.fxml' ]
 
     if (project.hasProperty('javafxPlatform')) {
         platform = project.property('javafxPlatform')

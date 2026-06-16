@@ -1,0 +1,183 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.Button?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.control.PasswordField?>
+<?import javafx.scene.control.ProgressIndicator?>
+<?import javafx.scene.control.RadioButton?>
+<?import javafx.scene.control.ScrollPane?>
+<?import javafx.scene.control.TextArea?>
+<?import javafx.scene.control.TextField?>
+<?import javafx.scene.control.TitledPane?>
+<?import javafx.scene.control.ToggleGroup?>
+<?import javafx.scene.layout.BorderPane?>
+<?import javafx.scene.layout.GridPane?>
+<?import javafx.scene.layout.HBox?>
+<?import javafx.scene.layout.Region?>
+<?import javafx.scene.layout.StackPane?>
+<?import javafx.scene.layout.VBox?>
+<?import javafx.scene.shape.Circle?>
+
+<BorderPane fx:id="root" styleClass="root-pane" stylesheets="@/manager.css" xmlns="http://javafx.com/javafx/21" xmlns:fx="http://javafx.com/fxml/1" fx:controller="ai.remotephoto.downloader.manager.ui.MainViewController">
+    <padding>
+        <Insets bottom="18.0" left="18.0" right="18.0" top="18.0" />
+    </padding>
+
+    <!-- HEADER -->
+    <top>
+        <VBox spacing="10.0">
+            <padding>
+                <Insets bottom="18.0" />
+            </padding>
+            <children>
+                <HBox alignment="TOP_LEFT" spacing="12.0">
+                    <children>
+                        <HBox fx:id="logoContainer" alignment="CENTER_LEFT">
+                        </HBox>
+                        <Region HBox.hgrow="ALWAYS" />
+                        <Button fx:id="helpButton" onAction="#handleHelp" styleClass="outline-button" text="Help" />
+                    </children>
+                </HBox>
+                <HBox alignment="CENTER_LEFT" spacing="8.0" styleClass="status-row">
+                    <children>
+                        <Label text="API Connection:" />
+                        <Circle fx:id="apiStatusIndicator" radius="6.0" />
+                        <Label fx:id="serviceStatusLabel" styleClass="status-label" text="Unknown" />
+                    </children>
+                </HBox>
+            </children>
+        </VBox>
+    </top>
+
+    <!-- MAIN CONTENT -->
+    <center>
+        <ScrollPane fitToWidth="true" hbarPolicy="NEVER" styleClass="main-scroll-pane" vbarPolicy="ALWAYS">
+            <content>
+                <VBox spacing="14.0" VBox.vgrow="ALWAYS">
+                    <children>
+
+                        <!-- CONNECTION SETTINGS -->
+                        <VBox styleClass="card" spacing="10.0">
+                            <children>
+                                <HBox alignment="CENTER_LEFT" spacing="10.0">
+                                    <children>
+                                        <Label styleClass="section-title" text="Connection" />
+                                        <Region HBox.hgrow="ALWAYS" />
+                                    </children>
+                                </HBox>
+                                <GridPane hgap="12.0" vgap="12.0">
+                                    <children>
+                                        <Label text="API URL" GridPane.columnIndex="0" GridPane.rowIndex="0" />
+                                        <TextField fx:id="apiUrlField" promptText="CloudCard API URL" GridPane.columnIndex="1" GridPane.rowIndex="0" GridPane.hgrow="ALWAYS" />
+
+                                        <Label text="Integration Name" GridPane.columnIndex="0" GridPane.rowIndex="1" />
+                                        <TextField fx:id="integrationNameField" promptText="Integration Name" GridPane.columnIndex="1" GridPane.rowIndex="1" />
+
+                                        <Label text="Persistent Access Token" GridPane.columnIndex="0" GridPane.rowIndex="2" />
+                                        <HBox alignment="CENTER_LEFT" spacing="10.0" GridPane.columnIndex="1" GridPane.rowIndex="2" GridPane.hgrow="ALWAYS">
+                                            <children>
+                                                <StackPane HBox.hgrow="ALWAYS">
+                                                    <children>
+                                                        <PasswordField fx:id="patField" promptText="Paste token here" />
+                                                        <TextField fx:id="visiblePatField" managed="false" promptText="Paste token here" visible="false" />
+                                                    </children>
+                                                </StackPane>
+                                                <Button fx:id="revealTokenButton" focusTraversable="false" onAction="#handleToggleTokenVisibility" styleClass="icon-button" />
+                                                <Button fx:id="testConnectionButton" onAction="#handleTestConnection" styleClass="secondary-button" text="Test Connection" />
+                                            </children>
+                                        </HBox>
+                                    </children>
+                                </GridPane>
+                            </children>
+                        </VBox>
+
+                        <!-- APPLICATION SETTINGS -->
+                        <VBox styleClass="card" spacing="10.0">
+                            <children>
+                                <HBox alignment="CENTER_LEFT" spacing="10.0">
+                                    <children>
+                                        <Label styleClass="section-title" text="Application" />
+                                        <Region HBox.hgrow="ALWAYS" />
+                                    </children>
+                                </HBox>
+                                <GridPane hgap="12.0" vgap="12.0">
+                                    <children>
+                                        <Label text="Application Home" GridPane.columnIndex="0" GridPane.rowIndex="0" />
+                                        <Label fx:id="appHomeLabel" styleClass="monospace" GridPane.columnIndex="1" GridPane.rowIndex="0" GridPane.hgrow="ALWAYS" />
+
+                                        <Label text="Configuration Mode" GridPane.columnIndex="0" GridPane.rowIndex="1" />
+                                        <HBox alignment="CENTER_LEFT" spacing="12.0" GridPane.columnIndex="1" GridPane.rowIndex="1">
+                                            <children>
+                                                <RadioButton fx:id="useRemoteConfigRadio" text="Remote [Recommended]">
+                                                    <toggleGroup>
+                                                        <ToggleGroup fx:id="remoteConfigToggleGroup" />
+                                                    </toggleGroup>
+                                                </RadioButton>
+                                                <RadioButton fx:id="useLocalConfigRadio" text="Local [Requires Advanced Settings]" toggleGroup="$remoteConfigToggleGroup" />
+                                            </children>
+                                        </HBox>
+                                    </children>
+                                </GridPane>
+                            </children>
+                        </VBox>
+
+                        <!-- ADVANCED PROPERTIES AREA -->
+                        <TitledPane animated="false" collapsible="true" expanded="false" styleClass="advanced-pane" text="Advanced Settings">
+                            <content>
+                                <VBox fx:id="additionalPropertiesBox" spacing="4.0">
+                                    <children>
+                                        <Label styleClass="muted" text="Optional application.properties (note: Remote Configurations will override any duplicates)." />
+                                        <Label styleClass="muted, monospace" text="Example: downloader.fetchStatuses=APPROVED" />
+                                        <TextArea fx:id="advancedPropertiesArea" minHeight="40.0" prefRowCount="10" promptText="Optional advanced key=value properties, one per line" wrapText="false" VBox.vgrow="ALWAYS" />
+                                    </children>
+                                </VBox>
+                            </content>
+                        </TitledPane>
+
+                        <!-- SERVICE BUTTONS ROW -->
+                        <VBox styleClass="card" spacing="10.0">
+                            <children>
+                                <HBox alignment="CENTER_LEFT" spacing="10.0">
+                                    <children>
+                                        <Label styleClass="section-title" text="Downloader Service" />
+                                        <HBox alignment="CENTER_LEFT" spacing="8.0">
+                                            <children>
+                                                <ProgressIndicator fx:id="busyIndicator" prefHeight="18.0" prefWidth="18.0" />
+                                                <Label fx:id="busyLabel" styleClass="muted" />
+                                            </children>
+                                        </HBox>
+                                        <Region HBox.hgrow="ALWAYS" />
+                                    </children>
+                                </HBox>
+                                <HBox alignment="CENTER_LEFT" spacing="10.0">
+                                    <children>
+                                        <Button fx:id="applyConfigurationButton" onAction="#handleApplyConfiguration" styleClass="primary-button" text="Apply Configuration" />
+                                        <Button fx:id="startButton" onAction="#handleStartService" styleClass="success-button" text="Start" />
+                                        <Button fx:id="stopButton" onAction="#handleStopService" styleClass="danger-button" text="Stop" />
+                                        <Button fx:id="refreshStatusButton" onAction="#handleRefreshStatus" styleClass="secondary-button" text="Refresh" />
+                                    </children>
+                                </HBox>
+                            </children>
+                        </VBox>
+
+                        <!-- CONSOLE OUTPUT -->
+                        <VBox styleClass="card" spacing="10.0">
+                            <children>
+                                <HBox alignment="CENTER_LEFT" spacing="10.0">
+                                    <children>
+                                        <Label styleClass="section-title" text="Console Output" />
+                                        <Region HBox.hgrow="ALWAYS" />
+                                        <Button fx:id="openLogsButton" onAction="#handleOpenLogs" styleClass="outline-button" text="Open Logs Folder" />
+                                    </children>
+                                </HBox>
+                                <TextArea fx:id="outputArea" editable="false" minHeight="180.0" prefHeight="220.0" styleClass="activity-log, monospace" wrapText="true" VBox.vgrow="ALWAYS" />
+                            </children>
+                        </VBox>
+
+                    </children>
+                </VBox>
+            </content>
+        </ScrollPane>
+    </center>
+</BorderPane>

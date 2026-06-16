@@ -21,7 +21,7 @@ class AssetFactory {
     }
 
     static ImageView icon(String name) {
-        URL iconUrl = AssetFactory.getResource("/${name}.png")
+        URL iconUrl = AssetFactory.getResource("/icons/${name}.png")
 
         ImageView icon = iconUrl
             ? new ImageView(new Image(iconUrl.toExternalForm()))
