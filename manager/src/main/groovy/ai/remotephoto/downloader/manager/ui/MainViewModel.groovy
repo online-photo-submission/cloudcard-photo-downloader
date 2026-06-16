@@ -54,11 +54,13 @@ class MainViewModel {
         runBackground('Starting downloader service') {
             String status = ServyServiceManager.refresh(appHome)
 
-            if (status == 'RUNNING') {
+            if (status.toLowerCase().contains('running')) {
+                log("Service was already running, so it will be restarted.")
+
                 String stopOutput = ServyServiceManager.stop(appHome)
                 String startOutput = ServyServiceManager.start(appHome)
 
-                return "Service was already running, so it will be restarted. \n ${stopOutput} \n ${startOutput}"
+                return  "Restarting... \n ${stopOutput} \n ${startOutput}"
             }
 
             return ServyServiceManager.start(appHome)
