@@ -3,7 +3,7 @@ on:
   workflow_dispatch:
     inputs:
       version:
-        description: 'Release/version label for this Windows app image'
+        description: 'MSI app version (e.g., 1.0.123.1). Leave blank to auto-suffix the project version.'
         required: false
         type: string
 
@@ -89,7 +89,7 @@ jobs:
 
           # 6. Stage user-facing help README at app root
           if (!(Test-Path "MANAGER.README.txt")) {
-            throw "MANAGER.README.txt missing from repository root. The manager Help button expects this file at app/README.txt."
+            throw "MANAGER.README.txt missing from repository root. The manager Help button expects this file at app/MANAGER.README.txt."
           }
 
           Copy-Item -Path "MANAGER.README.txt" -Destination "$StagingDir/MANAGER.README.txt" -Force
@@ -97,9 +97,31 @@ jobs:
       - name: Build Windows MSI
         shell: powershell
         run: |
+          # 1. Pull the base version from gradle (e.g., "1.0.123" or "1.0.123-SNAPSHOT")
+          $RawVersion = ./gradlew properties -q | Select-String "^version:" | ForEach-Object {
+          $_.ToString().Split(":")[1].Trim()
+          }
+        
+          # 2. Strip any non-numeric suffixes (like -SNAPSHOT or -RC1) to protect jpackage
+          $BaseVersion = $RawVersion -replace '-.*$', ''
+          
+          # 3. Fall back to manual input if provided, otherwise compute: BaseVersion.RunNumber
+          $AppVersion = "${{ github.event.inputs.version }}"
+          if ([string]::IsNullOrWhiteSpace($AppVersion)) {
+          $AppVersion = "${BaseVersion}.${{ github.run_number }}"
+          }
+        
+          # 4. Strict validation check
+          if ($AppVersion -notmatch '^\d+\.\d+\.\d+(\.\d+)?$') {
+          throw "Computed version '$AppVersion' is invalid for Windows MSI format."
+          }
+        
+          # 5. Export to environment for the artifact upload step
+          "APP_VERSION=$AppVersion" >> $env:GITHUB_ENV
           jpackage `
             --type msi `
             --name "RemotePhoto Downloader" `
+            --app-version "$AppVersion" `
             --input "build/package-input" `
             --main-jar "manager.jar" `
             --main-class "ai.remotephoto.downloader.manager.Launcher" `
@@ -114,6 +136,6 @@ jobs:
       - name: Upload MSI artifact
         uses: actions/upload-artifact@v4
         with:
-          name: RemotePhoto-Downloader-Windows-MSI-${{ github.event.inputs.version || github.run_number }}
+          name: RemotePhoto-Downloader-Windows-MSI-${{ env.APP_VERSION }}
           path: build/jpackage/*.msi
           retention-days: 7

@@ -152,7 +152,7 @@
                                 </HBox>
                                 <HBox alignment="CENTER_LEFT" spacing="10.0">
                                     <children>
-                                        <Button fx:id="applyConfigurationButton" onAction="#handleApplyConfiguration" styleClass="primary-button" text="Apply Configuration" />
+                                        <Button fx:id="saveConfigurationButton" onAction="#handleSaveConfiguration" styleClass="primary-button" text="Save Configuration" />
                                         <Button fx:id="startButton" onAction="#handleStartService" styleClass="success-button" text="Start" />
                                         <Button fx:id="stopButton" onAction="#handleStopService" styleClass="danger-button" text="Stop" />
                                         <Button fx:id="refreshStatusButton" onAction="#handleRefreshStatus" styleClass="secondary-button" text="Refresh" />

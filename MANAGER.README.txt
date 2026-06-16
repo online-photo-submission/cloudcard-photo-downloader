@@ -78,9 +78,9 @@ custom key-value environment overrides.
 Once your configuration fields are completely populated, navigate to the
 "Downloader Service" control block to launch the application engine:
 
-Step 1: Click [ Apply Configuration ]
+Step 1: Click [ Save Configuration ]
         This writes your active parameters out to the local configuration
-        files and registers/updates the background service framework.
+        files and registers/updates the background service configuration.
 
 Step 2: Click [ Start ]
         Launches the active background worker process. The status spinner

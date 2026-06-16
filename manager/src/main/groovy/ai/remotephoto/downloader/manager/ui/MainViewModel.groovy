@@ -41,9 +41,9 @@ class MainViewModel {
         logConsumer.call(message)
     }
 
-    void applyConfiguration(Path appHome) {
+    void saveConfiguration(Path appHome) {
         runBackground('Applying configuration') {
-            saveConfiguration(appHome)
+            saveAndReloadConfiguration(appHome)
             Path json = ServyConfigWriter.write(appHome)
             String installOutput = ServyServiceManager.install(appHome, json)
             return "${installOutput}\nApplied configuration and installed downloader service."
@@ -51,13 +51,22 @@ class MainViewModel {
     }
 
     void startService(Path appHome) {
-        runBackground('Starting Service') {
+        runBackground('Starting downloader service') {
+            String status = ServyServiceManager.refresh(appHome)
+
+            if (status == 'RUNNING') {
+                String stopOutput = ServyServiceManager.stop(appHome)
+                String startOutput = ServyServiceManager.start(appHome)
+
+                return "Service was already running, so it will be restarted. \n ${stopOutput} \n ${startOutput}"
+            }
+
             return ServyServiceManager.start(appHome)
         }
     }
 
     void stopService(Path appHome) {
-        runBackground('Refreshing service status') {
+        runBackground('Stopping downloader service') {
             return ServyServiceManager.stop(appHome)
         }
     }
@@ -99,7 +108,7 @@ class MainViewModel {
         worker.start()
     }
 
-    void saveConfiguration(Path appHome) {
+    void saveAndReloadConfiguration(Path appHome) {
         configService.writeOrUpdate(
             appHome,
             apiUrl.get(),
@@ -136,7 +145,7 @@ class MainViewModel {
         }
     }
 
-    String testConnection() {
+    void testConnection() {
         runBackground('Testing API connection') {
             ApiUtil apiClient = new ApiUtil()
 

@@ -29,7 +29,7 @@ class MainViewController {
     @FXML private VBox additionalPropertiesBox
     @FXML private ProgressIndicator busyIndicator
     @FXML private Label busyLabel
-    @FXML private Button applyConfigurationButton
+    @FXML private Button saveConfigurationButton
     @FXML private Button startButton
     @FXML private Button stopButton
     @FXML private Button refreshStatusButton
@@ -90,8 +90,8 @@ class MainViewController {
     }
 
     @FXML
-    void handleApplyConfiguration() {
-        viewModel.applyConfiguration(APP_HOME)
+    void handleSaveConfiguration() {
+        viewModel.saveConfiguration(APP_HOME)
     }
 
     @FXML
@@ -122,7 +122,7 @@ class MainViewController {
     private void setupDynamicAssets() {
         revealTokenButton.graphic = AssetFactory.icon('eye')
         testConnectionButton.graphic = AssetFactory.icon('link')
-        applyConfigurationButton.graphic = AssetFactory.icon('save')
+        saveConfigurationButton.graphic = AssetFactory.icon('save')
         startButton.graphic = AssetFactory.icon('play')
         stopButton.graphic = AssetFactory.icon('stop-circle')
         refreshStatusButton.graphic = AssetFactory.icon('refresh-cw')
