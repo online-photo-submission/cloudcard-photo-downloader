@@ -13,14 +13,16 @@
 REMOTEPHOTO DOWNLOADER MANAGER - USER GUIDE
 ======================================================================
 
-Welcome to the RemotePhoto Downloader Manager. This utility configures
-and manages the background service responsible for pulling photos down
-from your organization in RemotePhoto.
+Welcome to the RemotePhoto Downloader Manager. This utility configures and
+manages the RemotePhoto Downloader service, which automatically downloads
+approved photos from your RemotePhoto organization to your downstream system.
 
 Follow the steps below to connect your integration and get the background
 service running.
 
-For the latest downloader documentation, see https://help.remotephoto.ai/downloader
+For the latest downloader documentation:
+https://help.remotephoto.ai/downloader
+
 
 1. CORE CONFIGURATION
 ----------------------------------------------------------------------
@@ -28,9 +30,10 @@ To establish a secure connection to the API, you must fill out the
 required credential fields at the top of the interface:
 
 * API URL:
-  The endpoint for the photo service database.
+  The RemotePhoto API endpoint to which the downloader will connect.
+
   Default:
-   -https://api.cloudcard.us/api/              [CloudCard US]
+   - https://api.cloudcard.us/api/                    [CloudCard US]
 
   Other options:
    - https://test-api.onlinephotosubmission.com/api/  [TEST]
@@ -40,14 +43,18 @@ required credential fields at the top of the interface:
    - https://api.itc.remotephoto.ca/api/              [ITC Systems]
 
 * INTEGRATION NAME:
-  The unique identifier assigned to your specific photo ingestion setup.
+  The integration identifier assigned to your organization’s downloader configuration.
   - This is required if fetching remote configurations from the RemotePhoto API.
 
 * PERSISTENT ACCESS TOKEN:
   The secure key authorizing the application to pull data from the RemotePhoto API.
-  - In RemotePhoto, create a service account with SERVICE & OFFICE roles and generate a
-    Persistent Access token.
+  - In RemotePhoto, create a service account with SERVICE & OFFICE roles and generate
+    a Persistent Access Token.
+  - For a full guide on how to generate a token, see:
+    https://sharptop.atlassian.net/wiki/spaces/CCD/pages/2494988307/Get+a+Persistent+Access+Token
 
+* After entering your credentials, click [ Test Connection ] to verify that the downloader
+  can successfully connect to the RemotePhoto API.
 
 2. ENVIRONMENT & SETTINGS
 ----------------------------------------------------------------------
@@ -58,8 +65,8 @@ required credential fields at the top of the interface:
 * CONFIGURATION MODE:
   - Remote [Recommended]: Pulls deployment settings dynamically from
     the cloud configuration panel.
-  - Local [Advanced]: Forces the service to rely strictly on localized
-    rules and property profiles.
+  - Local [Advanced]: Uses only local configuration values stored on this machine
+    and ignores remote configuration settings.
 
 
 3. ADVANCED SETTINGS OVERRIDES
@@ -67,41 +74,49 @@ required credential fields at the top of the interface:
 Expanding the "Advanced Settings" section reveals a text area for entering
 custom key-value environment overrides.
 
-* Note: Remote configurations will override these local declarations
-  unless explicitly configured otherwise.
+* Note: Remote configurations will override these local properties unless
+  explicitly configured otherwise.
+
 * Syntax Example: downloader.fetchStatuses=APPROVED,READY_FOR_DOWNLOAD
-* For more information, check out the Downloader README.md on GitHub: https://github.com/online-photo-submission/cloudcard-photo-downloader#configuration
+
+* For more information, check out the Downloader README.md on GitHub:
+  https://github.com/online-photo-submission/cloudcard-photo-downloader#configuration
 
 
 4. RUNNING THE DOWNLOADER SERVICE
 ----------------------------------------------------------------------
 Once your configuration fields are completely populated, navigate to the
-"Downloader Service" control block to launch the application engine:
+"Downloader Service" section:
 
 Step 1: Click [ Save Configuration ]
         This writes your active parameters out to the local configuration
         files and registers/updates the background service configuration.
 
 Step 2: Click [ Start ]
-        Launches the active background worker process. The status spinner
-        at the top of the application will shift to reflect the live state.
+        Launches the background process to start downloading photos.
 
 * Additional Controls:
-  - [ Stop ]: Halts the background worker process cleanly.
+  - [ Stop ]: Halts the background downloader process.
   - [ Refresh ]: Polls the operating system to query the active status
-    of the background service framework.
+    of the downloader service.
 
 
 5. DIAGNOSTICS & TROUBLESHOOTING
 ----------------------------------------------------------------------
-If the downloader stalls or throws a communication error:
+If the downloader is unable to retrieve photos or reports a communication error:
 
-1. Look down at the "Console Output" panel. It provides a real-time
-   stream of commands executing directly inside the manager application.
-2. Click the [ Open Logs Folder ] button located in the Console
-   header. This will instantly launch Windows File Explorer directly to
-   the output directory containing the deep-dive system log files.
+  1. Review the "Console Output" panel for error messages.
+  2. Verify that the API URL, Integration Name, and Persistent Access Token are correct.
+  3. Confirm the API connection status by clicking [ Test Connection ].
+  4. Click [ Open Logs Folder ] and review the application log files for additional details.
+  5. Contact support if the issue persists.
 
 ======================================================================
-Need Additional Help? Contact support@remotephoto.ai for assistance
+Need Additional Help?
+
+Support channels depend on how your organization purchased RemotePhoto:
+  - Direct customers: Contact RemotePhoto Support at support@remotephoto.ai.
+  - Customers of resellers or integration partners: Contact your reseller’s
+    or partner’s support team for assistance. If necessary, they will
+    escalate issues to RemotePhoto on your behalf.
 ======================================================================

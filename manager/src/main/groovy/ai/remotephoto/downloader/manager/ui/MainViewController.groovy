@@ -52,10 +52,7 @@ class MainViewController {
         bindFormFields()
         bindStatusIndicators()
 
-        // Link the ViewModel's logging pipeline straight to our FXML TextArea
-        viewModel.logConsumer = { String message ->
-            outputArea.appendText("${new Date()}  ${message}${System.lineSeparator()}")
-        }
+        outputArea.textProperty().bind(viewModel.logOutput)
 
         // Initialize App Home display
         appHomeLabel.text = APP_HOME.toString()

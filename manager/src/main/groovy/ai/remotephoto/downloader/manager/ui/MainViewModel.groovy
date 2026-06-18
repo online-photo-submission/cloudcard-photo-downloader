@@ -17,28 +17,27 @@ import java.nio.file.Path
 class MainViewModel {
     DownloaderConfigUtility configService = new DownloaderConfigUtility()
 
-    // 1. Form Data Fields
+    // Form data fields
     final StringProperty apiUrl = new SimpleStringProperty()
     final StringProperty integrationName = new SimpleStringProperty()
     final StringProperty accessToken = new SimpleStringProperty()
     final BooleanProperty useRemoteConfigs = new SimpleBooleanProperty(true)
     final StringProperty advancedProperties = new SimpleStringProperty()
 
-    // 2. Global Status UI States
+    // API connection states
     final StringProperty apiStatusText = new SimpleStringProperty('Unknown')
     final StringProperty apiStatusState = new SimpleStringProperty('UNKNOWN') // SUCCESS, ERROR, UNKNOWN
 
-    // 3. Busy Indicator States
+    // Busy Indicator States
     final BooleanProperty isProcessing = new SimpleBooleanProperty(false)
     final StringProperty processingMessage = new SimpleStringProperty('')
 
-    // 4. The Log Callback Pipeline
-    // This connects the model's text back to the View's TextArea without the model knowing the view exists.
-    Closure<Void> logConsumer = { String msg -> println "Fallback Log: ${msg}" }
+    final StringProperty logOutput = new SimpleStringProperty('')
 
-    // Helper method inside the model to easily push logs back to the view
     void log(String message) {
-        logConsumer.call(message)
+        runOnFxThread {
+            logOutput.value += formatLogLine(message)
+        }
     }
 
     void saveConfiguration(Path appHome) {
@@ -179,5 +178,9 @@ class MainViewModel {
                 action.call()
             }
         }
+    }
+
+    private static String formatLogLine(Object message) {
+        "${new Date()}  ${message ?: ''}${System.lineSeparator()}"
     }
 }

@@ -59,23 +59,23 @@ jobs:
           Expand-Archive -Path $ReleaseZip -DestinationPath $ReleaseExtractDir -Force
 
           $DownloaderJar = Get-ChildItem -Path $ReleaseExtractDir -Recurse -Filter "cloudcard-photo-downloader.jar" | Select-Object -First 1
-          $ServyDir = Get-ChildItem -Path $ReleaseExtractDir -Recurse -Directory -Filter "servy" | Select-Object -First 1
+          $ServyDir = "external/servy"
 
           if ($null -eq $DownloaderJar) {
             throw "cloudcard-photo-downloader.jar was not found inside $ReleaseZip."
           }
 
-          if ($null -eq $ServyDir) {
-            throw "servy directory was not found inside $ReleaseZip."
+          if (!(Test-Path $ServyDir)) {
+            throw "Servy directory missing from repository: $ServyDir."
           }
 
-          if (!(Test-Path "$($ServyDir.FullName)\servy-cli.exe")) {
-            throw "servy-cli.exe was not found inside $($ServyDir.FullName)."
+          if (!(Test-Path "$ServyDir/servy-cli.exe")) {
+            throw "servy-cli.exe was not found inside $ServyDir."
           }
 
-          # 4. Stage downloader jar at app root so it shares application.properties
+          # 4. Stage downloader jar and bundled Servy runtime at app root
           Copy-Item -Path $DownloaderJar.FullName -Destination "$StagingDir/cloudcard-photo-downloader.jar" -Force
-          Copy-Item -Path $ServyDir.FullName -Destination $StagingDir -Recurse -Force
+          Copy-Item -Path $ServyDir -Destination $StagingDir -Recurse -Force
 
           # 5. Stage branding icon inside input so jpackage can catch it
           if (Test-Path "rp.ico") {
@@ -126,3 +126,4 @@ jobs:
           name: RemotePhoto-Downloader-Windows-MSI-${{ env.APP_VERSION }}
           path: build/jpackage/*.msi
           retention-days: 7
+          
