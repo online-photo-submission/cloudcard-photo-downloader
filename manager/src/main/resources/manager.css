@@ -1,0 +1,258 @@
+.root-pane {
+    -fx-background-color: #07111f;
+    -fx-font-size: 15px;
+    -fx-font-family: "Inter", "SF Pro Text", "Segoe UI", "Arial";
+}
+
+.label,
+.radio-button {
+    -fx-text-fill: #dbe7f5;
+}
+
+.status-row {
+    -fx-padding: 2 0 0 0;
+}
+
+.status-label {
+    -fx-font-weight: 600;
+    -fx-text-fill: #f8fafc;
+}
+
+.card {
+    -fx-background-color: #0b1626;
+    -fx-border-color: #1f334d;
+    -fx-border-width: 1;
+    -fx-border-radius: 12;
+    -fx-background-radius: 12;
+    -fx-padding: 16;
+    -fx-effect: none;
+}
+
+.section-title {
+    -fx-font-size: 16px;
+    -fx-font-weight: 800;
+    -fx-text-fill: #f8fafc;
+}
+
+.muted {
+    -fx-font-size: 13px;
+    -fx-text-fill: #8fa3bd;
+}
+
+.monospace {
+    -fx-font-family: "Consolas", "Cascadia Mono", "Courier New", monospace;
+}
+
+.text-field,
+.password-field,
+.text-area {
+    -fx-background-color: #101d2f;
+    -fx-text-fill: #f8fafc;
+    -fx-prompt-text-fill: #64748b;
+    -fx-border-color: #2b405c;
+    -fx-border-width: 1;
+    -fx-border-radius: 8;
+    -fx-background-radius: 8;
+    -fx-padding: 8 10;
+}
+
+.text-field:focused,
+.password-field:focused,
+.text-area:focused {
+    -fx-border-color: #3b82f6;
+    -fx-effect: none;
+}
+
+.text-area .content {
+    -fx-background-color: #101d2f;
+    -fx-background-radius: 8;
+    -fx-padding: 0;
+    -fx-border-width: 0;
+}
+
+.text-area {
+    -fx-background-insets: 0;
+    -fx-padding: 0;
+}
+
+.text-area .scroll-pane {
+    -fx-background-color: transparent;
+    -fx-background-insets: 0;
+    -fx-padding: 0;
+    -fx-border-width: 0;
+}
+
+.text-area .scroll-pane .viewport {
+    -fx-background-color: transparent;
+}
+
+.text-area .scroll-pane .content {
+    -fx-background-color: #101d2f;
+    -fx-background-radius: 8;
+    -fx-border-radius: 8;
+}
+
+.text-area .corner {
+    -fx-background-color: #101d2f;
+}
+
+.button {
+    -fx-background-color: #17243a;
+    -fx-text-fill: #f8fafc;
+    -fx-border-color: #344a66;
+    -fx-border-width: 1;
+    -fx-border-radius: 8;
+    -fx-background-radius: 8;
+    -fx-padding: 8 14;
+    -fx-font-weight: 600;
+    -fx-cursor: hand;
+}
+
+.button:hover {
+    -fx-background-color: #223652;
+    -fx-border-color: #4b6687;
+}
+
+.button:pressed {
+    -fx-background-color: #0f1b2c;
+}
+
+.primary-button {
+    -fx-background-color: #2563eb;
+    -fx-border-color: #3b82f6;
+}
+
+.primary-button:hover {
+    -fx-background-color: #1d4ed8;
+    -fx-border-color: #60a5fa;
+}
+
+.success-button {
+    -fx-background-color: #15803d;
+    -fx-border-color: #22c55e;
+}
+
+.success-button:hover {
+    -fx-background-color: #166534;
+    -fx-border-color: #4ade80;
+}
+
+.danger-button {
+    -fx-background-color: #991b1b;
+    -fx-border-color: #ef4444;
+}
+
+.danger-button:hover {
+    -fx-background-color: #7f1d1d;
+    -fx-border-color: #f87171;
+}
+
+.secondary-button {
+    -fx-background-color: #1e293b;
+    -fx-border-color: #475569;
+}
+
+.icon-button {
+    -fx-min-width: 40;
+    -fx-pref-width: 40;
+    -fx-padding: 8 0;
+}
+
+.activity-log {
+    -fx-font-size: 12px;
+}
+
+.status-success {
+    -fx-fill: #22c55e;
+}
+
+.status-error {
+    -fx-fill: #ef4444;
+}
+
+.status-unknown {
+    -fx-fill: #94a3b8;
+}
+
+.scroll-bar:vertical,
+.scroll-bar:horizontal {
+    -fx-background-color: #0d1a2b;
+}
+
+.scroll-bar .thumb {
+    -fx-background-color: #334155;
+    -fx-background-radius: 8;
+}
+
+.scroll-bar .thumb:hover {
+    -fx-background-color: #475569;
+}
+
+/*TODO: The margin here is still too big if we care*/
+.advanced-pane {
+    -fx-background-color: transparent;
+    -fx-background-insets: 0;
+    -fx-border-color: #1f334d;
+    -fx-border-width: 1;
+    -fx-border-radius: 12;
+    -fx-background-radius: 12;
+    -fx-text-fill: #f8fafc;
+}
+
+.advanced-pane > .title {
+    -fx-background-color: #0b1626;
+    -fx-background-insets: 0;
+    -fx-background-radius: 12;
+    -fx-border-radius: 12;
+    -fx-padding: 6 6;
+}
+
+.advanced-pane:expanded > .title {
+    -fx-background-radius: 12 12 0 0;
+    -fx-border-radius: 12 12 0 0;
+}
+
+.advanced-pane > .title > .text {
+    -fx-fill: #f8fafc;
+    -fx-font-size: 16px;
+    -fx-font-weight: 800;
+}
+
+.advanced-pane > .content {
+    -fx-background-color: #0b1626;
+    -fx-background-insets: 0;
+    -fx-border-color: #1f334d;
+    -fx-padding: 4 16 14 16;
+}
+
+.advanced-pane .content VBox {
+    -fx-spacing: 4;
+}
+
+.advanced-pane > .title > .arrow-button .arrow {
+    -fx-background-color: #f8fafc;
+}
+
+.advanced-pane:focused > .title {
+    -fx-color: transparent;
+}
+
+.outline-button {
+    -fx-background-color: transparent;
+    -fx-text-fill: #cbd5e1;
+    -fx-border-color: #475569;
+    -fx-border-width: 1;
+    -fx-border-radius: 8;
+    -fx-background-radius: 8;
+}
+
+.outline-button:hover {
+    -fx-background-color: rgba(148, 163, 184, 0.12);
+    -fx-border-color: #64748b;
+    -fx-text-fill: #f8fafc;
+}
+
+.main-scroll-pane,
+.main-scroll-pane > .viewport {
+    -fx-background-color: transparent;
+}

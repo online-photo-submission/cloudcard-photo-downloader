@@ -1,14 +1,9 @@
 name: Build Windows Downloader Installer
 on:
   workflow_dispatch:
-    inputs:
-      version:
-        description: 'Release/version label for this Windows app image'
-        required: false
-        type: string
 
 jobs:
-  build-windows-app-image:
+  build-windows-msi:
     runs-on: windows-latest
 
     steps:
@@ -20,38 +15,37 @@ jobs:
         with:
           java-version: '17'
           distribution: 'corretto'
-          cache: 'gradle'
 
       - name: Make Gradle wrapper executable
         shell: bash
         run: chmod +x ./gradlew
 
-      - name: Build setup UI distribution
+      - name: Build manager UI distribution
         shell: powershell
-        run: .\gradlew.bat :setup-ui:clean :setup-ui:jar :setup-ui:installDist -PjavafxPlatform=win
+        run: .\gradlew.bat :manager:clean :manager:jar :manager:installDist -PjavafxPlatform=win
 
       - name: Stage jpackage input
         shell: powershell
         run: |
           $StagingDir = "build/package-input"
           $OutputDir = "build/jpackage"
-          $DownloaderDir = "$StagingDir/downloader"
 
           if (Test-Path $StagingDir) { Remove-Item -Recurse -Force $StagingDir }
           if (Test-Path $OutputDir) { Remove-Item -Recurse -Force $OutputDir }
 
           New-Item -ItemType Directory -Force -Path $StagingDir | Out-Null
           New-Item -ItemType Directory -Force -Path $OutputDir | Out-Null
-          New-Item -ItemType Directory -Force -Path $DownloaderDir | Out-Null
 
-          Copy-Item -Path "setup-ui/build/install/setup-ui/lib/*" -Destination $StagingDir -Recurse -Force
+          # 1. Copy over manager wizard dependencies
+          Copy-Item -Path "manager/build/install/manager/lib/*" -Destination $StagingDir -Recurse -Force
           
-          # Fix 2: Handles cases where Gradle appends a version tag to the subproject JAR
-          Copy-Item -Path "setup-ui/build/libs/setup-ui-*.jar" -Destination "$StagingDir/setup-ui.jar" -Force -ErrorAction SilentlyContinue
-          if (!(Test-Path "$StagingDir/setup-ui.jar")) {
-              Copy-Item -Path "setup-ui/build/libs/setup-ui.jar" -Destination "$StagingDir/setup-ui.jar" -Force
+          # 2. Stage the main manager UI jar cleanly into root
+          Copy-Item -Path "manager/build/libs/manager-*.jar" -Destination "$StagingDir/manager.jar" -Force -ErrorAction SilentlyContinue
+          if (!(Test-Path "$StagingDir/manager.jar")) {
+              Copy-Item -Path "manager/build/libs/manager.jar" -Destination "$StagingDir/manager.jar" -Force
           }
 
+          # 3. Handle payloads from the release zip
           $ReleaseZip = "cloudcard-photo-downloader.zip"
           $ReleaseExtractDir = "build/release-payload"
 
@@ -65,35 +59,71 @@ jobs:
           Expand-Archive -Path $ReleaseZip -DestinationPath $ReleaseExtractDir -Force
 
           $DownloaderJar = Get-ChildItem -Path $ReleaseExtractDir -Recurse -Filter "cloudcard-photo-downloader.jar" | Select-Object -First 1
-          $ServyCli = Get-ChildItem -Path $ReleaseExtractDir -Recurse -Filter "servy-cli.exe" | Select-Object -First 1
+          $ServyDir = "external/servy"
 
           if ($null -eq $DownloaderJar) {
             throw "cloudcard-photo-downloader.jar was not found inside $ReleaseZip."
           }
 
-          if ($null -eq $ServyCli) {
-            throw "servy-cli.exe was not found inside $ReleaseZip."
+          if (!(Test-Path $ServyDir)) {
+            throw "Servy directory missing from repository: $ServyDir."
           }
 
-          Copy-Item -Path $DownloaderJar.FullName -Destination "$DownloaderDir/cloudcard-photo-downloader.jar" -Force
-          Copy-Item -Path $ServyCli.FullName -Destination "$StagingDir/servy-cli.exe" -Force
+          if (!(Test-Path "$ServyDir/servy-cli.exe")) {
+            throw "servy-cli.exe was not found inside $ServyDir."
+          }
 
-      - name: Build Windows app image
+          # 4. Stage downloader jar and bundled Servy runtime at app root
+          Copy-Item -Path $DownloaderJar.FullName -Destination "$StagingDir/cloudcard-photo-downloader.jar" -Force
+          Copy-Item -Path $ServyDir -Destination $StagingDir -Recurse -Force
+
+          # 5. Stage branding icon inside input so jpackage can catch it
+          if (Test-Path "rp.ico") {
+              Copy-Item -Path "rp.ico" -Destination $StagingDir -Force
+          }
+
+          # 6. Stage user-facing help README at app root
+          if (!(Test-Path "MANAGER.README.txt")) {
+            throw "MANAGER.README.txt missing from repository root. The manager Help button expects this file at app/MANAGER.README.txt."
+          }
+
+          Copy-Item -Path "MANAGER.README.txt" -Destination "$StagingDir/MANAGER.README.txt" -Force
+
+      - name: Build Windows MSI
         shell: powershell
         run: |
+          # Use the Gradle project version for the MSI version.
+          $AppVersion = ./gradlew properties -q | Select-String "^version:" | ForEach-Object {
+            $_.ToString().Split(":")[1].Trim()
+          }
+
+          # jpackage/MSI expects a numeric app version, so remove suffixes such as -SNAPSHOT.
+          $AppVersion = $AppVersion -replace '-.*$', ''
+
+          if ($AppVersion -notmatch '^\d+\.\d+\.\d+(\.\d+)?$') {
+            throw "Gradle version '$AppVersion' is invalid for Windows MSI format. Use 3 or 4 numeric parts, for example 1.0.123 or 1.0.123.4."
+          }
+
+          "APP_VERSION=$AppVersion" >> $env:GITHUB_ENV
           jpackage `
-            --type app-image `
-            --name "CloudCard Setup" `
+            --type msi `
+            --name "RemotePhoto Downloader" `
+            --app-version "$AppVersion" `
             --input "build/package-input" `
-            --main-jar "setup-ui.jar" `
-            --main-class "ai.remotephoto.setup.Launcher" `
+            --main-jar "manager.jar" `
+            --main-class "ai.remotephoto.downloader.manager.Launcher" `
             --dest "build/jpackage" `
-            --java-options '-Dapp.home=$APPDIR' `
+            --runtime-image "$env:JAVA_HOME" `
+            --java-options "-Dapp.home=`$APPDIR" `
+            --icon "build/package-input/rp.ico" `
+            --win-shortcut `
+            --win-menu `
             --verbose
 
-      - name: Upload app image artifact
+      - name: Upload MSI artifact
         uses: actions/upload-artifact@v4
         with:
-          name: CloudCard-Setup-Windows-App-Image-${{ github.event.inputs.version || github.run_number }}
-          path: build/jpackage/CloudCard Setup/
+          name: RemotePhoto-Downloader-Windows-MSI-${{ env.APP_VERSION }}
+          path: build/jpackage/*.msi
           retention-days: 7
+          
