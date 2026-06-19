@@ -304,6 +304,11 @@ Note you will need to create an API integration in the Administration section of
 
 *Note: `downloader.storageService` must be set to `WorkdayStorageService` for these to have any effect.*
 
+Prerequisites:
+- Integration System User. Add the following permissions to an Integration System Security Group assigned to the user:
+    -  `Get and Put`: `Personal Data: Personal Photo`
+    -  `Get only`: `Worker Data: Current Staffing Information` - without this, photos cannot be saved until after the Employee's Hire date.
+
 - `WorkdayClient.apiUrl`
     - URL, including TLD, but no other path, where the Workday API is located.
     - Obtain by running the Public Web Services report. From related actions of Human Resources (public), select Web Service -> View WSDL.
@@ -315,7 +320,7 @@ Note you will need to create an API integration in the Administration section of
 - `WorkdayClient.tenantName`
     - tenant name, which is the value after `service/` in the WSDL URL.
 - `WorkdayClient.isu.username`
-    - username of an Integration System User account that has, at minimum, `Put` permissions on the `Personal Data: Personal Photo` domain.
+    - username of an Integration System User account.
 - `WorkdayClient.isu.password`
     - password of the account identified by `WorkdayClient.isu.username`
 
