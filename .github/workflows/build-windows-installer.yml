@@ -2,6 +2,10 @@ name: Build Windows Downloader Installer
 on:
   workflow_dispatch:
 
+permissions:
+  id-token: write
+  contents: read
+
 jobs:
   build-windows-msi:
     runs-on: windows-latest
@@ -119,6 +123,25 @@ jobs:
             --win-shortcut `
             --win-menu `
             --verbose
+
+      - name: Azure OIDC login
+        uses: azure/login@v3
+        with:
+          client-id: ${{ vars.AZURE_CLIENT_ID }}
+          tenant-id: ${{ vars.AZURE_TENANT_ID }}
+          subscription-id: ${{ vars.AZURE_SUBSCRIPTION_ID }}
+
+      - name: Sign MSI
+        uses: azure/artifact-signing-action@v2
+        with:
+          endpoint: https://eus.codesigning.azure.net
+          signing-account-name: cloudcard-signing
+          certificate-profile-name: cloudcard
+          files-folder: build/jpackage
+          files-folder-filter: msi
+          file-digest: SHA256
+          timestamp-rfc3161: http://timestamp.acs.microsoft.com
+          timestamp-digest: SHA256
 
       - name: Upload MSI artifact
         uses: actions/upload-artifact@v4
