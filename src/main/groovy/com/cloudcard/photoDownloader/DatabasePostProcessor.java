@@ -58,8 +58,7 @@ public class DatabasePostProcessor implements PostProcessor {
             updateDatabase(photo, photoFile);
             return photoFile;
         } catch (Exception e) {
-            log.error("Post processing failed: " + e.getMessage() + "\nPrint stacktrace follows...");
-            e.printStackTrace();
+            log.error("Post processing failed: " + e.getMessage() + "\nPrint stacktrace follows...", e);
             return null;
         }
     }

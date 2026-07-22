@@ -37,9 +37,21 @@
         </then>
 
         <else>
+            <!-- Only activate the remote logging when we aren't already logging directly to Papertrail -->
+            <appender name="REMOTE" class="com.cloudcard.photoDownloader.RemoteLoggingAppender" />
+
+            <appender name="ASYNC_REMOTE" class="ch.qos.logback.classic.AsyncAppender">
+                <appender-ref ref="REMOTE" />
+                <queueSize>100</queueSize>
+                <discardingThreshold>0</discardingThreshold>
+                <neverBlock>true</neverBlock>
+            </appender>
+
             <root level="INFO">
                 <appender-ref ref="STDOUT"/>
+                <appender-ref ref="ASYNC_REMOTE" />
             </root>
+
         </else>
     </if>
 </configuration>

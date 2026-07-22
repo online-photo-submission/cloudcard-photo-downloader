@@ -35,10 +35,8 @@ public class ShellCommandRunner {
                 log.error(command + " exited with error code: " + exitCode);
             return exitCode == 0;
 
-        } catch (IOException e) {
-            e.printStackTrace();
-        } catch (InterruptedException e) {
-            e.printStackTrace();
+        } catch (IOException | InterruptedException e) {
+            log.error("Exception occurred during run:", e);
         }
 
         return false;
