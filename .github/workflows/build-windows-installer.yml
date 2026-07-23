@@ -136,7 +136,7 @@ jobs:
         with:
           endpoint: https://eus.codesigning.azure.net
           signing-account-name: cloudcard-signing
-          certificate-profile-name: cloudcard
+          certificate-profile-name: cloudcard-downloader
           files-folder: build/jpackage
           files-folder-filter: msi
           file-digest: SHA256
