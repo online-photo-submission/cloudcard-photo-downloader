@@ -62,11 +62,14 @@ class SqsPhotoService implements PhotoService {
         log.info("        Pre-Processor : " + preProcessor.getClass().getSimpleName())
         log.info("           Put Status : " + putStatus)
 
-        throwIfTrue(putStatus && !cloudCardClient.isConfigured(), "The CloudCardClient must be configured when putStatus is set.")
+        throwIfTrue(!cloudCardClient.isConfigured(), "Persistent Access Token for the CloudCard API is required to retrieve brokered credentials for SQS.")
+
+        def dynamicCredentialsProvider = new StsTokenRefreshingProvider(cloudCardClient, queueUrl)
 
         try {
             sqsClient = SqsClient.builder()
                 .region(Region.of(region))
+                .credentialsProvider(dynamicCredentialsProvider)
                 .build()
         } catch(IllegalArgumentException e) {
             throw new IllegalArgumentException("Invalid AWS region specified: " + region, e)

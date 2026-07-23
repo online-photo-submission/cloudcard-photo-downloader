@@ -2,6 +2,7 @@ package com.cloudcard.photoDownloader
 
 import com.fasterxml.jackson.core.type.TypeReference
 import com.fasterxml.jackson.databind.ObjectMapper
+import jakarta.annotation.PostConstruct
 import kong.unirest.core.HttpResponse
 import kong.unirest.core.Unirest
 import org.slf4j.Logger
@@ -9,12 +10,10 @@ import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Component
+import software.amazon.awssdk.services.sts.model.Credentials
+
 import java.nio.charset.StandardCharsets
-
-import jakarta.annotation.PostConstruct
-
-import static com.cloudcard.photoDownloader.ApplicationPropertiesValidator.throwIfBlank
-
+import java.time.Instant
 
 @Component
 class CloudCardClient {
@@ -110,6 +109,35 @@ class CloudCardClient {
 
         return new ObjectMapper().readValue(response.getBody(), new TypeReference<List<Photo>>() {
         })
+    }
+
+    Credentials fetchStsCredentials(String queueUrl) throws Exception {
+        String url = "$apiUrl/status-queues/credentials"
+        ObjectMapper objectMapper = new ObjectMapper()
+
+        String payload = objectMapper.writeValueAsString([queueUrl: queueUrl])
+
+        HttpResponse<String> response = Unirest.post(url)
+                .headers(standardHeaders())
+                .body(payload)
+                .asString()
+
+        if (response.getStatus() != 200) {
+            log.error("Status $response.status returned from CloudCard API.")
+            return null
+        }
+
+        Map<String, Object> map = objectMapper.readValue(
+                response.getBody(),
+                new TypeReference<Map<String, Object>>() {}
+        )
+
+        return Credentials.builder()
+                .accessKeyId(map.accessKeyId as String)
+                .secretAccessKey(map.secretAccessKey as String)
+                .sessionToken(map.sessionToken as String)
+                .expiration(Instant.parse(map.expiration as String))
+                .build()
     }
 
     void close() {
