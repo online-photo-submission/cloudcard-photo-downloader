@@ -31,13 +31,17 @@ This project automatically downloads photos from [CloudCard Online Photo Submiss
 - Outbound network access to the following domains/ports if your organization requires all outbound traffic to be
   whitelisted
     - api.onlinephotosubmission.com:443
-    - s3-us-east-2.amazonaws.com:443
+    - s3.us-east-2.amazonaws.com:443
          #### Alternate Domains
         
         - api.cloudcard.ca:443 (CloudCard's Canada instance)
-        - s3-ca-central-1.amazonaws.com:443 (CloudCard's Canada instance)
+        - s3.ca-central-1.amazonaws.com:443 (CloudCard's Canada instance)
+        - s3-ca-central-1.amazonaws.com:443 (CloudCard's Canada instance legacy)
+        - api.remotephoto.ai:443 (US PROD alternative)
+        - api.cloudcard.us:443 (US PROD alternative)
         - test-api.onlinephotosubmission.com:443 (CloudCard's test instance)
         - onlinephoto-api.transactcampus.net:443 (Online Photo Submission through Transact)
+        - s3-us-east-2.amazonaws.com:443 (Legacy s3 instance)
     
 To test your system, run `java -version`. The output should look like the following. The exact version isn't important
 as long as it starts with `17`.
