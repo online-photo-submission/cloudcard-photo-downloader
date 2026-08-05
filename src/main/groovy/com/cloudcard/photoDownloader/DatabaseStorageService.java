@@ -93,8 +93,7 @@ public class DatabaseStorageService implements StorageService {
 
             return new PhotoFile(photo.getPerson().getIdentifier(), null, photo.getId());
         } catch (Exception e) {
-            log.error("Failed to push photo" + photo.getId() + " to DB.");
-            e.printStackTrace();
+            log.error("Failed to push photo" + photo.getId() + " to DB.", e);
             return null;
         }
     }
