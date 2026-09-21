@@ -1,5 +1,7 @@
 package com.cloudcard.photoDownloader
 
+
+import com.cloudcard.photoDownloader.exception.CredentialsBrokerException
 import com.fasterxml.jackson.core.type.TypeReference
 import com.fasterxml.jackson.databind.ObjectMapper
 import jakarta.annotation.PostConstruct
@@ -99,7 +101,7 @@ class CloudCardClient {
     }
 
     List<Photo> fetch(String status) throws Exception {
-        String url = "$apiUrl/trucredential/${tokenService.getAuthToken()}/photos?status=$status&base64EncodedImage=false&max=1000&additionalPhotos=true"
+        String url = "$apiUrl/trucredential/${tokenService.authTokenValue}/photos?status=$status&base64EncodedImage=false&max=1000&additionalPhotos=true"
         HttpResponse<String> response = Unirest.get(url).headers(standardHeaders()).asString()
 
         if (response.getStatus() != 200) {
@@ -123,15 +125,17 @@ class CloudCardClient {
                 .asString()
 
         if (response.getStatus() != 200) {
-            log.error("Status $response.status returned from CloudCard API.")
-            return null
+            boolean permanent = response.status in [401, 403, 404]
+            throw new CredentialsBrokerException("CloudCard API returned ${response.status} for ${queueUrl}.", response.status, permanent)
         }
 
+        // 1. Parse into a temporary map
         Map<String, Object> map = objectMapper.readValue(
                 response.getBody(),
                 new TypeReference<Map<String, Object>>() {}
         )
 
+        // 2. Map the keys directly to the official AWS SDK object builder
         return Credentials.builder()
                 .accessKeyId(map.accessKeyId as String)
                 .secretAccessKey(map.secretAccessKey as String)
@@ -148,7 +152,7 @@ class CloudCardClient {
         [
             accept: "application/json",
             "Content-Type": "application/json",
-            "X-Auth-Token": tokenService.getAuthToken()
+            "X-Auth-Token": tokenService.authTokenValue
         ]
     }
 

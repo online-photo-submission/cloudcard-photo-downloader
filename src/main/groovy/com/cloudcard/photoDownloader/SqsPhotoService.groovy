@@ -122,9 +122,10 @@ class SqsPhotoService implements PhotoService {
         return photo
     }
 
+//    TODO: Confirm that this continues to work after a token expires (can set expiry manually in the database), but I don't think we should close this with SQS.
     @Override
     void close() {
-        cloudCardClient.close()
+//        cloudCardClient.close()
     }
 
     /* *** PRIVATE HELPERS *** */

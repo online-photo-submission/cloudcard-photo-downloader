@@ -7,68 +7,88 @@ import software.amazon.awssdk.auth.credentials.AwsCredentialsProvider
 import software.amazon.awssdk.auth.credentials.AwsSessionCredentials
 import software.amazon.awssdk.services.sts.model.Credentials
 
+import java.time.Clock
 import java.time.Instant
 
 //TODO: Test this
 class StsTokenRefreshingProvider implements AwsCredentialsProvider {
+
     private static final Logger log = LoggerFactory.getLogger(StsTokenRefreshingProvider)
-    private static final int REFRESH_BUFFER_SECONDS = 300 // 5 minutes before expiration
+
+    private static final int REFRESH_BUFFER_SECONDS = 300
 
     private final CloudCardClient cloudCardClient
     private final String queueUrl
+    private final Clock clock
 
-    // Thread-safe caching state
-    private volatile AwsSessionCredentials cachedCredentials
-    private volatile Instant expirationTime
+    private volatile StsSession currentSession
 
-    StsTokenRefreshingProvider(CloudCardClient cloudCardClient, String queueUrl) {
+    StsTokenRefreshingProvider(CloudCardClient cloudCardClient, String queueUrl, Clock clock = Clock.systemUTC()) {
         this.cloudCardClient = cloudCardClient
         this.queueUrl = queueUrl
+        this.clock = clock
     }
 
     @Override
-    AwsCredentials resolveCredentials() {
-        if (shouldRefresh()) {
-            synchronized (this) {
-                if (shouldRefresh()) {
-                    refreshCredentials()
-                }
-            }
-        }
-        return cachedCredentials
-    }
+    synchronized AwsCredentials resolveCredentials() {
+        StsSession session = currentSession
 
-    private boolean shouldRefresh() {
-        if (!cachedCredentials || !expirationTime) return true
-        // Refresh proactively if we are within the 5-minute safety buffer window
-        return Instant.now().plusSeconds(REFRESH_BUFFER_SECONDS).isAfter(expirationTime)
-    }
+        if (session && clock.instant().isBefore(session.refreshAt)) return session.credentials
 
-    private void refreshCredentials() {
-        log.info("Requesting fresh short-lived STS tokens from CloudCard API...")
         try {
-            // 1. Explicitly type it to the AWS SDK Credentials object returned by Option 2
-            Credentials credentials = cloudCardClient.fetchStsCredentials(queueUrl)
-
-            // 2. Use the AWS SDK native method getters instead of string map keys
-            this.cachedCredentials = AwsSessionCredentials.builder()
-                .accessKeyId(credentials.accessKeyId())
-                .secretAccessKey(credentials.secretAccessKey())
-                .sessionToken(credentials.sessionToken())
-                .build()
-
-            // 3. The AWS Credentials object natively holds the expiration as an Instant object!
-            // No more manual string parsing or string matching required.
-            this.expirationTime = credentials.expiration()
-
-            log.info("STS credentials refreshed successfully. Next expiry: ${expirationTime}")
+            currentSession = fetchCredentials()
+            return currentSession.credentials
         } catch (Exception e) {
-            log.error("Failed to refresh temporary AWS credentials!", e)
-            if (cachedCredentials) {
-                log.warn("Attempting to fall back to expired in-memory cache to maintain continuity.")
-                return
+            session = currentSession
+
+            if (session && clock.instant().isBefore(session.expiresAt)) {
+                log.warn("Unable to refresh SQS credentials; using the current session until {}.", session.expiresAt)
+                return session.credentials
             }
-            throw new IllegalStateException("Initial downloader authentication failed; no credentials available.", e)
+            throw e
+        }
+    }
+
+    private StsSession fetchCredentials() {
+        log.info("Requesting SQS credentials from the CloudCard API.")
+
+        Credentials response = cloudCardClient.fetchStsCredentials(queueUrl)
+
+        if (!isValid(response)) throw new IllegalStateException("CloudCard API returned incomplete SQS credentials.")
+
+//        TODO: Determine if this is unnecessary. It gives a clearer error in the unlikely event that AWS issues already-expired credentials, but it's VERY unlikely.
+        if (!response.expiration().isAfter(clock.instant())) throw new IllegalStateException("Received SQS credentials that are already expired; check the downloader system clock and broker response.")
+
+        AwsSessionCredentials credentials = AwsSessionCredentials.create(response.accessKeyId(), response.secretAccessKey(), response.sessionToken())
+
+        Instant expiresAt = response.expiration()
+
+        log.info("SQS credentials obtained. Expire at {}.", response.expiration())
+
+        return new StsSession(credentials, expiresAt.minusSeconds(REFRESH_BUFFER_SECONDS), expiresAt)
+    }
+
+    private static boolean isValid(Credentials credentials) {
+        if (credentials &&
+            credentials.accessKeyId() &&
+            credentials.secretAccessKey() &&
+            credentials.sessionToken() &&
+            credentials.expiration()) {
+            return true
+        }
+
+        return false
+    }
+
+    private static final class StsSession {
+        final AwsSessionCredentials credentials
+        final Instant refreshAt
+        final Instant expiresAt
+
+        StsSession(AwsSessionCredentials credentials, Instant refreshAt, Instant expiresAt) {
+            this.credentials = credentials
+            this.refreshAt = refreshAt
+            this.expiresAt = expiresAt
         }
     }
 }
