@@ -42,7 +42,7 @@ class RemoteConfigInitializer implements ApplicationContextInitializer<Configura
 
         env.getPropertySources().addFirst(new MapPropertySource("remoteApiConfig", remoteProperties))
 
-        // Register the RemoteConfigService instance as a bean, so the DownloaderService (which @Autowires RemoteConfigService) gets this specific instance.
+        // Register the RemoteConfigService instance as a bean, so the DownloadRunnerService (which @Autowires RemoteConfigService) gets this specific instance.
         GenericBeanDefinition beanDefinition = new GenericBeanDefinition()
         beanDefinition.setBeanClass(RemoteConfigService)
         beanDefinition.setInstanceSupplier { remoteConfigService }
