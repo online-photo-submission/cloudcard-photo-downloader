@@ -1,11 +1,14 @@
 package com.cloudcard.photoDownloader
 
+import jakarta.annotation.PostConstruct
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty
 import org.springframework.stereotype.Service
+import software.amazon.awssdk.auth.credentials.AwsCredentialsProvider
+import software.amazon.awssdk.auth.credentials.DefaultCredentialsProvider
 import software.amazon.awssdk.regions.Region
 import software.amazon.awssdk.services.sqs.SqsClient
 import software.amazon.awssdk.services.sqs.model.DeleteMessageRequest
@@ -13,10 +16,7 @@ import software.amazon.awssdk.services.sqs.model.Message
 import software.amazon.awssdk.services.sqs.model.ReceiveMessageRequest
 import software.amazon.awssdk.services.sqs.model.SqsException
 
-import jakarta.annotation.PostConstruct
-
 import static com.cloudcard.photoDownloader.ApplicationPropertiesValidator.throwIfBlank
-import static com.cloudcard.photoDownloader.ApplicationPropertiesValidator.throwIfTrue
 
 @Service
 @ConditionalOnProperty(value = "downloader.photoService", havingValue = "SqsPhotoService", matchIfMissing = true)
@@ -39,10 +39,11 @@ class SqsPhotoService implements PhotoService {
     @Value('${sqsPhotoService.putStatus}')
     String putStatus
 
-    SqsClient sqsClient
+//  Fallback option so customers on API versions prior to STS can still use SQS if desired.
+    @Value('${sqsPhotoService.authType:sts}')
+    String authType
 
-    @Autowired
-    RestService restService
+    SqsClient sqsClient
 
     @Autowired
     PreProcessor preProcessor
@@ -50,6 +51,7 @@ class SqsPhotoService implements PhotoService {
     @Autowired
     CloudCardClient cloudCardClient
 
+    AwsCredentialsProvider credentialsProvider
     Map<Integer, Message> messageHistory = [:]
 
     @PostConstruct
@@ -57,19 +59,24 @@ class SqsPhotoService implements PhotoService {
 
         throwIfBlank(queueUrl, "The SQS Queue URL must be specified.")
 
-        log.info("              SQS URL : " + queueUrl)
-        log.info("           AWS Region : " + region)
-        log.info("        Pre-Processor : " + preProcessor.getClass().getSimpleName())
-        log.info("           Put Status : " + putStatus)
+        log.info("                    SQS URL : " + queueUrl)
+        log.info("                 AWS Region : " + region)
+        log.info("              Pre-Processor : " + preProcessor.getClass().getSimpleName())
+        log.info("                 Put Status : " + putStatus)
 
-        throwIfTrue(!cloudCardClient.isConfigured(), "Persistent Access Token for the CloudCard API is required to retrieve brokered credentials for SQS.")
-
-        def dynamicCredentialsProvider = new StsTokenRefreshingProvider(cloudCardClient, queueUrl)
+        if (cloudCardClient.isConfigured() && authType == "sts") {
+            credentialsProvider = new StsTokenRefreshingProvider(cloudCardClient, queueUrl)
+            log.info("            SQS Credentials : brokered by the CloudCard API")
+        } else {
+            credentialsProvider = DefaultCredentialsProvider.create()
+            log.warn("            SQS Credentials : using the AWS default credentials chain. Brokered credentials " +
+                     "are strongly preferred. Set cloudcard.api.accessToken and set sqsPhotoService.authType=sts to migrate.")
+        }
 
         try {
             sqsClient = SqsClient.builder()
                 .region(Region.of(region))
-                .credentialsProvider(dynamicCredentialsProvider)
+                .credentialsProvider(credentialsProvider)
                 .build()
         } catch(IllegalArgumentException e) {
             throw new IllegalArgumentException("Invalid AWS region specified: " + region, e)
@@ -90,7 +97,7 @@ class SqsPhotoService implements PhotoService {
             Photo photo = Photo.fromSqsMessage(it)
             if (photo) {
                 Photo processedPhoto = preProcessor.process(photo)
-                restService.fetchBytes(processedPhoto)
+                cloudCardClient.fetchBytes(processedPhoto)
                 messageHistory[photo.id] = it
                 photos += processedPhoto
             }

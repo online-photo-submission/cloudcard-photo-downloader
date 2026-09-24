@@ -11,16 +11,16 @@ public class ApplicationPropertiesValidator {
 
     public static void logVersion() {
 
-        log.info("  Application Version : " + version);
+        log.info("       Application Version : " + version);
     }
 
     public static void logScheduleSettings(String scheduleType, boolean repeat, int downloaderDelay, String cronSchedule) {
         if (scheduleType.equals("fixedDelay")) {
-            log.info("          Repeat Mode : " + (repeat ? "Repeat on Fixed Delay" : "Run Once & Stop"));
-            log.info("     Downloader Delay : " + downloaderDelay / 60000 + " min(s)");
+            log.info("               Repeat Mode : " + (repeat ? "Repeat on Fixed Delay" : "Run Once & Stop"));
+            log.info("          Downloader Delay : " + downloaderDelay / 60000 + " min(s)");
         } else if (scheduleType.equals("cron")){
-            log.info("  Repeat Mode : " + (repeat ? "Cron Schedule" : "Run Once & Stop"));
-            log.info("Cron Schedule : " + cronSchedule);
+            log.info("               Repeat Mode : " + (repeat ? "Cron Schedule" : "Run Once & Stop"));
+            log.info(".            Cron Schedule : " + cronSchedule);
         }
     }
 

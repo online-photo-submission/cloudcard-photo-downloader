@@ -1,6 +1,8 @@
 package com.cloudcard.photoDownloader;
 
+import io.github.resilience4j.core.IntervalFunction;
 import jakarta.annotation.PostConstruct;
+import kong.unirest.core.Config;
 import kong.unirest.core.Unirest;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -10,8 +12,6 @@ import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 
 import java.time.Duration;
-import java.time.Instant;
-import java.util.concurrent.ThreadLocalRandom;
 
 import static com.cloudcard.photoDownloader.ApplicationPropertiesValidator.*;
 
@@ -20,12 +20,15 @@ public class DownloadRunnerService {
 
     private static final Logger log = LoggerFactory.getLogger(DownloadRunnerService.class);
 
-    private static final long BASE_BACKOFF_SECONDS = 2;
-    private static final long MAX_BACKOFF_SECONDS = 600;
-    private int consecutiveFailures = 0;
+    private static final IntervalFunction BACKOFF =
+            IntervalFunction.ofExponentialRandomBackoff(
+                    Duration.ofSeconds(2),   // initial
+                    2.0d,                    // multiplier
+                    0.25d,                   // randomization factor
+                    Duration.ofSeconds(600)  // max
+            );
 
-    private static final Duration REMOTE_CONFIG_CHECK_INTERVAL = Duration.ofMinutes(5);
-    private Instant nextRemoteConfigCheckAt = Instant.MIN;
+    private int consecutiveFailures = 0;
 
     @Autowired
     PhotoService photoService;
@@ -64,10 +67,7 @@ public class DownloadRunnerService {
         logVersion();
         logScheduleSettings(schedulingType, repeat, downloaderDelay, cronSchedule);
 
-        if (proxyHost != null && proxyPort > 0) {
-            log.info("          Using Proxy : " + proxyHost + ":" + proxyPort);
-            Unirest.config().proxy(proxyHost, proxyPort);
-        }
+        configureUnirest();
     }
 
     @Scheduled(fixedDelayString = "${downloader.delay.milliseconds}", initialDelayString = "5000")
@@ -86,9 +86,8 @@ public class DownloadRunnerService {
 
     public void downloadPhotos() throws Exception {
         int exitStatus = 0;
-        long backoffSeconds = 0;
 
-        if (remoteConfigUpdateAvailable()) {
+        if (useRemoteConfigs && remoteConfigService.shouldRefresh()) {
             log.info("New configuration version detected. Restarting application to apply new settings.");
             Application.restart();
 
@@ -100,54 +99,41 @@ public class DownloadRunnerService {
             consecutiveFailures = 0;
 
         } catch (Exception e) {
-
             log.error(e.getMessage());
             e.printStackTrace();
             exitStatus = 1;
 
             consecutiveFailures++;
-            backoffSeconds = backoffSecondsFor(consecutiveFailures);
 
         } finally {
-            if (!repeat) {
-                log.info("downloader.repeat is set to false. Exiting application now.");
-                System.exit(exitStatus);
-            }
+            if (!repeat) exit(exitStatus);
 
-//            Only implement backoff if delay is set for less than 10 minutes.
-            if (backoffSeconds > 0 && (downloaderDelay < 600000 || schedulingType.equals("cron"))) {
-                log.warn("Backing off " + backoffSeconds + "s after " + consecutiveFailures + " consecutive failures.");
-                Thread.sleep(backoffSeconds * 1000L);
-            }
+            if (consecutiveFailures > 0) backoff(consecutiveFailures);
         }
     }
 
-//    TODO: Try resilience4J instead of this.
-    /** 2s, 4s, 8s ... capped at 600s, with +/-25% jitter so a fleet-wide failure doesn't retry in lockstep. */
-    private long backoffSecondsFor(int failures) {
-        int exponent = Math.min(failures, 10);
-        long seconds = Math.min(BASE_BACKOFF_SECONDS << (exponent - 1), MAX_BACKOFF_SECONDS);
-        double jitter = 0.75 + (ThreadLocalRandom.current().nextDouble() * 0.5);
-        return Math.max(1L, (long) (seconds * jitter));
+    private void configureUnirest() {
+        Config config = Unirest.config()
+                .reset()
+                .connectTimeout(10_000)
+                .requestTimeout(120_000);
+
+        if (proxyHost != null && proxyPort > 0) {
+            log.info("          Using Proxy : " + proxyHost + ":" + proxyPort);
+            config.proxy(proxyHost, proxyPort);
+        }
     }
 
-//    TODO: Test it
-    private synchronized boolean remoteConfigUpdateAvailable() {
-        if (!useRemoteConfigs || remoteConfigService == null) return false;
+    private static void exit(int exitStatus) {
+        log.info("downloader.repeat is set to false. Exiting application now.");
+        System.exit(exitStatus);
 
-        Instant now = Instant.now();
+    }
 
-        // We only check remote configs on a set interval to avoid hammering the API
-        if (now.isBefore(nextRemoteConfigCheckAt)) return false;
+    private static void backoff(int consecutiveFailures) throws Exception {
+        long backoffMillis = BACKOFF.apply(consecutiveFailures);
 
-        // Set this before the request so failed attempts are throttled too.
-        nextRemoteConfigCheckAt = now.plus(REMOTE_CONFIG_CHECK_INTERVAL);
-
-        try {
-            return remoteConfigService.isUpdated();
-        } catch (Exception e) {
-            log.warn("Unable to check for remote configuration updates. Continuing with the current configuration.", e);
-            return false;
-        }
+        log.warn("Backing off " + backoffMillis + "ms after " + consecutiveFailures + " consecutive failures.");
+        Thread.sleep(backoffMillis);
     }
 }

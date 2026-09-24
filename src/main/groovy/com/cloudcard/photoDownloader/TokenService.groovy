@@ -1,10 +1,8 @@
 package com.cloudcard.photoDownloader
 
-import com.fasterxml.jackson.annotation.JsonAnyGetter
 import jakarta.annotation.PostConstruct
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
-import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
 
@@ -25,15 +23,12 @@ class TokenService {
     @Value('${cloudcard.api.accessToken}')
     private String persistentAccessToken
 
-    @Autowired
-    RestService restService
-
     @PostConstruct
     void init() {
         if (this.persistentAccessTokenIsEmpty()) {
-            log.info("Persist. Access Token not set.")
+            log.info("       Persistent Access Token not set.")
         } else {
-            log.info("Persist. Access Token : ..." + persistentAccessToken.substring(3, 8) + "...")
+            log.info("       Persistent Access Token : ..." + persistentAccessToken.substring(3, 8) + "...")
         }
     }
 
@@ -49,8 +44,6 @@ class TokenService {
         return !persistentAccessTokenIsEmpty()
     }
 
-//    TODO: Is this token good until it expires? When does it expire?
-//      the token is logged out by the CloudCard Client when it closes, which with SQS will happen every 10 photos?
     void login() throws Exception {
         authenticationToken = RemotePhotoUtil.login(apiUrl, persistentAccessToken)
     }
@@ -65,21 +58,15 @@ class TokenService {
         authenticationToken = null
     }
 
-    @JsonAnyGetter
-    String getAuthTokenValue() {
+    synchronized String getAuthTokenValue() {
         if (authenticationTokenIsEmpty() || isExpiring()) {
-            try {
-                this.login()
-            } catch (Exception e) {
-                log.error("Error while trying to retrieve token from CloudCard API.", e)
-                return null
-            }
+            log.info("Fetching new AuthenticationToken from CloudCard API.")
+            this.login()
         }
 
         return authenticationToken.tokenValue
     }
 
-    //    TODO: TEST EXPIRY REFRESH
     private boolean isExpiring() {
         authenticationToken.expirationDate
             .toInstant()

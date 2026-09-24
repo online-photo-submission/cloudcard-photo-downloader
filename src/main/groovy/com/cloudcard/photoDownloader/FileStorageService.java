@@ -46,10 +46,10 @@ public class FileStorageService implements StorageService {
         throwIfTrue(fileNameResolver == null, "The File Name Resolver must be specified.");
         throwIfTrue(photoDirectories == null || photoDirectories.length == 0, "The Photo Directory(ies) must be specified.");
 
-        log.info("      File Name Resolver : " + fileNameResolver.getClass().getSimpleName());
-        log.info("    Photo Directory(ies) : " + String.join(" , ", photoDirectories));
-        log.info("          Post-Processor : " + postProcessor.getClass().getSimpleName());
-        log.info(" CardholderGroup Subdirs : " + useCardholderGroupSubdirectories);
+        log.info("                    File Name Resolver : " + fileNameResolver.getClass().getSimpleName());
+        log.info("                  Photo Directory(ies) : " + String.join(" , ", photoDirectories));
+        log.info("                        Post-Processor : " + postProcessor.getClass().getSimpleName());
+        log.info("               CardholderGroup Subdirs : " + useCardholderGroupSubdirectories);
     }
 
     @Override
