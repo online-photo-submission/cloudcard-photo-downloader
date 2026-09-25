@@ -11,7 +11,6 @@ import software.amazon.awssdk.services.sts.model.Credentials
 import java.time.Clock
 import java.time.Instant
 
-//TODO: Test this
 class StsTokenRefreshingProvider implements AwsCredentialsProvider {
 
     private static final Logger log = LoggerFactory.getLogger(StsTokenRefreshingProvider)
@@ -22,7 +21,7 @@ class StsTokenRefreshingProvider implements AwsCredentialsProvider {
     private final String queueUrl
     private final Clock clock
 
-    private volatile StsSession currentSession
+    StsSession currentSession
 
     StsTokenRefreshingProvider(CloudCardClient cloudCardClient, String queueUrl, Clock clock = Clock.systemUTC()) {
         this.cloudCardClient = cloudCardClient
