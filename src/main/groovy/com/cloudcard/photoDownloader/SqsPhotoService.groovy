@@ -64,7 +64,7 @@ class SqsPhotoService implements PhotoService {
 
         throwIfTrue(!cloudCardClient.isConfigured(), "Persistent Access Token for the CloudCard API is required to retrieve brokered credentials for SQS.")
 
-        def dynamicCredentialsProvider = new StsTokenRefreshingProvider(cloudCardClient, queueUrl)
+        def dynamicCredentialsProvider = new StsTokenRefreshProvider(cloudCardClient, queueUrl)
 
         try {
             sqsClient = SqsClient.builder()
@@ -122,10 +122,8 @@ class SqsPhotoService implements PhotoService {
         return photo
     }
 
-//    TODO: Confirm that this continues to work after a token expires (can set expiry manually in the database), but I don't think we should close this with SQS.
     @Override
     void close() {
-//        cloudCardClient.close()
     }
 
     /* *** PRIVATE HELPERS *** */
