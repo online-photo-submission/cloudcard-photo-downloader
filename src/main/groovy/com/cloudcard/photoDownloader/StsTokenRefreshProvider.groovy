@@ -1,5 +1,6 @@
 package com.cloudcard.photoDownloader
 
+import groovy.transform.TupleConstructor
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import software.amazon.awssdk.auth.credentials.AwsCredentials
@@ -80,15 +81,10 @@ class StsTokenRefreshingProvider implements AwsCredentialsProvider {
         return false
     }
 
+    @TupleConstructor
     private static final class StsSession {
         final AwsSessionCredentials credentials
         final Instant refreshAt
         final Instant expiresAt
-
-        StsSession(AwsSessionCredentials credentials, Instant refreshAt, Instant expiresAt) {
-            this.credentials = credentials
-            this.refreshAt = refreshAt
-            this.expiresAt = expiresAt
-        }
     }
 }
