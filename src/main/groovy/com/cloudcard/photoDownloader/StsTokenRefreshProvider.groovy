@@ -10,7 +10,6 @@ import software.amazon.awssdk.services.sts.model.Credentials
 import java.time.Clock
 import java.time.Instant
 
-//TODO: Test this
 class StsTokenRefreshingProvider implements AwsCredentialsProvider {
 
     private static final Logger log = LoggerFactory.getLogger(StsTokenRefreshingProvider)
@@ -56,7 +55,6 @@ class StsTokenRefreshingProvider implements AwsCredentialsProvider {
 
         if (!isValid(response)) throw new IllegalStateException("CloudCard API returned incomplete SQS credentials.")
 
-//        TODO: Determine if this is unnecessary. It gives a clearer error in the unlikely event that AWS issues already-expired credentials, but it's VERY unlikely.
         if (!response.expiration().isAfter(clock.instant())) throw new IllegalStateException("Received SQS credentials that are already expired; check the downloader system clock and broker response.")
 
         AwsSessionCredentials credentials = AwsSessionCredentials.create(response.accessKeyId(), response.secretAccessKey(), response.sessionToken())
