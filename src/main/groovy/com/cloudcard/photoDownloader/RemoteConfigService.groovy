@@ -20,11 +20,11 @@ class RemoteConfigService {
         // If we have a tokenService available, we prefer to use it so it can manage the token refreshes and limit unnecessary logins/logouts.
         if (this.tokenService) {
             log.debug("Using managed TokenService for remote configs")
-            return RemotePhotoUtil.getRemoteConfig(apiUrl, integrationName, tokenService.getAuthToken())
+            return RemotePhotoUtil.getRemoteConfig(apiUrl, integrationName, tokenService.authTokenValue)
         }
 
         // If no token service is available, fall back to manual login/logout for each config fetch.
-        String authToken = RemotePhotoUtil.login(apiUrl, pat)
+        String authToken = RemotePhotoUtil.login(apiUrl, pat).tokenValue
 
         try {
             return RemotePhotoUtil.getRemoteConfig(apiUrl, integrationName, authToken)

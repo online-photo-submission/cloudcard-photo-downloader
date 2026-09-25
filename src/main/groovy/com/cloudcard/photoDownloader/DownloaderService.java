@@ -9,8 +9,11 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 
+import java.time.Duration;
+import java.time.Instant;
 import java.util.Arrays;
 import java.util.List;
+import java.util.concurrent.ThreadLocalRandom;
 
 import static com.cloudcard.photoDownloader.ApplicationPropertiesValidator.*;
 
@@ -18,6 +21,13 @@ import static com.cloudcard.photoDownloader.ApplicationPropertiesValidator.*;
 public class DownloaderService {
 
     private static final Logger log = LoggerFactory.getLogger(DownloaderService.class);
+
+    private static final long BASE_BACKOFF_SECONDS = 2;
+    private static final long MAX_BACKOFF_SECONDS = 600;
+    private int consecutiveFailures = 0;
+
+    private static final Duration REMOTE_CONFIG_CHECK_INTERVAL = Duration.ofMinutes(5);
+    private Instant nextRemoteConfigCheckAt = Instant.MIN;
 
     @Autowired
     PhotoService photoService;
@@ -61,7 +71,7 @@ public class DownloaderService {
     @PostConstruct
     public void init() {
 
-        throwIfTrue(downloaderDelay < photoService.minDownloaderDelay() && !useRemoteConfigs, "The minimum downloader delay is " + photoService.minDownloaderDelay() + " milliseconds.");
+        throwIfTrue(downloaderDelay < photoService.minDownloaderDelay(),"The minimum downloader delay is " + photoService.minDownloaderDelay() + " milliseconds.");
         throwIfTrue(storageService == null, "The Storage Service must be specified.");
         throwIfTrue(summaryService == null, "The Summary Service must be specified.");
 
@@ -94,8 +104,12 @@ public class DownloaderService {
     public void downloadPhotos() throws Exception {
 
         int exitStatus = 0;
+        long backoffSeconds = 0;
 
-        if (useRemoteConfigs && remoteConfigService.isUpdated()) {
+//TODO: Make sure this isn't too complicated
+        if (useRemoteConfigs &&
+            shouldCheckRemoteConfig() &&
+            remoteConfigService.isUpdated()) {
             log.info("New configuration version detected. Restarting application to apply new settings.");
             Application.restart();
 
@@ -122,12 +136,16 @@ public class DownloaderService {
             shellCommandService.postDownload(results.downloadedPhotoFiles);
             shellCommandService.postExecute();
             log.info("Completed downloading " + results.downloadedPhotoFiles.size() + " photos.");
+            consecutiveFailures = 0;
 
         } catch (Exception e) {
 
             log.error(e.getMessage());
             e.printStackTrace();
             exitStatus = 1;
+
+            consecutiveFailures++;
+            backoffSeconds = backoffSecondsFor(consecutiveFailures);
 
         } finally {
             try {
@@ -142,6 +160,35 @@ public class DownloaderService {
                 log.info("downloader.repeat is set to false. Exiting application now.");
                 System.exit(exitStatus);
             }
+
+//            TODO: backoff *could* cause minor issues when debugging and slow feedback loops... but we also don't want to have EVERY downloader
+//                  blasting the system at the same time if the API went down and these all started failing.
+//            Only implement backoff if delay is set for less than 10 minutes.
+            if (backoffSeconds > 0 && (downloaderDelay < 600000 || schedulingType.equals("cron"))) {
+                log.warn("Backing off " + backoffSeconds + "s after " + consecutiveFailures + " consecutive failures.");
+                Thread.sleep(backoffSeconds * 1000L);
+            }
         }
+    }
+
+    /** 2s, 4s, 8s ... capped at 600s, with +/-25% jitter so a fleet-wide failure doesn't retry in lockstep. */
+    private long backoffSecondsFor(int failures) {
+        int exponent = Math.min(failures, 10);
+        long seconds = Math.min(BASE_BACKOFF_SECONDS << (exponent - 1), MAX_BACKOFF_SECONDS);
+        double jitter = 0.75 + (ThreadLocalRandom.current().nextDouble() * 0.5);
+        return Math.max(1L, (long) (seconds * jitter));
+    }
+
+    private synchronized boolean shouldCheckRemoteConfig() {
+        Instant now = Instant.now();
+
+        if (now.isBefore(nextRemoteConfigCheckAt)) {
+            return false;
+        }
+
+        // Throttle failed attempts too.
+        nextRemoteConfigCheckAt = now.plus(REMOTE_CONFIG_CHECK_INTERVAL);
+
+        return true;
     }
 }

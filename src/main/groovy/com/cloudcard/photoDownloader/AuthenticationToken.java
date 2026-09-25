@@ -3,6 +3,9 @@ package com.cloudcard.photoDownloader;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
+import java.time.Instant;
+import java.util.Date;
+
 @JsonInclude(JsonInclude.Include.NON_NULL)
 public class AuthenticationToken {
 
@@ -44,6 +47,11 @@ public class AuthenticationToken {
     public void setTokenValue(String tokenValue) {
 
         this.tokenValue = tokenValue;
+    }
+
+    @JsonProperty("expirationDate")
+    public Date getExpirationDate() {
+        return Date.from(Instant.parse(expirationDate));
     }
 
 }

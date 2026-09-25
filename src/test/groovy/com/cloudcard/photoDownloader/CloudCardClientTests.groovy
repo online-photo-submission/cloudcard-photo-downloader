@@ -48,7 +48,7 @@ class CloudCardClientTests {
     public void testFetchReadyForDownload() throws Exception {
         Photo processedPhoto = new Photo()
         when(mockPreProcessor.process(any(Photo.class))).thenReturn(processedPhoto)
-        when(mockTokenService.getAuthToken()).thenReturn("via76odv674i54eenhqvuf3v8cpverv79tj1bhak9u4u0ktheqa3qg2186srrt1g")
+        when(mockTokenService.authTokenValue).thenReturn("via76odv674i54eenhqvuf3v8cpverv79tj1bhak9u4u0ktheqa3qg2186srrt1g")
 
         List<Photo> photos = client.fetchWithBytes(READY_FOR_DOWNLOAD)()
         assertThat(photos.size()).isGreaterThanOrEqualTo(0)
@@ -60,7 +60,7 @@ class CloudCardClientTests {
         }
 
         verify(mockRestService, times(photos.size())).fetchBytes(processedPhoto)
-        verify(mockTokenService, times(4)).getAuthToken()
+        verify(mockTokenService, times(4)).getAuthTokenValue()
     }
 
     @Test
