@@ -32,10 +32,8 @@ This project automatically downloads photos from [CloudCard Online Photo Submiss
 
 #### US (Primary)
 - `api.onlinephotosubmission.com:443`
-- `api.remotephoto.ai:443` (alternative)
 - `api.cloudcard.us:443` (alternative)
 - `s3.us-east-2.amazonaws.com:443`
-- `s3-us-east-2.amazonaws.com:443` (legacy)
 
 #### Test
 - `test-api.onlinephotosubmission.com:443`
@@ -45,27 +43,21 @@ This project automatically downloads photos from [CloudCard Online Photo Submiss
 #### Canada
 - `api.cloudcard.ca:443`
 - `s3.ca-central-1.amazonaws.com:443`
-- `s3-ca-central-1.amazonaws.com:443` (legacy)
 
 #### Transact
 - `onlinephoto-api.transactcampus.net:443`
-- `s3.us-east-2.amazonaws.com:443`
-- `s3-us-east-2.amazonaws.com:443` (legacy)
 
 #### TouchNet
 - `api.onlinephoto.touchnet.com:443`
 - `s3.ca-central-1.amazonaws.com:443`
-- `s3-ca-central-1.amazonaws.com:443` (legacy)
 
 #### Atrium
 - `api.atrium.cloudcard.us:443`
 - `s3.us-east-2.amazonaws.com:443`
-- `s3-us-east-2.amazonaws.com:443` (legacy)
 
 #### ITC
 - `api.itc.remotephoto.ca:443`
 - `s3.ca-central-1.amazonaws.com:443`
-- `s3-ca-central-1.amazonaws.com:443` (legacy)
     
 To test your system, run `java -version`. The output should look like the following. The exact version isn't important
 as long as it starts with `17`.
