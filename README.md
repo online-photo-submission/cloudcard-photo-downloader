@@ -28,16 +28,36 @@ This project automatically downloads photos from [CloudCard Online Photo Submiss
 - OS/Security Roles: Access to photo storage destination
 - [Service account with office level access](https://sharptop.atlassian.net/wiki/spaces/CCD/pages/1226440705/User+Roles)
   to CloudCard Online Photo Submission
-- Outbound network access to the following domains/ports if your organization requires all outbound traffic to be
-  whitelisted
-    - api.onlinephotosubmission.com:443
-    - s3-us-east-2.amazonaws.com:443
-         #### Alternate Domains
-        
-        - api.cloudcard.ca:443 (CloudCard's Canada instance)
-        - s3-ca-central-1.amazonaws.com:443 (CloudCard's Canada instance)
-        - test-api.onlinephotosubmission.com:443 (CloudCard's test instance)
-        - onlinephoto-api.transactcampus.net:443 (Online Photo Submission through Transact)
+### Outbound Network Whitelist by Environment (Whitelist if needed)
+
+#### US (Primary)
+- `api.onlinephotosubmission.com:443`
+- `api.cloudcard.us:443` (alternative)
+- `s3.us-east-2.amazonaws.com:443`
+
+#### Test
+- `test-api.onlinephotosubmission.com:443`
+- `s3.us-east-1.amazonaws.com:443`
+- `s3-us-east-1.amazonaws.com:443` (legacy)
+
+#### Canada
+- `api.cloudcard.ca:443`
+- `s3.ca-central-1.amazonaws.com:443`
+
+#### Transact
+- `onlinephoto-api.transactcampus.net:443`
+
+#### TouchNet
+- `api.onlinephoto.touchnet.com:443`
+- `s3.ca-central-1.amazonaws.com:443`
+
+#### Atrium
+- `api.atrium.cloudcard.us:443`
+- `s3.us-east-2.amazonaws.com:443`
+
+#### ITC
+- `api.itc.remotephoto.ca:443`
+- `s3.ca-central-1.amazonaws.com:443`
     
 To test your system, run `java -version`. The output should look like the following. The exact version isn't important
 as long as it starts with `17`.
