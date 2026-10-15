@@ -20,7 +20,7 @@ public class AdditionalPhotoPostProcessorTest {
     FileService mockFileService;
 
     @Mock
-    RestService mockRestService;
+    CloudCardClient mockCloudCardClient;
 
     @InjectMocks
     AdditionalPhotoPostProcessor postProcessor;
@@ -38,7 +38,7 @@ public class AdditionalPhotoPostProcessorTest {
         postProcessor.process(photo, "./temp", new PhotoFile(baseFileName, null, 1));
 
         //check stuff
-        verify(mockRestService, times(1)).fetchBytes(additionalPhoto);
+        verify(mockCloudCardClient, times(1)).fetchBytes(additionalPhoto);
         verify(mockFileService, times(1)).writeBytesToFile("./temp/pancakes", baseFileName + ".jpg", additionalPhoto.getBytes());
     }
 
@@ -56,10 +56,10 @@ public class AdditionalPhotoPostProcessorTest {
         postProcessor.process(photo, "./temp", new PhotoFile(baseFileName, null, 1));
 
         //check stuff
-        verify(mockRestService, times(1)).fetchBytes(additionalPhoto);
+        verify(mockCloudCardClient, times(1)).fetchBytes(additionalPhoto);
         verify(mockFileService, times(1)).writeBytesToFile("./temp/pancakes", baseFileName + ".jpg", additionalPhoto.getBytes());
 
-        verify(mockRestService, times(1)).fetchBytes(additionalPhoto2);
+        verify(mockCloudCardClient, times(1)).fetchBytes(additionalPhoto2);
         verify(mockFileService, times(1)).writeBytesToFile("./temp/sausage", baseFileName + ".jpg", additionalPhoto2.getBytes());
     }
 
@@ -81,10 +81,10 @@ public class AdditionalPhotoPostProcessorTest {
         postProcessor.process(photo, "./temp", new PhotoFile(baseFileName, null, 1));
 
         //check stuff
-        verify(mockRestService, times(1)).fetchBytes(additionalPhoto);
+        verify(mockCloudCardClient, times(1)).fetchBytes(additionalPhoto);
         verify(mockFileService, times(1)).writeBytesToFile("./temp/pancakes", baseFileName + ".jpg", additionalPhoto.getBytes());
 
-        verify(mockRestService, times(0)).fetchBytes(additionalPhoto2);
+        verify(mockCloudCardClient, times(0)).fetchBytes(additionalPhoto2);
         verify(mockFileService, times(0)).writeBytesToFile("./temp/sausage", baseFileName + ".jpg", additionalPhoto2.getBytes());
     }
 

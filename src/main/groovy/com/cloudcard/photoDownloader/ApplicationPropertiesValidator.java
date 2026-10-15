@@ -7,20 +7,20 @@ public class ApplicationPropertiesValidator {
 
     private static final Logger log = LoggerFactory.getLogger(ApplicationPropertiesValidator.class);
 
-    public static String version = "26.06.18.1330";
+    public static String version = "26.10.15.1140";
 
     public static void logVersion() {
 
-        log.info("  Application Version : " + version);
+        log.info("       Application Version : " + version);
     }
 
     public static void logScheduleSettings(String scheduleType, boolean repeat, int downloaderDelay, String cronSchedule) {
         if (scheduleType.equals("fixedDelay")) {
-            log.info("          Repeat Mode : " + (repeat ? "Repeat on Fixed Delay" : "Run Once & Stop"));
-            log.info("     Downloader Delay : " + downloaderDelay / 60000 + " min(s)");
+            log.info("               Repeat Mode : " + (repeat ? "Repeat on Fixed Delay" : "Run Once & Stop"));
+            log.info("          Downloader Delay : " + downloaderDelay / 60000 + " min(s)");
         } else if (scheduleType.equals("cron")){
-            log.info("  Repeat Mode : " + (repeat ? "Cron Schedule" : "Run Once & Stop"));
-            log.info("Cron Schedule : " + cronSchedule);
+            log.info("               Repeat Mode : " + (repeat ? "Cron Schedule" : "Run Once & Stop"));
+            log.info(".            Cron Schedule : " + cronSchedule);
         }
     }
 

@@ -14,7 +14,7 @@ class SqsPhotoServiceSpec extends Specification {
         println "setting up"
         service = new SqsPhotoService()
         service.preProcessor = Mock(PreProcessor)
-        service.restService = Mock(RestService)
+        service.cloudCardClient = Mock(CloudCardClient)
         service.sqsClient = Mock(SqsClient)
     }
 
@@ -41,7 +41,7 @@ class SqsPhotoServiceSpec extends Specification {
         and:
         1 * service.sqsClient.receiveMessage(_) >> mockReceiveMessageResponse
         1 * service.preProcessor.process(photo) >> photo
-        1 * service.restService.fetchBytes(photo)
+        1 * service.cloudCardClient.fetchBytes(photo)
         service.messageHistory[photo.id].body() == messageBody
     }
 }
