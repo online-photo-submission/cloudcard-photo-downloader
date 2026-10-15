@@ -7,7 +7,7 @@ import java.time.Duration
 import java.time.Instant
 
 /**
- * Token lifecycle only. RemotePhotoUtil is a global Groovy mock, so nothing here touches the
+ * Token lifecycle only. RemotePhotoHttpAdapter is a global Groovy mock, so nothing here touches the
  * network. Global mocks only intercept calls from dynamically compiled Groovy, which TokenService is.
  *
  * Expiry is controlled by the token's expirationDate relative to now rather than by a clock, since
@@ -22,7 +22,7 @@ class TokenServiceSpec extends Specification {
     TokenService tokenService
 
     def setup() {
-        GroovyMock(RemotePhotoUtil, global: true)
+        GroovyMock(RemotePhotoHttpAdapter, global: true)
 
         tokenService = new TokenService()
         ReflectionTestUtils.setField(tokenService, "apiUrl", API_URL)
@@ -57,7 +57,7 @@ class TokenServiceSpec extends Specification {
         tokenService.login()
 
         then:
-        1 * RemotePhotoUtil.login(API_URL, PERSISTENT_ACCESS_TOKEN) >> token
+        1 * RemotePhotoHttpAdapter.login(API_URL, PERSISTENT_ACCESS_TOKEN) >> token
         tokenService.authenticationToken.is(token)
     }
 
@@ -68,7 +68,7 @@ class TokenServiceSpec extends Specification {
         String value = tokenService.authTokenValue
 
         then:
-        1 * RemotePhotoUtil.login(API_URL, PERSISTENT_ACCESS_TOKEN) >> token("first", Duration.ofHours(1))
+        1 * RemotePhotoHttpAdapter.login(API_URL, PERSISTENT_ACCESS_TOKEN) >> token("first", Duration.ofHours(1))
         value == "first"
     }
 
@@ -80,7 +80,7 @@ class TokenServiceSpec extends Specification {
         String value = tokenService.authTokenValue
 
         then:
-        logins * RemotePhotoUtil.login(API_URL, PERSISTENT_ACCESS_TOKEN) >> token("refreshed", Duration.ofHours(1))
+        logins * RemotePhotoHttpAdapter.login(API_URL, PERSISTENT_ACCESS_TOKEN) >> token("refreshed", Duration.ofHours(1))
         value == expected
 
         where:
@@ -100,7 +100,7 @@ class TokenServiceSpec extends Specification {
         String second = tokenService.authTokenValue
 
         then:
-        0 * RemotePhotoUtil.login(_, _)
+        0 * RemotePhotoHttpAdapter.login(_, _)
         first == "reused"
         second == "reused"
     }
@@ -113,7 +113,7 @@ class TokenServiceSpec extends Specification {
         tokenService.authTokenValue
 
         then:
-        1 * RemotePhotoUtil.login(_, _) >> { throw failure }
+        1 * RemotePhotoHttpAdapter.login(_, _) >> { throw failure }
 
         and:
         RuntimeException thrownException = thrown()
@@ -130,7 +130,7 @@ class TokenServiceSpec extends Specification {
         tokenService.logout()
 
         then:
-        1 * RemotePhotoUtil.logout(API_URL, "to-invalidate")
+        1 * RemotePhotoHttpAdapter.logout(API_URL, "to-invalidate")
         tokenService.authenticationToken == null
     }
 
@@ -139,7 +139,7 @@ class TokenServiceSpec extends Specification {
         tokenService.logout()
 
         then:
-        0 * RemotePhotoUtil.logout(_, _)
+        0 * RemotePhotoHttpAdapter.logout(_, _)
     }
 
     def "the next call after logout logs in again"() {
@@ -151,8 +151,8 @@ class TokenServiceSpec extends Specification {
         String value = tokenService.authTokenValue
 
         then:
-        1 * RemotePhotoUtil.logout(API_URL, "old")
-        1 * RemotePhotoUtil.login(API_URL, PERSISTENT_ACCESS_TOKEN) >> token("new", Duration.ofHours(1))
+        1 * RemotePhotoHttpAdapter.logout(API_URL, "old")
+        1 * RemotePhotoHttpAdapter.login(API_URL, PERSISTENT_ACCESS_TOKEN) >> token("new", Duration.ofHours(1))
         value == "new"
     }
 

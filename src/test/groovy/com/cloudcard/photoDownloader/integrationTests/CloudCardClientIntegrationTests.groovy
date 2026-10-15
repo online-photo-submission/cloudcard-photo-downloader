@@ -24,7 +24,7 @@ import static com.cloudcard.photoDownloader.CloudCardClient.*
  * Nothing is mocked: DoNothingPreProcessor is the real pass-through the application ships with.
  */
 @Tag("integration")
-class CloudCardClientIntegrationSpec extends Specification {
+class CloudCardClientIntegrationTests extends Specification {
 
     private static final String TEST_IMAGE_URL =
         "https://sharptopco.github.io/cloudcard-custom-assets/example_id_photo.jpg"

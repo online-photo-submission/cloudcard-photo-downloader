@@ -6,7 +6,7 @@ import spock.lang.Specification
 import java.time.Instant
 
 /**
- * RemotePhotoUtil is a global Groovy mock, so nothing here touches the network. Global mocks only
+ * RemotePhotoHttpAdapter is a global Groovy mock, so nothing here touches the network. Global mocks only
  * intercept calls from dynamically compiled Groovy, which RemoteConfigService is.
  */
 class RemoteConfigServiceSpec extends Specification {
@@ -20,7 +20,7 @@ class RemoteConfigServiceSpec extends Specification {
     RemoteConfigService service
 
     def setup() {
-        GroovyMock(RemotePhotoUtil, global: true)
+        GroovyMock(RemotePhotoHttpAdapter, global: true)
 
         service = new RemoteConfigService(apiUrl: API_URL, integrationName: INTEGRATION_NAME)
     }
@@ -36,9 +36,9 @@ class RemoteConfigServiceSpec extends Specification {
         Integration result = service.fetchRemoteConfig()
 
         then:
-        1 * RemotePhotoUtil.getRemoteConfig(API_URL, INTEGRATION_NAME, MANAGED_TOKEN) >> expected
-        0 * RemotePhotoUtil.login(_, _)
-        0 * RemotePhotoUtil.logout(_, _)
+        1 * RemotePhotoHttpAdapter.getRemoteConfig(API_URL, INTEGRATION_NAME, MANAGED_TOKEN) >> expected
+        0 * RemotePhotoHttpAdapter.login(_, _)
+        0 * RemotePhotoHttpAdapter.logout(_, _)
         result.is(expected)
     }
 
@@ -51,13 +51,13 @@ class RemoteConfigServiceSpec extends Specification {
         Integration result = service.fetchRemoteConfig()
 
         then:
-        1 * RemotePhotoUtil.login(API_URL, PAT) >> new AuthenticationToken(tokenValue: MANUAL_TOKEN)
+        1 * RemotePhotoHttpAdapter.login(API_URL, PAT) >> new AuthenticationToken(tokenValue: MANUAL_TOKEN)
 
         then:
-        1 * RemotePhotoUtil.getRemoteConfig(API_URL, INTEGRATION_NAME, MANUAL_TOKEN) >> expected
+        1 * RemotePhotoHttpAdapter.getRemoteConfig(API_URL, INTEGRATION_NAME, MANUAL_TOKEN) >> expected
 
         then:
-        1 * RemotePhotoUtil.logout(API_URL, MANUAL_TOKEN)
+        1 * RemotePhotoHttpAdapter.logout(API_URL, MANUAL_TOKEN)
         result.is(expected)
     }
 
@@ -70,9 +70,9 @@ class RemoteConfigServiceSpec extends Specification {
         service.fetchRemoteConfig()
 
         then:
-        1 * RemotePhotoUtil.login(API_URL, PAT) >> new AuthenticationToken(tokenValue: MANUAL_TOKEN)
-        1 * RemotePhotoUtil.getRemoteConfig(API_URL, INTEGRATION_NAME, MANUAL_TOKEN) >> { throw failure }
-        1 * RemotePhotoUtil.logout(API_URL, MANUAL_TOKEN)
+        1 * RemotePhotoHttpAdapter.login(API_URL, PAT) >> new AuthenticationToken(tokenValue: MANUAL_TOKEN)
+        1 * RemotePhotoHttpAdapter.getRemoteConfig(API_URL, INTEGRATION_NAME, MANUAL_TOKEN) >> { throw failure }
+        1 * RemotePhotoHttpAdapter.logout(API_URL, MANUAL_TOKEN)
 
         and:
         RuntimeException thrownException = thrown()
@@ -90,7 +90,7 @@ class RemoteConfigServiceSpec extends Specification {
         boolean result = service.shouldRefresh()
 
         then:
-        1 * RemotePhotoUtil.getRemoteConfig(API_URL, INTEGRATION_NAME, MANAGED_TOKEN) >> new Integration(version: remoteVersion)
+        1 * RemotePhotoHttpAdapter.getRemoteConfig(API_URL, INTEGRATION_NAME, MANAGED_TOKEN) >> new Integration(version: remoteVersion)
         result == refresh
         service.currentVersion == remoteVersion
 
@@ -111,7 +111,7 @@ class RemoteConfigServiceSpec extends Specification {
         boolean second = service.shouldRefresh()
 
         then:
-        1 * RemotePhotoUtil.getRemoteConfig(_, _, _) >> new Integration(version: 7)
+        1 * RemotePhotoHttpAdapter.getRemoteConfig(_, _, _) >> new Integration(version: 7)
         first
         !second
     }
@@ -125,7 +125,7 @@ class RemoteConfigServiceSpec extends Specification {
         boolean second = service.shouldRefresh()
 
         then:
-        1 * RemotePhotoUtil.getRemoteConfig(_, _, _) >> { throw new RuntimeException("Config API down") }
+        1 * RemotePhotoHttpAdapter.getRemoteConfig(_, _, _) >> { throw new RuntimeException("Config API down") }
         !first
         !second
     }
@@ -141,7 +141,7 @@ class RemoteConfigServiceSpec extends Specification {
         service.shouldRefresh()
 
         then:
-        2 * RemotePhotoUtil.getRemoteConfig(_, _, _) >> new Integration(version: 7)
+        2 * RemotePhotoHttpAdapter.getRemoteConfig(_, _, _) >> new Integration(version: 7)
     }
 
     /* *** HELPERS *** */

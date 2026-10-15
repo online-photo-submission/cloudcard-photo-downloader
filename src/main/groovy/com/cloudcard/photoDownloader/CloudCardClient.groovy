@@ -14,7 +14,7 @@ import software.amazon.awssdk.services.sts.model.Credentials
 
 /**
  * Policy layer for the CloudCard API: retry, token handling, orchestration.
- * All HTTP lives in RemotePhotoUtil.
+ * All HTTP lives in RemotePhotoHttpAdapter.
  */
 @Component
 class CloudCardClient {
@@ -73,12 +73,8 @@ class CloudCardClient {
      * authorisation, a bad request -- will not succeed on a second attempt, so it propagates
      * immediately.
      */
-    private boolean isRetryable(Throwable throwable) {
-        if (throwable instanceof CloudCardApiException) {
-            return !((CloudCardApiException) throwable).permanent
-        }
-
-        return throwable instanceof IOException
+    private static boolean isRetryable(Throwable throwable) {
+        throwable instanceof CloudCardApiException && !throwable.permanent
     }
 
     boolean isConfigured() {
@@ -99,11 +95,11 @@ class CloudCardClient {
     }
 
     void fetchBytes(Photo photo) throws Exception {
-        photo.bytes = withRetry { RemotePhotoUtil.fetchBytes(photo.externalURL) }
+        photo.bytes = withRetry { RemotePhotoHttpAdapter.fetchBytes(photo.externalURL) }
     }
 
     void fetchBytes(AdditionalPhoto additionalPhoto) throws Exception {
-        additionalPhoto.bytes = withRetry { RemotePhotoUtil.fetchBytes(additionalPhoto.externalURL) }
+        additionalPhoto.bytes = withRetry { RemotePhotoHttpAdapter.fetchBytes(additionalPhoto.externalURL) }
     }
 
     List<Photo> fetch(String[] statuses) throws Exception {
@@ -118,13 +114,13 @@ class CloudCardClient {
 
     List<Photo> fetch(String status) throws Exception {
         return withRetry {
-            RemotePhotoUtil.fetchPhotos(apiUrl, tokenService.authTokenValue, status)
+            RemotePhotoHttpAdapter.fetchPhotos(apiUrl, tokenService.authTokenValue, status)
         }
     }
 
     Photo updateStatus(Photo photo, String status, String message = null) throws Exception {
         return withRetry {
-            RemotePhotoUtil.updateStatus(apiUrl, tokenService.authTokenValue, photo, status, message)
+            RemotePhotoHttpAdapter.updateStatus(apiUrl, tokenService.authTokenValue, photo, status, message)
         }
     }
 
@@ -132,7 +128,7 @@ class CloudCardClient {
 
     Credentials fetchStsCredentials(String queueUrl) throws Exception {
         return withRetry {
-            RemotePhotoUtil.fetchStsCredentials(apiUrl, tokenService.authTokenValue, queueUrl)
+            RemotePhotoHttpAdapter.fetchStsCredentials(apiUrl, tokenService.authTokenValue, queueUrl)
         }
     }
 

@@ -14,13 +14,13 @@ import java.time.Instant
 import static com.cloudcard.photoDownloader.CloudCardClient.*
 
 /**
- * Wire contract for RemotePhotoUtil, tested against a loopback HTTP server so it holds regardless
- * of which HTTP client RemotePhotoUtil uses. Each route matches method + path exactly; a request to
+ * Wire contract for RemotePhotoHttpAdapter, tested against a loopback HTTP server so it holds regardless
+ * of which HTTP client RemotePhotoHttpAdapter uses. Each route matches method + path exactly; a request to
  * the wrong one gets a 404 and the test fails.
  *
  * Every feature gets its own server, so no state is shared between features.
  */
-class RemotePhotoUtilSpec extends Specification {
+class RemotePhotoHttpAdapterSpec extends Specification {
 
     private static final String TOKEN = "auth-token"
 
@@ -43,7 +43,7 @@ class RemotePhotoUtilSpec extends Specification {
         route("POST", "/api/authenticationTokens", status)
 
         when:
-        RemotePhotoUtil.login("${host}/api", "pat")
+        RemotePhotoHttpAdapter.login("${host}/api", "pat")
 
         then:
         CloudCardApiException e = thrown()
@@ -64,7 +64,7 @@ class RemotePhotoUtilSpec extends Specification {
         route("POST", "/api/authenticationTokens", 200, JsonOutput.toJson([tokenValue: "abc", expirationDate: "2026-09-25T12:00:00Z"]))
 
         expect:
-        RemotePhotoUtil.login("${host}/api", "pat").tokenValue == "abc"
+        RemotePhotoHttpAdapter.login("${host}/api", "pat").tokenValue == "abc"
         body().persistentAccessToken == "pat"
         !authHeader()
     }
@@ -74,7 +74,7 @@ class RemotePhotoUtilSpec extends Specification {
         route("POST", "/api/people/me/logout", 500)
 
         when:
-        RemotePhotoUtil.logout("${host}/api", TOKEN)
+        RemotePhotoHttpAdapter.logout("${host}/api", TOKEN)
 
         then:
         noExceptionThrown()
@@ -87,14 +87,14 @@ class RemotePhotoUtilSpec extends Specification {
         route("GET", "/api/integrations/downloader", 200, JsonOutput.toJson([version: 7]))
 
         expect:
-        RemotePhotoUtil.getRemoteConfig("${host}/api", "downloader", TOKEN).version == 7
+        RemotePhotoHttpAdapter.getRemoteConfig("${host}/api", "downloader", TOKEN).version == 7
         queryParams() == [findBy: "name"]
         authHeader() == TOKEN
     }
 
     def "getRemoteConfig rejects an integration name of '#name' without making a request"() {
         when:
-        RemotePhotoUtil.getRemoteConfig("${host}/api", name, TOKEN)
+        RemotePhotoHttpAdapter.getRemoteConfig("${host}/api", name, TOKEN)
 
         then:
         thrown(IllegalArgumentException)
@@ -109,7 +109,7 @@ class RemotePhotoUtilSpec extends Specification {
         route("GET", "/api/trucredential/${TOKEN}/photos", 200, JsonOutput.toJson([[id: 1]]))
 
         expect:
-        RemotePhotoUtil.fetchPhotos("${host}/api", TOKEN, READY_FOR_DOWNLOAD)*.id == [1]
+        RemotePhotoHttpAdapter.fetchPhotos("${host}/api", TOKEN, READY_FOR_DOWNLOAD)*.id == [1]
         queryParams().status == READY_FOR_DOWNLOAD
         authHeader() == TOKEN
     }
@@ -120,7 +120,7 @@ class RemotePhotoUtilSpec extends Specification {
         route("PUT", "/api/photos/42", 200, JsonOutput.toJson([id: 42, status: FAILED]))
 
         expect:
-        RemotePhotoUtil.updateStatus("${host}/api", TOKEN, new Photo(id: 42), FAILED, reason).status == FAILED
+        RemotePhotoHttpAdapter.updateStatus("${host}/api", TOKEN, new Photo(id: 42), FAILED, reason).status == FAILED
 
         // One parameter, decoded back to the original -- the & did not split it and nothing was double-encoded.
         queryParams() == [failedReason: reason]
@@ -134,7 +134,7 @@ class RemotePhotoUtilSpec extends Specification {
             accessKeyId: "id", secretAccessKey: "secret", sessionToken: "session", expiration: "2026-09-25T13:00:00Z"]))
 
         when:
-        def credentials = RemotePhotoUtil.fetchStsCredentials("${host}/api", TOKEN, "https://sqs.example/queue")
+        def credentials = RemotePhotoHttpAdapter.fetchStsCredentials("${host}/api", TOKEN, "https://sqs.example/queue")
 
         then:
         credentials.accessKeyId() == "id"
@@ -150,7 +150,7 @@ class RemotePhotoUtilSpec extends Specification {
         route("GET", "/photos/1.jpg", 200, [1, 2, 3] as byte[])
 
         expect:
-        RemotePhotoUtil.fetchBytes("${host}/photos/1.jpg") == [1, 2, 3] as byte[]
+        RemotePhotoHttpAdapter.fetchBytes("${host}/photos/1.jpg") == [1, 2, 3] as byte[]
         !authHeader()
     }
 
@@ -159,7 +159,7 @@ class RemotePhotoUtilSpec extends Specification {
         route("GET", "/photos/1.jpg", 200, new byte[0])
 
         when:
-        RemotePhotoUtil.fetchBytes("${host}/photos/1.jpg")
+        RemotePhotoHttpAdapter.fetchBytes("${host}/photos/1.jpg")
 
         then:
         CloudCardApiException e = thrown()

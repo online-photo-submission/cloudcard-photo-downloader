@@ -45,7 +45,7 @@ class TokenService {
     }
 
     void login() throws Exception {
-        authenticationToken = RemotePhotoUtil.login(apiUrl, persistentAccessToken)
+        authenticationToken = RemotePhotoHttpAdapter.login(apiUrl, persistentAccessToken)
     }
 
     void logout() throws Exception {
@@ -53,7 +53,7 @@ class TokenService {
             return
         }
 
-        RemotePhotoUtil.logout(apiUrl, authenticationToken.tokenValue)
+        RemotePhotoHttpAdapter.logout(apiUrl, authenticationToken.tokenValue)
 
         authenticationToken = null
     }

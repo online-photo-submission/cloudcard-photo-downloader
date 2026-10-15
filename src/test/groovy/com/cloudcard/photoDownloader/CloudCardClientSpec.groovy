@@ -10,7 +10,7 @@ import java.time.Instant
 import static com.cloudcard.photoDownloader.CloudCardClient.*
 
 /**
- * Policy only. RemotePhotoUtil is a global Groovy mock, so these run offline in milliseconds.
+ * Policy only. RemotePhotoHttpAdapter is a global Groovy mock, so these run offline in milliseconds.
  * Global mocks only intercept calls from dynamically compiled Groovy, which CloudCardClient is --
  * including the calls inside the closures it hands to Retry. Anything that actually talks to a
  * server belongs in CloudCardClientIntegrationTests.
@@ -27,7 +27,7 @@ class CloudCardClientSpec extends Specification {
     CloudCardClient client
 
     def setup() {
-        GroovyMock(RemotePhotoUtil, global: true)
+        GroovyMock(RemotePhotoHttpAdapter, global: true)
 
         tokenService.getAuthTokenValue() >> AUTH_TOKEN
 
@@ -52,7 +52,7 @@ class CloudCardClientSpec extends Specification {
         client.fetch(READY_FOR_DOWNLOAD)
 
         then:
-        attempts * RemotePhotoUtil.fetchPhotos(API_URL, AUTH_TOKEN, READY_FOR_DOWNLOAD) >> {
+        attempts * RemotePhotoHttpAdapter.fetchPhotos(API_URL, AUTH_TOKEN, READY_FOR_DOWNLOAD) >> {
             throw new CloudCardApiException("failure", status, permanent)
         }
 
@@ -76,7 +76,7 @@ class CloudCardClientSpec extends Specification {
         List<Photo> photos = client.fetch(READY_FOR_DOWNLOAD)
 
         then:
-        2 * RemotePhotoUtil.fetchPhotos(API_URL, AUTH_TOKEN, READY_FOR_DOWNLOAD) >>
+        2 * RemotePhotoHttpAdapter.fetchPhotos(API_URL, AUTH_TOKEN, READY_FOR_DOWNLOAD) >>
             { throw new CloudCardApiException("boom", 503, false) } >> [photo]
         photos == [photo]
     }
@@ -86,7 +86,7 @@ class CloudCardClientSpec extends Specification {
         client.fetchStsCredentials(QUEUE_URL)
 
         then:
-        1 * RemotePhotoUtil.fetchStsCredentials(API_URL, AUTH_TOKEN, QUEUE_URL) >> {
+        1 * RemotePhotoHttpAdapter.fetchStsCredentials(API_URL, AUTH_TOKEN, QUEUE_URL) >> {
             throw new CloudCardApiException("queue is shared", 403, true)
         }
 
@@ -105,7 +105,7 @@ class CloudCardClientSpec extends Specification {
         client.fetchBytes(photo)
 
         then:
-        1 * RemotePhotoUtil.fetchBytes("https://example.test/photo.jpg") >> expected
+        1 * RemotePhotoHttpAdapter.fetchBytes("https://example.test/photo.jpg") >> expected
         photo.bytes == expected
     }
 
@@ -118,7 +118,7 @@ class CloudCardClientSpec extends Specification {
         client.fetchBytes(additionalPhoto)
 
         then:
-        1 * RemotePhotoUtil.fetchBytes("https://example.test/extra.jpg") >> expected
+        1 * RemotePhotoHttpAdapter.fetchBytes("https://example.test/extra.jpg") >> expected
         additionalPhoto.bytes == expected
     }
 
@@ -130,7 +130,7 @@ class CloudCardClientSpec extends Specification {
         client.fetchBytes(photo)
 
         then:
-        1 * RemotePhotoUtil.fetchBytes(_) >> { throw new CloudCardApiException("not found", 404, true) }
+        1 * RemotePhotoHttpAdapter.fetchBytes(_) >> { throw new CloudCardApiException("not found", 404, true) }
 
         and:
         thrown(CloudCardApiException)
@@ -148,8 +148,8 @@ class CloudCardClientSpec extends Specification {
         List<Photo> photos = client.fetch([APPROVED, READY_FOR_DOWNLOAD] as String[])
 
         then:
-        1 * RemotePhotoUtil.fetchPhotos(API_URL, AUTH_TOKEN, APPROVED) >> [approved]
-        1 * RemotePhotoUtil.fetchPhotos(API_URL, AUTH_TOKEN, READY_FOR_DOWNLOAD) >> [ready]
+        1 * RemotePhotoHttpAdapter.fetchPhotos(API_URL, AUTH_TOKEN, APPROVED) >> [approved]
+        1 * RemotePhotoHttpAdapter.fetchPhotos(API_URL, AUTH_TOKEN, READY_FOR_DOWNLOAD) >> [ready]
         photos == [approved, ready]
     }
 
@@ -163,9 +163,9 @@ class CloudCardClientSpec extends Specification {
         client.fetchWithBytes([READY_FOR_DOWNLOAD] as String[])
 
         then:
-        1 * RemotePhotoUtil.fetchPhotos(API_URL, AUTH_TOKEN, READY_FOR_DOWNLOAD) >> [raw]
+        1 * RemotePhotoHttpAdapter.fetchPhotos(API_URL, AUTH_TOKEN, READY_FOR_DOWNLOAD) >> [raw]
         1 * preProcessor.process(raw) >> processed
-        1 * RemotePhotoUtil.fetchBytes("https://example.test/processed.jpg") >> bytes
+        1 * RemotePhotoHttpAdapter.fetchBytes("https://example.test/processed.jpg") >> bytes
         processed.bytes == bytes
     }
 
@@ -178,7 +178,7 @@ class CloudCardClientSpec extends Specification {
         Photo result = client.updateStatus(photo, DOWNLOADED)
 
         then:
-        1 * RemotePhotoUtil.updateStatus(API_URL, AUTH_TOKEN, photo, DOWNLOADED, null) >> updated
+        1 * RemotePhotoHttpAdapter.updateStatus(API_URL, AUTH_TOKEN, photo, DOWNLOADED, null) >> updated
         result.is(updated)
     }
 
@@ -195,7 +195,7 @@ class CloudCardClientSpec extends Specification {
         Credentials result = client.fetchStsCredentials(QUEUE_URL)
 
         then:
-        1 * RemotePhotoUtil.fetchStsCredentials(API_URL, AUTH_TOKEN, QUEUE_URL) >> credentials
+        1 * RemotePhotoHttpAdapter.fetchStsCredentials(API_URL, AUTH_TOKEN, QUEUE_URL) >> credentials
         result.is(credentials)
     }
 
