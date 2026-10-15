@@ -166,6 +166,29 @@ class RemotePhotoHttpAdapterSpec extends Specification {
         !e.permanent
     }
 
+    def "a network failure is transient, with status 0"() {
+        when:
+        RemotePhotoHttpAdapter.login("http://localhost:1/api", "pat")
+
+        then:
+        CloudCardApiException e = thrown()
+        e.status == 0
+        !e.permanent
+        e.cause
+    }
+
+    def "a malformed response body is not a CloudCardApiException, so it is never retried"() {
+        given:
+        route("POST", "/api/authenticationTokens", 200, "not json")
+
+        when:
+        RemotePhotoHttpAdapter.login("${host}/api", "pat")
+
+        then:
+        Exception e = thrown()
+        !(e instanceof CloudCardApiException)
+    }
+
     /* *** STUB SERVER *** */
 
     private void route(String method, String path, int status, body = null) {

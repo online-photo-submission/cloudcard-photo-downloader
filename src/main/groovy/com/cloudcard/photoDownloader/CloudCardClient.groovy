@@ -2,6 +2,7 @@ package com.cloudcard.photoDownloader
 
 import com.cloudcard.photoDownloader.exception.CloudCardApiException
 import io.github.resilience4j.core.IntervalFunction
+import io.github.resilience4j.core.functions.CheckedSupplier
 import io.github.resilience4j.retry.Retry
 import io.github.resilience4j.retry.RetryConfig
 import jakarta.annotation.PostConstruct
@@ -138,7 +139,7 @@ class CloudCardClient {
 
     }
 
-    private <T> T withRetry(Closure<T> call) {
-        return Retry.decorateSupplier(retry, call).get()
+    private <T> T withRetry(CheckedSupplier<T> call) {
+        return Retry.decorateCheckedSupplier(retry, call).get()
     }
 }

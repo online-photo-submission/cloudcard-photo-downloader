@@ -66,6 +66,7 @@ class CloudCardClientSpec extends Specification {
         502    | false     || 3
         403    | true      || 1
         401    | true      || 1
+        0      | false     || 3    // network failure
     }
 
     def "a transient failure followed by success returns the result"() {
@@ -92,6 +93,24 @@ class CloudCardClientSpec extends Specification {
 
         and:
         thrown(CloudCardApiException)
+    }
+
+    def "a #failure.class.simpleName is not retried"() {
+        when:
+        client.fetch(READY_FOR_DOWNLOAD)
+
+        then:
+        1 * RemotePhotoHttpAdapter.fetchPhotos(API_URL, AUTH_TOKEN, READY_FOR_DOWNLOAD) >> { throw failure }
+
+        and:
+        Exception e = thrown()
+        e == failure
+
+        where:
+        failure << [
+            new IllegalArgumentException("a bug, e.g. a blank URL"),
+            new IOException("stands in for Jackson's checked JsonProcessingException on a malformed body")
+        ]
     }
 
     /* *** PHOTO BYTES *** */
