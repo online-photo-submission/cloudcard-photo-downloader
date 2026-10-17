@@ -1,7 +1,10 @@
 package com.cloudcard.photoDownloader
 
+
+import com.cloudcard.photoDownloader.exception.CredentialsBrokerException
 import com.fasterxml.jackson.core.type.TypeReference
 import com.fasterxml.jackson.databind.ObjectMapper
+import jakarta.annotation.PostConstruct
 import kong.unirest.core.HttpResponse
 import kong.unirest.core.Unirest
 import org.slf4j.Logger
@@ -9,12 +12,10 @@ import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Component
+import software.amazon.awssdk.services.sts.model.Credentials
+
 import java.nio.charset.StandardCharsets
-
-import jakarta.annotation.PostConstruct
-
-import static com.cloudcard.photoDownloader.ApplicationPropertiesValidator.throwIfBlank
-
+import java.time.Instant
 
 @Component
 class CloudCardClient {
@@ -100,7 +101,7 @@ class CloudCardClient {
     }
 
     List<Photo> fetch(String status) throws Exception {
-        String url = "$apiUrl/trucredential/${tokenService.getAuthToken()}/photos?status=$status&base64EncodedImage=false&max=1000&additionalPhotos=true"
+        String url = "$apiUrl/trucredential/${tokenService.authTokenValue}/photos?status=$status&base64EncodedImage=false&max=1000&additionalPhotos=true"
         HttpResponse<String> response = Unirest.get(url).headers(standardHeaders()).asString()
 
         if (response.getStatus() != 200) {
@@ -112,6 +113,37 @@ class CloudCardClient {
         })
     }
 
+    Credentials fetchStsCredentials(String queueUrl) throws Exception {
+        String url = "$apiUrl/status-queues/credentials"
+        ObjectMapper objectMapper = new ObjectMapper()
+
+        String payload = objectMapper.writeValueAsString([queueUrl: queueUrl])
+
+        HttpResponse<String> response = Unirest.post(url)
+                .headers(standardHeaders())
+                .body(payload)
+                .asString()
+
+        if (response.getStatus() != 200) {
+            boolean permanent = response.status in [401, 403, 404]
+            throw new CredentialsBrokerException("CloudCard API returned ${response.status} for ${queueUrl}.", response.status, permanent)
+        }
+
+        // 1. Parse into a temporary map
+        Map<String, Object> map = objectMapper.readValue(
+                response.getBody(),
+                new TypeReference<Map<String, Object>>() {}
+        )
+
+        // 2. Map the keys directly to the official AWS SDK object builder
+        return Credentials.builder()
+                .accessKeyId(map.accessKeyId as String)
+                .secretAccessKey(map.secretAccessKey as String)
+                .sessionToken(map.sessionToken as String)
+                .expiration(Instant.parse(map.expiration as String))
+                .build()
+    }
+
     void close() {
         tokenService.logout()
     }
@@ -120,7 +152,7 @@ class CloudCardClient {
         [
             accept: "application/json",
             "Content-Type": "application/json",
-            "X-Auth-Token": tokenService.getAuthToken()
+            "X-Auth-Token": tokenService.authTokenValue
         ]
     }
 

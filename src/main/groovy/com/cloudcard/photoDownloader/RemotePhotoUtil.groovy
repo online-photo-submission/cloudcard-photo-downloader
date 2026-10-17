@@ -16,7 +16,7 @@ class RemotePhotoUtil {
         * @param persistentAccessToken
         * @return The authentication token value if login is successful, null otherwise.
      */
-    static String login(String apiUrl, String persistentAccessToken) throws Exception {
+    static AuthenticationToken login(String apiUrl, String persistentAccessToken) throws Exception {
         String url =  apiUrl + "/authenticationTokens"
         HttpResponse<String> response = Unirest.post(url).headers(standardHeaders()).body("{\"persistentAccessToken\":\"" + persistentAccessToken + "\"}").asString()
 
@@ -28,7 +28,7 @@ class RemotePhotoUtil {
         AuthenticationToken token = new ObjectMapper().readValue(response.getBody(), new TypeReference<AuthenticationToken>(){
         })
 
-        return token.getTokenValue()
+        return token
     }
 
     /*
