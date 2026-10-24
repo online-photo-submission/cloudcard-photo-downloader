@@ -32,10 +32,10 @@ public class ShellCommandService {
     @PostConstruct
     void init() {
 
-        log.info("  Pre-Execute Command : " + printCommand(preExecuteCommand));
-        log.info(" Pre-Download Command : " + printCommand(preDownloadCommand));
-        log.info("Post-Download Command : " + printCommand(postDownloadCommand));
-        log.info(" Post-Execute Command : " + printCommand(postExecuteCommand));
+        log.info("                  Pre-Execute Command : " + printCommand(preExecuteCommand));
+        log.info("                 Pre-Download Command : " + printCommand(preDownloadCommand));
+        log.info("                Post-Download Command : " + printCommand(postDownloadCommand));
+        log.info("                 Post-Execute Command : " + printCommand(postExecuteCommand));
     }
 
     public boolean preExecute() {

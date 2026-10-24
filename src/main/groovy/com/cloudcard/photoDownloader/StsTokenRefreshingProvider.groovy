@@ -11,9 +11,9 @@ import software.amazon.awssdk.services.sts.model.Credentials
 import java.time.Clock
 import java.time.Instant
 
-class StsTokenRefreshProvider implements AwsCredentialsProvider {
+class StsTokenRefreshingProvider implements AwsCredentialsProvider {
 
-    private static final Logger log = LoggerFactory.getLogger(StsTokenRefreshProvider)
+    private static final Logger log = LoggerFactory.getLogger(StsTokenRefreshingProvider)
 
     private static final int REFRESH_BUFFER_SECONDS = 300
 
@@ -23,7 +23,7 @@ class StsTokenRefreshProvider implements AwsCredentialsProvider {
 
     StsSession currentSession
 
-    StsTokenRefreshProvider(CloudCardClient cloudCardClient, String queueUrl, Clock clock = Clock.systemUTC()) {
+    StsTokenRefreshingProvider(CloudCardClient cloudCardClient, String queueUrl, Clock clock = Clock.systemUTC()) {
         this.cloudCardClient = cloudCardClient
         this.queueUrl = queueUrl
         this.clock = clock

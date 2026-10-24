@@ -16,7 +16,7 @@ import static org.assertj.core.api.Assertions.assertThat
 import static org.assertj.core.api.Assertions.assertThatThrownBy
 import static org.mockito.Mockito.*
 
-class StsTokenRefreshProviderTest {
+class StsTokenRefreshingProviderTest {
 
     private static final String QUEUE_URL = "https://sqs.ca-central-1.amazonaws.com/123456789012/status-queue"
     private static final Instant START = Instant.parse("2026-09-25T12:00:00Z")
@@ -25,14 +25,14 @@ class StsTokenRefreshProviderTest {
 
     CloudCardClient cloudCardClient
     TestClock clock
-    StsTokenRefreshProvider provider
+    StsTokenRefreshingProvider provider
 
     @BeforeEach
     void setup() {
         cloudCardClient = mock(CloudCardClient)
         clock = new TestClock(START)
 
-        provider = new StsTokenRefreshProvider(cloudCardClient, QUEUE_URL, clock)
+        provider = new StsTokenRefreshingProvider(cloudCardClient, QUEUE_URL, clock)
     }
 
     @Test
