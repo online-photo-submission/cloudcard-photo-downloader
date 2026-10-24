@@ -1,25 +1,27 @@
 package com.cloudcard.photoDownloader
 
-import com.fasterxml.jackson.core.type.TypeReference
-import com.fasterxml.jackson.databind.ObjectMapper
-import kong.unirest.core.HttpResponse
-import kong.unirest.core.Unirest
+import com.cloudcard.photoDownloader.exception.CloudCardApiException
+import io.github.resilience4j.core.IntervalFunction
+import io.github.resilience4j.core.functions.CheckedSupplier
+import io.github.resilience4j.retry.Retry
+import io.github.resilience4j.retry.RetryConfig
+import jakarta.annotation.PostConstruct
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Component
-import java.nio.charset.StandardCharsets
+import software.amazon.awssdk.services.sts.model.Credentials
 
-import jakarta.annotation.PostConstruct
-
-import static com.cloudcard.photoDownloader.ApplicationPropertiesValidator.throwIfBlank
-
-
+/**
+ * Policy layer for the CloudCard API: retry, token handling, orchestration.
+ * All HTTP lives in RemotePhotoHttpAdapter.
+ */
 @Component
 class CloudCardClient {
 
     private static final Logger log = LoggerFactory.getLogger(CloudCardClient.class)
+
     public static final String READY_FOR_DOWNLOAD = "READY_FOR_DOWNLOAD"
     public static final String APPROVED = "APPROVED"
     public static final String DOWNLOADED = "DOWNLOADED"
@@ -29,99 +31,115 @@ class CloudCardClient {
     @Value('${cloudcard.api.url}')
     private String apiUrl
 
+    @Value('${cloudcard.api.retry.maxAttempts:3}')
+    private int maxAttempts
+
+    @Value('${cloudcard.api.retry.initialIntervalMillis:1000}')
+    private long initialIntervalMillis
+
+    @Value('${cloudcard.api.retry.maxIntervalMillis:30000}')
+    private long maxIntervalMillis
+
     @Autowired
     TokenService tokenService
-
-    //TODO move the contents of this restService back into the cloudcard client.
-    @Autowired
-    RestService restService
 
     @Autowired
     PreProcessor preProcessor
 
+    Retry retry
+
     @PostConstruct
     void init() {
-        log.info("              API URL : " + apiUrl)
-        log.info("        Pre-Processor : " + preProcessor.getClass().getSimpleName())
+        log.info("                    API URL : " + apiUrl)
+        log.info("              Pre-Processor : " + preProcessor.getClass().getSimpleName())
+        log.info("              API Retry     : ${maxAttempts} attempts, ${initialIntervalMillis}ms to ${maxIntervalMillis}ms")
+
+        RetryConfig retryConfig = RetryConfig.custom()
+            .maxAttempts(maxAttempts)
+            .intervalFunction(IntervalFunction.ofExponentialRandomBackoff(
+                initialIntervalMillis, 2.0d, 0.25d, maxIntervalMillis))
+            .retryOnException(this.&isRetryable)
+            .failAfterMaxAttempts(true)
+            .build()
+
+        retry = Retry.of("CloudCardClient", retryConfig)
+
+        retry.eventPublisher.onRetry { event ->
+            log.warn("Retrying CloudCard API call, attempt ${event.numberOfRetryAttempts}.")
+        }
     }
 
     /**
-     * Each usage of the CloudCardClient should check isConfigured to make sure the client is configured.
-     *
-     * @return
+     * Retry transient API failures and anything network-level. A permanent failure -- auth,
+     * authorisation, a bad request -- will not succeed on a second attempt, so it propagates
+     * immediately.
      */
+    private static boolean isRetryable(Throwable throwable) {
+        throwable instanceof CloudCardApiException && !throwable.permanent
+    }
+
     boolean isConfigured() {
         return apiUrl && tokenService.isConfigured()
     }
 
-    Photo updateStatus(Photo photo, String status, String message = null) throws Exception {
-        String url = "${apiUrl}/photos/${photo.id}"
-
-        if (message) {
-            String encodedMessage = URLEncoder.encode(message, StandardCharsets.UTF_8.toString())
-
-            if (status == ON_HOLD) url += "?onHoldReason=${encodedMessage}"
-            if (status == FAILED) url += "?failedReason=${encodedMessage}"
-        }
-
-        HttpResponse<String> response = Unirest.put(url)
-            .headers(standardHeaders())
-            .body("{ \"status\": \"${status}\" }")
-            .asString()
-
-        if (response.status != 200) {
-            log.error("Status ${response.status} returned from CloudCard API when updating photo: ${photo.id}")
-            return null
-        }
-
-        return new ObjectMapper().readValue(response.body, new TypeReference<Photo>() {})
-    }
+    /* *** PHOTOS *** */
 
     List<Photo> fetchWithBytes(String[] fetchStatuses) throws Exception {
         List<Photo> photos = fetch(fetchStatuses)
 
         for (Photo photo : photos) {
             Photo processedPhoto = preProcessor.process(photo)
-            restService.fetchBytes(processedPhoto)
+            fetchBytes(processedPhoto)
         }
 
         return photos
     }
 
+    void fetchBytes(Photo photo) throws Exception {
+        photo.bytes = withRetry { RemotePhotoHttpAdapter.fetchBytes(photo.externalURL) }
+    }
+
+    void fetchBytes(AdditionalPhoto additionalPhoto) throws Exception {
+        additionalPhoto.bytes = withRetry { RemotePhotoHttpAdapter.fetchBytes(additionalPhoto.externalURL) }
+    }
+
     List<Photo> fetch(String[] statuses) throws Exception {
-        List<Photo> photoList = []
+        List<Photo> photos = []
 
         for (String status : statuses) {
-            List<Photo> photos = fetch(status)
-            photoList.addAll(photos)
+            photos.addAll(fetch(status))
         }
 
-        return photoList
+        return photos
     }
 
     List<Photo> fetch(String status) throws Exception {
-        String url = "$apiUrl/trucredential/${tokenService.getAuthToken()}/photos?status=$status&base64EncodedImage=false&max=1000&additionalPhotos=true"
-        HttpResponse<String> response = Unirest.get(url).headers(standardHeaders()).asString()
-
-        if (response.getStatus() != 200) {
-            log.error("Status $response.status returned from CloudCard API when retrieving photo list to download.")
-            return []
+        return withRetry {
+            RemotePhotoHttpAdapter.fetchPhotos(apiUrl, tokenService.authTokenValue, status)
         }
-
-        return new ObjectMapper().readValue(response.getBody(), new TypeReference<List<Photo>>() {
-        })
     }
+
+    Photo updateStatus(Photo photo, String status, String message = null) throws Exception {
+        return withRetry {
+            RemotePhotoHttpAdapter.updateStatus(apiUrl, tokenService.authTokenValue, photo, status, message)
+        }
+    }
+
+    /* *** CREDENTIAL BROKERING *** */
+
+    Credentials fetchStsCredentials(String queueUrl) throws Exception {
+        return withRetry {
+            RemotePhotoHttpAdapter.fetchStsCredentials(apiUrl, tokenService.authTokenValue, queueUrl)
+        }
+    }
+
+    /* *** LIFECYCLE *** */
 
     void close() {
-        tokenService.logout()
+
     }
 
-    private Map<String, String> standardHeaders() {
-        [
-            accept: "application/json",
-            "Content-Type": "application/json",
-            "X-Auth-Token": tokenService.getAuthToken()
-        ]
+    private <T> T withRetry(CheckedSupplier<T> call) {
+        return Retry.decorateCheckedSupplier(retry, call).get()
     }
-
 }

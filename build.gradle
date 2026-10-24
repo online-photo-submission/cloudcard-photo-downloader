@@ -8,7 +8,7 @@ plugins {
 }
 
 group = 'com.onlinephotosubmission'
-version = '26.06.18.1330'
+version = '26.10.15.1140'
 
 java {
     sourceCompatibility = '17'
@@ -56,14 +56,36 @@ dependencies {
 
     implementation platform("software.amazon.awssdk:bom:2.31.21")
     implementation 'software.amazon.awssdk:sqs'
+    implementation "software.amazon.awssdk:sts"
     /* *** UNCOMMENT FOR LOCAL DEV *** */
 //    implementation "software.amazon.awssdk:sso"
 //    implementation "software.amazon.awssdk:ssooidc"
 }
 
+
 tasks.named('test') {
-    useJUnitPlatform()
+    useJUnitPlatform {
+        excludeTags 'integration'
+    }
     testLogging {
         events "passed", "skipped", "failed"
     }
+}
+
+tasks.register('integrationTest', Test) {
+    testClassesDirs = sourceSets.test.output.classesDirs
+    classpath = sourceSets.test.runtimeClasspath
+
+    useJUnitPlatform {
+        includeTags 'integration'
+    }
+
+    outputs.upToDateWhen { false }
+
+    testLogging {
+        events "passed", "skipped", "failed"
+        showStandardStreams = true
+    }
+
+    environment System.getenv()
 }
