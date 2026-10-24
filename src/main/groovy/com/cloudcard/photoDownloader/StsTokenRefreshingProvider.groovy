@@ -29,6 +29,17 @@ class StsTokenRefreshingProvider implements AwsCredentialsProvider {
         this.clock = clock
     }
 
+    /**
+     * Returns cached SQS credentials, refreshing them when the session enters the {@code REFRESH_BUFFER_SECONDS} window.
+     *
+     * If refreshing fails while the current credentials are still unexpired, the
+     * current session is returned. Once it expires, the refresh failure is propagated.
+     *
+     * Concurrent callers are serialized so only one refresh occurs at a time.
+     *
+     * @return usable AWS credentials
+     * @throws Exception if credentials cannot be fetched and no unexpired session remains
+     */
     @Override
     synchronized AwsCredentials resolveCredentials() {
         StsSession session = currentSession
