@@ -64,7 +64,6 @@ class SqsPhotoService implements PhotoService {
         log.info("              Pre-Processor : " + preProcessor.getClass().getSimpleName())
         log.info("                 Put Status : " + putStatus)
 
-// TODO: Determine if we want to change the authType default?
         if (cloudCardClient.isConfigured() && authType == "sts") {
             credentialsProvider = new StsTokenRefreshingProvider(cloudCardClient, queueUrl)
             log.info("            SQS Credentials : brokered by the CloudCard API")
@@ -132,7 +131,7 @@ class SqsPhotoService implements PhotoService {
 
     @Override
     void close() {
-
+        sqsClient.close()
     }
 
     /* *** PRIVATE HELPERS *** */

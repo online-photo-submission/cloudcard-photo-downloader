@@ -20,7 +20,7 @@ public class ApplicationPropertiesValidator {
             log.info("          Downloader Delay : " + downloaderDelay / 60000 + " min(s)");
         } else if (scheduleType.equals("cron")){
             log.info("               Repeat Mode : " + (repeat ? "Cron Schedule" : "Run Once & Stop"));
-            log.info(".            Cron Schedule : " + cronSchedule);
+            log.info("             Cron Schedule : " + cronSchedule);
         }
     }
 
