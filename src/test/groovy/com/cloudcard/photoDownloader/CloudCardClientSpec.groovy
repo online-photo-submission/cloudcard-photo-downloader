@@ -261,4 +261,17 @@ class CloudCardClientSpec extends Specification {
         CloudCardApiException e = thrown()
         e.status == 403
     }
+
+    /* *** RE-AUTHENTICATION *** */
+    def "the retry after a rejected token uses a freshly fetched token"() {
+        when:
+        client.fetch(READY_FOR_DOWNLOAD)
+
+        then:
+        _ * tokenService.getAuthTokenValue() >>> ['stale-token', 'fresh-token']
+        1 * RemotePhotoHttpAdapter.fetchPhotos(API_URL, 'stale-token', READY_FOR_DOWNLOAD) >>
+            { throw new CloudCardApiException("forbidden", 403, true) }
+        1 * tokenService.invalidate()
+        1 * RemotePhotoHttpAdapter.fetchPhotos(API_URL, 'fresh-token', READY_FOR_DOWNLOAD) >> []
+    }
 }
