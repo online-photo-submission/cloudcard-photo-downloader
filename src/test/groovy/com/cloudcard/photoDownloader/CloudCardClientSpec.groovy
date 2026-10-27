@@ -64,9 +64,9 @@ class CloudCardClientSpec extends Specification {
         status | permanent || attempts
         503    | false     || 3
         502    | false     || 3
-        403    | true      || 1
-        401    | true      || 1
         0      | false     || 3    // network failure
+        403    | true      || 2    // rejected token: invalidate, log in again, one more try
+        401    | true      || 2
     }
 
     def "a transient failure followed by success returns the result"() {
@@ -87,9 +87,10 @@ class CloudCardClientSpec extends Specification {
         client.fetchStsCredentials(QUEUE_URL)
 
         then:
-        1 * RemotePhotoHttpAdapter.fetchStsCredentials(API_URL, AUTH_TOKEN, QUEUE_URL) >> {
+        2 * RemotePhotoHttpAdapter.fetchStsCredentials(API_URL, AUTH_TOKEN, QUEUE_URL) >> {
             throw new CloudCardApiException("queue is shared", 403, true)
         }
+        1 * tokenService.invalidate()
 
         and:
         thrown(CloudCardApiException)
@@ -234,5 +235,43 @@ class CloudCardClientSpec extends Specification {
         API_URL | false           || false
         ""      | true            || false
         null    | true            || false
+    }
+
+    def "a rejected token is invalidated and the call retried once"() {
+        when:
+        List<Photo> photos = client.fetch(READY_FOR_DOWNLOAD)
+
+        then:
+        2 * RemotePhotoHttpAdapter.fetchPhotos(API_URL, AUTH_TOKEN, READY_FOR_DOWNLOAD) >>
+            { throw new CloudCardApiException("forbidden", 403, true) } >> []
+        1 * tokenService.invalidate()
+        photos == []
+    }
+
+    def "a second rejection propagates"() {
+        when:
+        client.fetch(READY_FOR_DOWNLOAD)
+
+        then:
+        2 * RemotePhotoHttpAdapter.fetchPhotos(API_URL, AUTH_TOKEN, READY_FOR_DOWNLOAD) >>
+            { throw new CloudCardApiException("forbidden", 403, true) }
+        1 * tokenService.invalidate()
+
+        and:
+        CloudCardApiException e = thrown()
+        e.status == 403
+    }
+
+    /* *** RE-AUTHENTICATION *** */
+    def "the retry after a rejected token uses a freshly fetched token"() {
+        when:
+        client.fetch(READY_FOR_DOWNLOAD)
+
+        then:
+        _ * tokenService.getAuthTokenValue() >>> ['stale-token', 'fresh-token']
+        1 * RemotePhotoHttpAdapter.fetchPhotos(API_URL, 'stale-token', READY_FOR_DOWNLOAD) >>
+            { throw new CloudCardApiException("forbidden", 403, true) }
+        1 * tokenService.invalidate()
+        1 * RemotePhotoHttpAdapter.fetchPhotos(API_URL, 'fresh-token', READY_FOR_DOWNLOAD) >> []
     }
 }

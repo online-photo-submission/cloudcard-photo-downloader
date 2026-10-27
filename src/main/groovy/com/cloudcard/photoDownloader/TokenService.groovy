@@ -73,4 +73,9 @@ class TokenService {
             .isBefore(Instant.now() + REFRESH_BUFFER_MINUTES)
     }
 
+    /** Forget the cached token without calling the API -- it's already dead. */
+    void invalidate() {
+        authenticationToken = null
+    }
+
 }
