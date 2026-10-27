@@ -1,6 +1,7 @@
 package com.cloudcard.photoDownloader
 
 import jakarta.annotation.PostConstruct
+import jakarta.annotation.PreDestroy
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
@@ -131,7 +132,12 @@ class SqsPhotoService implements PhotoService {
 
     @Override
     void close() {
-        sqsClient.close()
+        // Per-cycle cleanup only. The SqsClient lives as long as this bean.
+    }
+
+    @PreDestroy
+    void shutdown() {
+        sqsClient?.close()
     }
 
     /* *** PRIVATE HELPERS *** */

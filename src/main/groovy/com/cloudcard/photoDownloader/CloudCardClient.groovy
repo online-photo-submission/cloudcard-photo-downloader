@@ -28,6 +28,9 @@ class CloudCardClient {
     public static final String ON_HOLD = "ON_HOLD"
     public static final String FAILED = "FAILED"
 
+    /** Statuses the API returns when it rejects the auth token itself. */
+    private static final List<Integer> AUTH_REJECTED_STATUSES = [401, 403]
+
     @Value('${cloudcard.api.url}')
     private String apiUrl
 
@@ -95,6 +98,7 @@ class CloudCardClient {
         return photos
     }
 
+    /** No token is sent to the photo host, so there is nothing to re-authenticate. */
     void fetchBytes(Photo photo) throws Exception {
         photo.bytes = withRetry { RemotePhotoHttpAdapter.fetchBytes(photo.externalURL) }
     }
@@ -114,13 +118,13 @@ class CloudCardClient {
     }
 
     List<Photo> fetch(String status) throws Exception {
-        return withRetry {
+        return withReauthentication {
             RemotePhotoHttpAdapter.fetchPhotos(apiUrl, tokenService.authTokenValue, status)
         }
     }
 
     Photo updateStatus(Photo photo, String status, String message = null) throws Exception {
-        return withRetry {
+        return withReauthentication {
             RemotePhotoHttpAdapter.updateStatus(apiUrl, tokenService.authTokenValue, photo, status, message)
         }
     }
@@ -128,7 +132,7 @@ class CloudCardClient {
     /* *** CREDENTIAL BROKERING *** */
 
     Credentials fetchStsCredentials(String queueUrl) throws Exception {
-        return withRetry {
+        return withReauthentication {
             RemotePhotoHttpAdapter.fetchStsCredentials(apiUrl, tokenService.authTokenValue, queueUrl)
         }
     }
@@ -137,6 +141,26 @@ class CloudCardClient {
 
     void close() {
 
+    }
+
+    /* *** PRIVATE HELPERS *** */
+
+    /**
+     * The API can revoke a token before its stated expiry, and TokenService only refreshes on expiry.
+     * On an auth rejection, drop the cached token and try once more; the call reads
+     * tokenService.authTokenValue each time it runs, so the second attempt logs in fresh. A second
+     * rejection is a real authorization failure and propagates.
+     */
+    private <T> T withReauthentication(CheckedSupplier<T> call) {
+        try {
+            return withRetry(call)
+        } catch (CloudCardApiException e) {
+            if (!(e.status in AUTH_REJECTED_STATUSES)) throw e
+
+            log.warn("CloudCard API rejected the auth token (HTTP ${e.status}). Logging in again and retrying once.")
+            tokenService.invalidate()
+            return withRetry(call)
+        }
     }
 
     private <T> T withRetry(CheckedSupplier<T> call) {
