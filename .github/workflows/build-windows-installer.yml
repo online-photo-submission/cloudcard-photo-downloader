@@ -124,6 +124,19 @@ jobs:
             --win-menu `
             --verbose
 
+      - name: Remove jpackage install-folder wipe from MSI
+        shell: powershell
+        run: |
+          # jpackage always adds a RemoveFolderEx entry that deletes the whole install folder on
+          # uninstall/upgrade (config, logs, photos). No flag disables it, so delete it before signing.
+          $msi = (Get-ChildItem build/jpackage/*.msi).FullName
+          $installer = New-Object -ComObject WindowsInstaller.Installer
+          $db = $installer.GetType().InvokeMember('OpenDatabase', 'InvokeMethod', $null, $installer, @($msi, 1))
+          $view = $db.GetType().InvokeMember('OpenView', 'InvokeMethod', $null, $db, @('DELETE FROM `WixRemoveFolderEx`'))
+          $view.GetType().InvokeMember('Execute', 'InvokeMethod', $null, $view, $null)
+          $view.GetType().InvokeMember('Close', 'InvokeMethod', $null, $view, $null)
+          $db.GetType().InvokeMember('Commit', 'InvokeMethod', $null, $db, $null)
+
       - name: Azure OIDC login
         uses: azure/login@v3
         with:
@@ -149,4 +162,3 @@ jobs:
           name: RemotePhoto-Downloader-Windows-MSI-${{ env.APP_VERSION }}
           path: build/jpackage/*.msi
           retention-days: 7
-          
